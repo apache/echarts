@@ -20,10 +20,10 @@
 import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import MapView from './MapView';
 import MapSeries from './MapSeries';
-import mapDataStatistic from './mapDataStatistic';
-import mapSymbolLayout from './mapSymbolLayout';
 import {createLegacyDataSelectAction} from '../../legacy/dataSelectAction';
 import {install as installGeo} from '../../component/geo/install';
+import { mapSymbolLayoutStageHandler } from './mapSymbolLayout';
+import { mapDataStatisticStageHandler } from './mapDataStatistic';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     use(installGeo);
@@ -31,8 +31,8 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(MapView);
     registers.registerSeriesModel(MapSeries);
 
-    registers.registerLayout(mapSymbolLayout);
-    registers.registerProcessor(registers.PRIORITY.PROCESSOR.STATISTIC, mapDataStatistic);
+    registers.registerLayout(mapSymbolLayoutStageHandler);
+    registers.registerProcessor(registers.PRIORITY.PROCESSOR.STATISTIC, mapDataStatisticStageHandler);
 
     createLegacyDataSelectAction('map', registers.registerAction);
 }

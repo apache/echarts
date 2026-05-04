@@ -19,9 +19,12 @@
 
 import {circularLayout} from './circularLayoutHelper';
 import GlobalModel from '../../model/Global';
-import GraphSeriesModel from './GraphSeries';
+import GraphSeriesModel, { SERIES_TYPE_GRAPH } from './GraphSeries';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
-export default function graphCircularLayout(ecModel: GlobalModel) {
+export const graphCircularLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_GRAPH, graphCircularLayout);
+
+function graphCircularLayout(ecModel: GlobalModel) {
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
         if (seriesModel.get('layout') === 'circular') {
             circularLayout(seriesModel, 'symbolSize');

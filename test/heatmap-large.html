@@ -45,7 +45,9 @@ under the License.
                 'echarts'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'));
+                var chart = echarts.init(document.getElementById('main'), {
+                    // useDirtyRect: true,
+                });
 
                 // function normalDist(theta, x) {
                 //     return 1 / (theta * Math.sqrt(2 * Math.PI)) * Math.exp(- x * x / 2 / theta / theta);

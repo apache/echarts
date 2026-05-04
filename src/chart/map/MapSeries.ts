@@ -36,9 +36,10 @@ import {
     StatesMixinBase,
     CallbackDataParams,
     ComponentOnCalendarOptionMixin,
-    ComponentOnMatrixOptionMixin
+    ComponentOnMatrixOptionMixin,
+    RoamHostModel
 } from '../../util/types';
-import { Dictionary } from 'zrender/src/core/types';
+import { Dictionary, NullUndefined } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
 import SeriesData from '../../data/SeriesData';
 import Model from '../../model/Model';
@@ -47,9 +48,10 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
-import { CoordinateSystemUsageKind, decideCoordSysUsageKind } from '../../core/CoordinateSystem';
+import { COORD_SYS_USAGE_KIND_BOX, decideCoordSysUsageKind } from '../../core/CoordinateSystem';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import tokens from '../../visual/tokens';
+import { MapSeriesGroup, mapSeriesNeedsDrawMap } from '../../coord/geo/geoCreator';
 
 export interface MapStateOption<TCbParams = never> {
     itemStyle?: GeoItemStyleOption<TCbParams>
@@ -99,10 +101,12 @@ export interface MapSeriesOption extends
     nameProperty?: string;
 }
 
-class MapSeries extends SeriesModel<MapSeriesOption> {
+export const SERIES_TYPE_MAP = 'map';
 
-    static type = 'series.map' as const;
-    type = MapSeries.type;
+class MapSeries extends SeriesModel<MapSeriesOption> implements RoamHostModel {
+
+    static readonly type = 'series.' + SERIES_TYPE_MAP;
+    readonly type = MapSeries.type;
 
     static dependencies = ['geo'];
 
@@ -113,11 +117,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     // -----------------
     // Injected outside
     originalData: SeriesData;
-    mainSeries: MapSeries;
-    // Only first map series of same mapType will drawMap.
-    needsDrawMap: boolean = false;
-    // Group of all map series with same mapType
-    seriesGroup: MapSeries[] = [];
+    seriesGroup: MapSeriesGroup | NullUndefined;
 
 
     getInitialData(this: MapSeries, option: MapSeriesOption): SeriesData {
@@ -164,8 +164,8 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
      * inner exclusive geo model.
      */
     getHostGeoModel(): GeoModel {
-        if (decideCoordSysUsageKind(this).kind === CoordinateSystemUsageKind.boxCoordSys) {
-            // Always use an internal geo if specify a boxCoordSys.
+        if (decideCoordSysUsageKind(this).kind === COORD_SYS_USAGE_KIND_BOX) {
+            // Always use an internal geo if specify as `COORD_SYS_USAGE_KIND_BOX`.
             // Notice that currently we do not support laying out a geo based on
             // another geo, but preserve the possibility.
             return;
@@ -211,20 +211,19 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         multipleSeries: boolean,
         dataType: string
     ) {
-        // FIXME orignalData and data is a bit confusing
+        // FIXME originalData and data is a bit confusing
         const data = this.getData();
         const value = this.getRawValue(dataIndex);
         const name = data.getName(dataIndex);
 
-        const seriesGroup = this.seriesGroup;
-        const seriesNames = [];
-        for (let i = 0; i < seriesGroup.length; i++) {
-            const otherIndex = seriesGroup[i].originalData.indexOfName(name);
+        const seriesNames: string[] = [];
+        zrUtil.each(this.seriesGroup.f, function (mapSeries) {
+            const otherIndex = mapSeries.originalData.indexOfName(name);
             const valueDim = data.mapDimension('value');
-            if (!isNaN(seriesGroup[i].originalData.get(valueDim, otherIndex) as number)) {
-                seriesNames.push(seriesGroup[i].name);
+            if (!isNaN(mapSeries.originalData.get(valueDim, otherIndex) as number)) {
+                seriesNames.push(mapSeries.name);
             }
-        }
+        });
 
         return createTooltipMarkup('section', {
             header: seriesNames.join(', '),
@@ -244,14 +243,6 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             return region && geo.dataToPoint(region.getCenter());
         }
     };
-
-    setZoom(zoom: number): void {
-        this.option.zoom = zoom;
-    }
-
-    setCenter(center: number[]): void {
-        this.option.center = center;
-    }
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
         const iconType = opt.icon || 'roundRect';
@@ -275,6 +266,10 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             icon.style.lineWidth = 2;
         }
         return icon;
+    }
+
+    __ownRoamView() {
+        return mapSeriesNeedsDrawMap(this) ? this.coordinateSystem.view : null;
     }
 
     static defaultOption: MapSeriesOption = {

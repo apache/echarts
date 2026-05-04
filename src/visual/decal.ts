@@ -20,8 +20,12 @@
 import ExtensionAPI from '../core/ExtensionAPI';
 import GlobalModel from '../model/Global';
 import {createOrUpdatePatternFromDecal} from '../util/decal';
+import { createSimpleOverallStageHandler2 } from '../util/model';
 
-export default function decalVisual(ecModel: GlobalModel, api: ExtensionAPI) {
+
+export const decalVisualStageHandler = createSimpleOverallStageHandler2(decalVisual);
+
+function decalVisual(ecModel: GlobalModel, api: ExtensionAPI): void {
     ecModel.eachRawSeries(seriesModel => {
         if (ecModel.isSeriesFiltered(seriesModel)) {
             return;

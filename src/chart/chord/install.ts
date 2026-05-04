@@ -20,14 +20,14 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import ChordView from './ChordView';
 import ChordSeriesModel from './ChordSeries';
-import chordLayout from './chordLayout';
 import dataFilter from '../../processor/dataFilter';
+import { chordCircularLayoutStageHandler } from './chordLayout';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(ChordView);
     registers.registerSeriesModel(ChordSeriesModel);
 
-    registers.registerLayout(registers.PRIORITY.VISUAL.POST_CHART_LAYOUT, chordLayout);
+    registers.registerLayout(registers.PRIORITY.VISUAL.POST_CHART_LAYOUT, chordCircularLayoutStageHandler);
     // Add data filter processor
     registers.registerProcessor(dataFilter('chord'));
 }

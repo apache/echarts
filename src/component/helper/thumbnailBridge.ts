@@ -23,14 +23,14 @@ import { makeInner } from '../../util/model';
 import { NullUndefined, RoamOptionMixin } from '../../util/types';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import type View from '../../coord/View';
+import { MatrixArray } from 'zrender/src/core/matrix';
 /**
  * @caveat Do not import other `src/component/thumbnail/*` files.
  *  This file should be decoupled from them for sake of the size consideration.
  */
 
 /**
- * FIXME: This is a temporary implmentation. May need refactor to decouple
+ * FIXME: This is a temporary implementation. May need refactor to decouple
  *  the direct call from series.graph to thumbnail.
  */
 
@@ -60,7 +60,7 @@ export function injectThumbnailBridge(
  * in their local unit (e.g., geo in longitude-latitude) to screen coord.
  * Typically it is `View['transform']` if `coord/View` is used.
  */
-export type ThumbnailTargetTransformRawToViewport = View['transform'];
+export type ThumbnailTargetTransformRawToViewport = MatrixArray;
 
 export interface ThumbnailBridge {
     /**

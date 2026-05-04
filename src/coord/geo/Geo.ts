@@ -18,8 +18,9 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import BoundingRect from 'zrender/src/core/BoundingRect';
-import View from '../View';
+import View, {
+    useLegacyViewCoordSysCenterBase, viewCoordSysCopyViewRect, viewCoordSysSetBoundingRect
+} from '../View';
 import geoSourceManager from './geoSourceManager';
 import { GeoJSONRegion, Region } from './Region';
 import { GeoProjection, GeoResource, NameMap } from './geoTypes';
@@ -29,6 +30,11 @@ import type GeoModel from './GeoModel';
 import { resizeGeoType } from './geoCreator';
 import { warn } from '../../util/log';
 import type ExtensionAPI from '../../core/ExtensionAPI';
+import { CoordinateSystemMaster, GeoLikeCoordSys } from '../CoordinateSystem';
+import BoundingRect from 'zrender/src/core/BoundingRect';
+import Transformable from 'zrender/src/core/Transformable';
+import { MatrixArray } from 'zrender/src/core/matrix';
+import { NullUndefined } from 'zrender/src/core/types';
 
 const GEO_DEFAULT_PARAMS: {
     [type in GeoResource['type']]: {
@@ -46,12 +52,14 @@ const GEO_DEFAULT_PARAMS: {
     }
 } as const;
 
-export const geo2DDimensions = ['lng', 'lat'];
+export const geo2DDimensions: ['lng', 'lat'] = ['lng', 'lat'];
 
 
-class Geo extends View {
+class Geo
+    extends Transformable // See VIEW_COORD_SYS_TRANS_OVERALL_BACKWARD_COMPATIBILITY
+    implements CoordinateSystemMaster, GeoLikeCoordSys {
 
-    dimensions = geo2DDimensions;
+    dimensions: ['lng', 'lat'] = geo2DDimensions;
 
     type = 'geo';
 
@@ -59,16 +67,20 @@ class Geo extends View {
     readonly map: string;
     readonly resourceType: GeoResource['type'];
 
+    readonly view: View;
+    readonly name: string;
+
     // Only store specified name coord via `addGeoCoord`.
     private _nameCoordMap: zrUtil.HashMap<number[]> = zrUtil.createHashMap<number[], string>();
     private _regionsMap: zrUtil.HashMap<Region>;
-    private _invertLongitute: boolean;
+    private _clip: boolean;
     readonly regions: Region[];
     readonly aspectScale: number;
 
+
     projection: GeoProjection;
     // Injected outside
-    model: GeoModel;
+    model: GeoModel | NullUndefined;
     resize: resizeGeoType;
 
     constructor(
@@ -82,12 +94,12 @@ class Geo extends View {
             aspectScale?: number;
             api: ExtensionAPI;
             ecModel: GlobalModel;
+            clip?: boolean;
         }
     ) {
-        super(name, {api: opt.api, ecModel: opt.ecModel});
+        super();
 
-        this.map = map;
-
+        this.name = name;
         let projection = opt.projection;
         const source = geoSourceManager.load(
             map,
@@ -97,9 +109,19 @@ class Geo extends View {
         const resource = geoSourceManager.getGeoResource(map);
         const resourceType = this.resourceType = resource ? resource.type : null;
         const regions = this.regions = source.regions;
-
         const defaultParams = GEO_DEFAULT_PARAMS[resource.type];
+        this._clip = opt.clip;
 
+        // Not invert longitude if projection exits.
+        const invertLongitute = projection ? false : defaultParams.invertLongitute;
+
+        this.view = new View(
+            invertLongitute,
+            useLegacyViewCoordSysCenterBase(opt.ecModel, opt.api),
+            this
+        );
+
+        this.map = map;
         this._regionsMap = source.regionsMap;
         this.regions = source.regions;
 
@@ -132,45 +154,15 @@ class Geo extends View {
         else {
             boundingRect = source.boundingRect;
         }
-        this.setBoundingRect(boundingRect.x, boundingRect.y, boundingRect.width, boundingRect.height);
-
+        viewCoordSysSetBoundingRect(
+            this.view, boundingRect.x, boundingRect.y, boundingRect.width, boundingRect.height
+        );
 
         // aspectScale and invertLongitute actually is the parameters default raw projection.
         // So we ignore them if projection is given.
 
         // Ignore default aspect scale if projection exits.
         this.aspectScale = projection ? 1 : zrUtil.retrieve2(opt.aspectScale, defaultParams.aspectScale);
-        // Not invert longitude if projection exits.
-        this._invertLongitute = projection ? false : defaultParams.invertLongitute;
-    }
-
-    protected _transformTo(x: number, y: number, width: number, height: number): void {
-        let rect = this.getBoundingRect();
-        const invertLongitute = this._invertLongitute;
-
-        rect = rect.clone();
-
-        if (invertLongitute) {
-            // Longitude is inverted.
-            rect.y = -rect.y - rect.height;
-        }
-
-        const rawTransformable = this._rawTransformable;
-
-        rawTransformable.transform = rect.calculateTransform(
-            new BoundingRect(x, y, width, height)
-        );
-
-        const rawParent = rawTransformable.parent;
-        rawTransformable.parent = null;
-        rawTransformable.decomposeTransform();
-        rawTransformable.parent = rawParent;
-
-        if (invertLongitute) {
-            rawTransformable.scaleY = -rawTransformable.scaleY;
-        }
-
-        this._updateTransform();
     }
 
     getRegion(name: string): Region {
@@ -214,7 +206,7 @@ class Geo extends View {
                 // projection may return null point.
                 data = projection.project(data);
             }
-            return data && this.projectedToPoint(data, noRoam, out);
+            return data && this.view.dataToPoint(data, noRoam, out);
         }
     }
 
@@ -226,18 +218,7 @@ class Geo extends View {
         }
         // FIXME: if no `point`, should return [NaN, NaN], rather than undefined.
         //  null/undefined has special meaning in `convertFromPixel`.
-        return point && this.pointToProjected(point, out);
-    }
-
-    /**
-     * Point to projected data. Same with pointToData when projection is used.
-     */
-    pointToProjected(point: number[], out?: number[]) {
-        return super.pointToData(point, 0, out);
-    }
-
-    projectedToPoint(projected: number[], noRoam?: boolean, out?: number[]) {
-        return super.dataToPoint(projected, noRoam, out);
+        return point && this.view.pointToData(point, out);
     }
 
     convertToPixel(
@@ -253,9 +234,47 @@ class Geo extends View {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.pointToData(pixel) : null;
     }
-};
 
-zrUtil.mixin(Geo, View);
+    containPoint(point: number[]): boolean {
+        return this.view.containPoint(point);
+    }
+
+    getArea(tolerance?: number): BoundingRect {
+        tolerance = tolerance || 0;
+        const rect = viewCoordSysCopyViewRect(null, this.view);
+        rect.x -= tolerance;
+        rect.y -= tolerance;
+        rect.width += 2 * tolerance;
+        rect.height += 2 * tolerance;
+        return rect;
+    }
+
+    shouldClip(): boolean {
+        return this._clip;
+    }
+
+    /**
+     * @implements CoordinateSystem['getBoundingRect']
+     */
+    getBoundingRect(): BoundingRect {
+        return this.view.getBoundingRect();
+    }
+
+    /**
+     * @implements CoordinateSystem['getViewRect']
+     */
+    getViewRect(): BoundingRect {
+        return this.view.getViewRect();
+    }
+
+    /**
+     * @implements CoordinateSystem['getRoamTransform']
+     */
+    getRoamTransform(): MatrixArray {
+        return this.view.getRoamTransform();
+    }
+
+};
 
 function getCoordSys(finder: ParsedModelFinderKnown): Geo {
     const geoModel = finder.geoModel as GeoModel;

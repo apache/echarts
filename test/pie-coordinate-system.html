@@ -36,7 +36,7 @@ under the License.
         <div id="main2"></div>
         <div id="main3"></div>
         <div id="main4"></div>
-        <div id="main5"></div>
+        <div id="main_pie_on_cartesian2d"></div>
         <div id="main7"></div>
 
         <script>
@@ -335,20 +335,14 @@ under the License.
                                 { value: 300, name: 'E' }
                             ]
                         },
-                        {
-                            // currently it needs data to calculate axis extend
-                            data: [150, 230, 224, 218, 135, 147, 260],
-                            type: 'line',
-                            showSymbol: false,
-                            lineStyle: {
-                                width: 0
-                            }
-                        }
                     ]
                 };
 
-                testHelper.create(echarts, 'main5', {
-                    title: ['Pie series on Cartesian2D', 'category axis & value axis (not perfectly supported)'],
+                testHelper.create(echarts, 'main_pie_on_cartesian2d', {
+                    title: [
+                        'Pie series on Cartesian2D',
+                        'category axis & value axis (**pie center should be auto-added into axis extent union**)'
+                    ],
                     option: option
                 })
             });

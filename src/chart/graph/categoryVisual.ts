@@ -18,14 +18,18 @@
 */
 
 import GlobalModel from '../../model/Global';
-import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
+import GraphSeriesModel, { GraphNodeItemOption, SERIES_TYPE_GRAPH } from './GraphSeries';
 import { Dictionary, ColorString } from '../../util/types';
 import { extend, isString } from 'zrender/src/core/util';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
-export default function categoryVisual(ecModel: GlobalModel) {
+
+export const graphCategoryVisualStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_GRAPH, categoryVisual);
+
+function categoryVisual(ecModel: GlobalModel) {
 
     const paletteScope: Dictionary<ColorString> = {};
-    ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
+    ecModel.eachSeriesByType(SERIES_TYPE_GRAPH, function (seriesModel: GraphSeriesModel) {
         const categoriesData = seriesModel.getCategoriesData();
         const data = seriesModel.getData();
 

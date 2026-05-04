@@ -1,7 +1,3 @@
-import SeriesModel from '../../model/Series';
-import GlobalModel from '../../model/Global';
-import LegendModel from './LegendModel';
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -21,7 +17,15 @@ import LegendModel from './LegendModel';
 * under the License.
 */
 
-export default function legendFilter(ecModel: GlobalModel) {
+import SeriesModel from '../../model/Series';
+import GlobalModel from '../../model/Global';
+import LegendModel from './LegendModel';
+import { createSimpleOverallStageHandler2 } from '../../util/model';
+
+
+export const legendFilterStageHandler = createSimpleOverallStageHandler2(legendFilter);
+
+function legendFilter(ecModel: GlobalModel) {
 
     const legendModels = ecModel.findComponents({
         mainType: 'legend'

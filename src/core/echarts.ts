@@ -35,18 +35,18 @@ import {
     isArray,
     noop,
     isString,
-    retrieve2
+    retrieve2,
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import timsort from 'zrender/src/core/timsort';
 import Eventful, { EventCallbackSingleParam } from 'zrender/src/core/Eventful';
 import Element, { ElementEvent } from 'zrender/src/Element';
-import GlobalModel, {QueryConditionKindA, GlobalModelSetOptionOpts} from '../model/Global';
+import GlobalModel, {GlobalModelSetOptionOpts} from '../model/Global';
 import ExtensionAPI from './ExtensionAPI';
 import CoordinateSystemManager from './CoordinateSystem';
 import OptionManager from '../model/OptionManager';
 import backwardCompat from '../preprocessor/backwardCompat';
-import dataStack from '../processor/dataStack';
+import { dataStackStageHandler } from '../processor/dataStack';
 import ComponentModel from '../model/Component';
 import SeriesModel from '../model/Series';
 import ComponentView, {ComponentViewConstructor} from '../view/Component';
@@ -112,6 +112,7 @@ import {
     CoordinateSystemDataLayout,
     NullUndefined,
     CoordinateSystemDataCoord,
+    COMPONENT_MAIN_TYPE_SERIES,
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
@@ -124,7 +125,6 @@ import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 
 import type {EChartsOption} from '../export/option';
 import { findEventDispatcher } from '../util/event';
-import decal from '../visual/decal';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
 import lifecycle, {
@@ -139,6 +139,9 @@ import type geoSourceManager from '../coord/geo/geoSourceManager';
 import {
     registerCustomSeries as registerCustom
 } from '../chart/custom/customSeriesRegister';
+import { resetCachePerECFullUpdate, resetCachePerECPrepare } from '../util/cycleCache';
+import globalDefault from '../model/globalDefault';
+import { decalVisualStageHandler } from '../visual/decal';
 
 declare let global: any;
 
@@ -153,14 +156,19 @@ export const dependencies = {
 const TEST_FRAME_REMAIN_TIME = 1;
 
 const PRIORITY_PROCESSOR_SERIES_FILTER = 800;
-// Some data processors depends on the stack result dimension (to calculate data extent).
-// So data stack stage should be in front of data processing stage.
+// In the current impl, "data stack" will modifies the original "series data extent". Some data
+// processors rely on the stack result dimension to calculate extents. So data stack
+// should be in front of other data processors.
 const PRIORITY_PROCESSOR_DATASTACK = 900;
-// "Data filter" will block the stream, so it should be
-// put at the beginning of data processing.
+// AXIS_STATISTICS should be after SERIES_FILTER, as it may change the statistics result (like min gap).
+// AXIS_STATISTICS should be before filter (dataZoom), as dataZoom require the result in "containShape" calculation.
+const PRIORITY_PROCESSOR_AXIS_STATISTICS = 920;
+// `PRIORITY_PROCESSOR_FILTER` is typically used by `dataZoom` (see `AxisProxy`), which relies
+// on the initialized "axis extent".
 const PRIORITY_PROCESSOR_FILTER = 1000;
 const PRIORITY_PROCESSOR_DEFAULT = 2000;
-const PRIORITY_PROCESSOR_STATISTIC = 5000;
+const PRIORITY_PROCESSOR_STATISTICS = 5000;
+// NOTICE: Data processors above block the stream (especially time-consuming processors like data filters).
 
 const PRIORITY_VISUAL_LAYOUT = 1000;
 const PRIORITY_VISUAL_PROGRESSIVE_LAYOUT = 1100;
@@ -168,7 +176,7 @@ const PRIORITY_VISUAL_GLOBAL = 2000;
 const PRIORITY_VISUAL_CHART = 3000;
 const PRIORITY_VISUAL_COMPONENT = 4000;
 // Visual property in data. Greater than `PRIORITY_VISUAL_COMPONENT` to enable to
-// overwrite the viusal result of component (like `visualMap`)
+// overwrite the visual result of component (like `visualMap`)
 // using data item specific setting (like itemStyle.xxx on data item)
 const PRIORITY_VISUAL_CHART_DATA_CUSTOM = 4500;
 // Greater than `PRIORITY_VISUAL_CHART_DATA_CUSTOM` to enable to layout based on
@@ -180,9 +188,11 @@ const PRIORITY_VISUAL_DECAL = 7000;
 
 export const PRIORITY = {
     PROCESSOR: {
-        FILTER: PRIORITY_PROCESSOR_FILTER,
         SERIES_FILTER: PRIORITY_PROCESSOR_SERIES_FILTER,
-        STATISTIC: PRIORITY_PROCESSOR_STATISTIC
+        AXIS_STATISTICS: PRIORITY_PROCESSOR_AXIS_STATISTICS,
+        FILTER: PRIORITY_PROCESSOR_FILTER,
+        STATISTIC: PRIORITY_PROCESSOR_STATISTICS, // naming - backward compatibility.
+        STATISTICS: PRIORITY_PROCESSOR_STATISTICS,
     },
     VISUAL: {
         LAYOUT: PRIORITY_VISUAL_LAYOUT,
@@ -198,17 +208,81 @@ export const PRIORITY = {
     }
 };
 
-// Main process have three entries: `setOption`, `dispatchAction` and `resize`,
-// where they must not be invoked nestedly, except the only case: invoke
-// dispatchAction with updateMethod "none" in main process.
-// This flag is used to carry out this rule.
-// All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
-const IN_MAIN_PROCESS_KEY = '__flagInMainProcess' as const;
-// Useful for detecting outdated rendering results in scenarios that these issues are involved:
-//  - Use shortcut (such as, updateTransform, or no update) to start a main process.
+/**
+ * @tutorial [EC_CYCLE] (ec updating/rendering cycles):
+ *
+ *  - Common Rules:
+ *    - Nested entry is not allowed. If triggering a new run of EC_CYCLE during a
+ *      unfinished run, the new run will be delayed until the current run finishes
+ *      (if triggered by `dispatchAction`), or throw error (if triggered by other API calls).
+ *    - All user-visible ec events are triggered outside EC_CYCLE.
+ *      (i.e. be triggered after `this[IN_EC_CYCLE_KEY]` becoming `false`).
+ *
+ *  - [EC_FULL_UPDATE_CYCLE]:
+ *    - It designates a run of a series of processing/updating/rendering.
+ *    - It is triggered by:
+ *      - `setOption`
+ *      - `dispatchAction`
+ *        (It is typically internally triggered by user inputs; but can also an explicit API call.)
+ *      - `resize`
+ *      - The next "animation frame" if in `lazyMode: true`.
+ *    - A run of EC_FULL_UPDATE_CYCLE comprises:
+ *      - EC_PREPARE (may be absent)
+ *      - EC_FULL_UPDATE:
+ *        - CoordinateSystem['create']
+ *        - Data processing (may be absent) (see `registerProcessor`)
+ *        - CoordinateSystem['update'] (may be absent)
+ *        - Visual encoding (may be absent) (see `registerVisual`)
+ *        - Layout (may be absent) (see `registerLayout`)
+ *        - Rendering (`ComponentView` or `SeriesView`)
+ *
+ *  - [EC_PARTIAL_UPDATE_CYCLE]s:
+ *      - They are shortcuts for performance.
+ *      - They are triggered by:
+ *        - `dispatchAction`
+ *      - These steps are typically omitted:
+ *        - No EC_PREPARE
+ *        - No CoordinateSystem['create'] and CoordinateSystem['update']
+ *      - They require careful implementation, otherwise inconsistency may be introduced.
+ *
+ *  - [EC_PROGRESSIVE_CYCLE]:
+ *    - It also carries out a series of processing/updating/rendering.
+ *    - It is performed in each subsequent "animation frame" until finished.
+ *    - It can be triggered by EC_FULL_UPDATE_CYCLE, EC_PARTIAL_UPDATE_CYCLE or EC_APPEND_DATA_CYCLE.
+ *    - A run of EC_PROGRESSIVE_CYCLE comprises:
+ *      - Data processing (may be absent) (see `registerProcessor`)
+ *      - Visual encoding (may be absent) (see `registerVisual`)
+ *      - Layout (may be absent) (see `registerLayout`)
+ *      - Rendering (`ComponentView` or `SeriesView`)
+ *    - PENDING: currently all data processing tasks (via `registerProcessor`) run in "block" mode.
+ *      (see `performDataProcessorTasks`).
+ *
+ *  - [EC_APPEND_DATA_CYCLE]:
+ *    - See `appendData`. It is only supported for some special cases.
+ *
+ *  - [SERIES_SPECIFIC_CYCLE]s:
+ *    - Series may have specific update/render cycles. For example, graph force layout performs
+ *      layout and rendering in each "animation frame".
+ *
+ *  - Model updating:
+ *    - Model can only be modified at the beginning of ec cycles, including only:
+ *      - EC_PREPARE (see method `prepare()`) in `setOption` call.
+ *      - EC action handlers in `dispatchAction` call.
+ *      - `appendData` (a special case, where only data can be modified).
+ *
+ *  - The lifetime of CoordinateSystem/Axis/Scale instances:
+ *    - They are only re-created per run of EC_FULL_UPDATE_CYCLE.
+ *
+ *  - Global caches: see `cycleCache.ts`
+ */
+
+// See comments in EC_CYCLE.
+const IN_EC_CYCLE_KEY = '__flagInMainProcess' as const;
+// Useful for detecting outdated rendering results for the following scenarios:
+//  - In EC_PARTIAL_UPDATE_CYCLE, some rendering may be skipped.
 //  - Asynchronously update rendered view (e.g., graph force layout).
 //  - Multiple ChartView/ComponentView render to one group cooperatively.
-const MAIN_PROCESS_VERSION_KEY = '__mainProcessVersion' as const;
+const EC_UPDATE_CYCLE_VERSION_KEY = '__mainProcessVersion' as const;
 const PENDING_UPDATE = '__pendingUpdate' as const;
 const STATUS_NEEDS_UPDATE_KEY = '__needsUpdateStatus' as const;
 const ACTION_REG = /^[a-zA-Z0-9_]+$/;
@@ -280,20 +354,33 @@ messageCenterProto.off = createRegisterEventWithLowercaseMessageCenter('off');
 // ---------------------------------------
 // Internal method names for class ECharts
 // ---------------------------------------
+
+// This is [EC_PREPARE].
 let prepare: (ecIns: ECharts) => void;
 let prepareView: (ecIns: ECharts, isComponent: boolean) => void;
 let updateDirectly: (
     ecIns: ECharts, method: string, payload: Payload, mainType: ComponentMainType, subType?: ComponentSubType
 ) => void;
+
 type UpdateMethod = (this: ECharts, payload?: Payload, renderParams?: UpdateLifecycleParams) => void;
 let updateMethods: {
+    // Call EC_PREPARE and EC_FULL_UPDATE
     prepareAndUpdate: UpdateMethod,
+
+    // This is [EC_FULL_UPDATE]:
     update: UpdateMethod,
-    updateTransform: UpdateMethod,
-    updateView: UpdateMethod,
-    updateVisual: UpdateMethod,
-    updateLayout: UpdateMethod
+
+    // The following are [EC_PARTIAL_UPDATE]:
+    updateTransform: UpdateMethod, // [EC_PARTIAL_UPDATE_TRANSFORM]
+    updateView: UpdateMethod, // [EC_PARTIAL_UPDATE_VIEW]
+    updateVisual: UpdateMethod, // [EC_PARTIAL_UPDATE_VISUAL]
+    updateLayout: UpdateMethod, // [EC_PARTIAL_UPDATE_LAYOUT]
+    // [EC_PARTIAL_UPDATE_DIRECTLY]: Only call a specified method on view. See also `ActionInfo['update']`.
+
+    // [EC_PARTIAL_UPDATE_NONE]: no update method is called
 };
+export type ECUpdateMethodName = (keyof typeof updateMethods) | 'none';
+
 let doConvertPixel: {
     (
         ecIns: ECharts,
@@ -340,7 +427,7 @@ let enableConnect: (ecIns: ECharts) => void;
 
 let markStatusToUpdate: (ecIns: ECharts) => void;
 let applyChangedStates: (ecIns: ECharts) => void;
-let updateMainProcessVersion: (ecIns: ECharts) => void;
+let updateECUpdateCycleVersion: (ecIns: ECharts) => void;
 
 type RenderedEventParam = { elapsedTime: number };
 type ECEventDefinition = {
@@ -417,13 +504,15 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     private _loadingFX: LoadingEffect;
 
+    // Using hoverLayer due to over hoverLayerThreshold.
+    private _usingTHL: boolean;
 
     private [PENDING_UPDATE]: {
         silent: boolean
         updateParams: UpdateLifecycleParams
     };
-    private [IN_MAIN_PROCESS_KEY]: boolean;
-    private [MAIN_PROCESS_VERSION_KEY]: number;
+    private [IN_EC_CYCLE_KEY]: boolean;
+    private [EC_UPDATE_CYCLE_VERSION_KEY]: number; // Never be null/undefined
     private [CONNECT_STATUS_KEY]: ConnectStatus;
     private [STATUS_NEEDS_UPDATE_KEY]: boolean;
 
@@ -446,7 +535,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         let defaultCoarsePointer: 'auto' | boolean = 'auto';
         let defaultUseDirtyRect = false;
 
-        this[MAIN_PROCESS_VERSION_KEY] = 1;
+        this[EC_UPDATE_CYCLE_VERSION_KEY] = 1;
 
         if (__DEV__) {
             const root = (
@@ -531,24 +620,25 @@ class ECharts extends Eventful<ECEventDefinition> {
         if (this._disposed) {
             return;
         }
+        const scheduler = this._scheduler;
+        const ecModel = this._model;
+        const api = this._api;
 
         applyChangedStates(this);
-
-        const scheduler = this._scheduler;
 
         // Lazy update
         if (this[PENDING_UPDATE]) {
             const silent = (this[PENDING_UPDATE] as any).silent;
 
-            this[IN_MAIN_PROCESS_KEY] = true;
-            updateMainProcessVersion(this);
+            this[IN_EC_CYCLE_KEY] = true;
+            updateECUpdateCycleVersion(this);
 
             try {
                 prepare(this);
                 updateMethods.update.call(this, null, this[PENDING_UPDATE].updateParams);
             }
             catch (e) {
-                this[IN_MAIN_PROCESS_KEY] = false;
+                this[IN_EC_CYCLE_KEY] = false;
                 this[PENDING_UPDATE] = null;
                 throw e;
             }
@@ -561,7 +651,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             // will render the final state of the elements before the real animation started.
             this._zr.flush();
 
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_CYCLE_KEY] = false;
             this[PENDING_UPDATE] = null;
 
             flushPendingActions.call(this, silent);
@@ -571,11 +661,15 @@ class ECharts extends Eventful<ECEventDefinition> {
         else if (scheduler.unfinished) {
             // Stream progress.
             let remainTime = TEST_FRAME_REMAIN_TIME;
-            const ecModel = this._model;
-            const api = this._api;
-            scheduler.unfinished = false;
+
+            // PENDING: guard the following by `this[IN_EC_CYCLE_KEY] = true`?
+
             do {
-                const startTime = +new Date();
+                // Reset to false per iteration. Otherwise the last zr.flush
+                // can not be triggered and 'finish' event can not be triggered.
+                scheduler.unfinished = false;
+
+                const startTime = platformApi.getTime();
 
                 scheduler.performSeriesTasks(ecModel);
 
@@ -595,7 +689,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
                 renderSeries(this, this._model, api, 'remain', {});
 
-                remainTime -= (+new Date() - startTime);
+                remainTime -= (platformApi.getTime() - startTime);
             }
             while (remainTime > 0 && scheduler.unfinished);
 
@@ -644,7 +738,7 @@ class ECharts extends Eventful<ECEventDefinition> {
     setOption<Opt extends ECBasicOption>(option: Opt, opts?: SetOptionOpts): void;
     /* eslint-disable-next-line */
     setOption<Opt extends ECBasicOption>(option: Opt, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
-        if (this[IN_MAIN_PROCESS_KEY]) {
+        if (this[IN_EC_CYCLE_KEY]) {
             if (__DEV__) {
                 error('`setOption` should not be called during main process.');
             }
@@ -667,8 +761,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             notMerge = notMerge.notMerge;
         }
 
-        this[IN_MAIN_PROCESS_KEY] = true;
-        updateMainProcessVersion(this);
+        this[IN_EC_CYCLE_KEY] = true;
+        updateECUpdateCycleVersion(this);
 
         if (!this._model || notMerge) {
             const optionManager = new OptionManager(this._api);
@@ -691,7 +785,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 silent: silent,
                 updateParams: updateParams
             };
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_CYCLE_KEY] = false;
 
             // `setOption(option, {lazyMode: true})` may be called when zrender has been slept.
             // It should wake it up to make sure zrender start to render at the next frame.
@@ -704,7 +798,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
             catch (e) {
                 this[PENDING_UPDATE] = null;
-                this[IN_MAIN_PROCESS_KEY] = false;
+                this[IN_EC_CYCLE_KEY] = false;
 
                 throw e;
             }
@@ -717,7 +811,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
 
             this[PENDING_UPDATE] = null;
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_CYCLE_KEY] = false;
 
             flushPendingActions.call(this, silent);
             triggerUpdatedEvent.call(this, silent);
@@ -730,7 +824,7 @@ class ECharts extends Eventful<ECEventDefinition> {
      * @param opts Optional settings
      */
     setTheme(theme: string | ThemeOption, opts?: SetThemeOpts): void {
-        if (this[IN_MAIN_PROCESS_KEY]) {
+        if (this[IN_EC_CYCLE_KEY]) {
             if (__DEV__) {
                 error('`setTheme` should not be called during main process.');
             }
@@ -758,8 +852,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             this[PENDING_UPDATE] = null;
         }
 
-        this[IN_MAIN_PROCESS_KEY] = true;
-        updateMainProcessVersion(this);
+        this[IN_EC_CYCLE_KEY] = true;
+        updateECUpdateCycleVersion(this);
 
         try {
             this._updateTheme(theme);
@@ -769,11 +863,11 @@ class ECharts extends Eventful<ECEventDefinition> {
             updateMethods.update.call(this, {type: 'setTheme'}, updateParams);
         }
         catch (e) {
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_CYCLE_KEY] = false;
             throw e;
         }
 
-        this[IN_MAIN_PROCESS_KEY] = false;
+        this[IN_EC_CYCLE_KEY] = false;
 
         flushPendingActions.call(this, silent);
         triggerUpdatedEvent.call(this, silent);
@@ -1352,7 +1446,7 @@ class ECharts extends Eventful<ECEventDefinition> {
      * Resize the chart
      */
     resize(opts?: ResizeOpts): void {
-        if (this[IN_MAIN_PROCESS_KEY]) {
+        if (this[IN_EC_CYCLE_KEY]) {
             if (__DEV__) {
                 error('`resize` should not be called during main process.');
             }
@@ -1390,8 +1484,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             this[PENDING_UPDATE] = null;
         }
 
-        this[IN_MAIN_PROCESS_KEY] = true;
-        updateMainProcessVersion(this);
+        this[IN_EC_CYCLE_KEY] = true;
+        updateECUpdateCycleVersion(this);
 
         try {
             needPrepare && prepare(this);
@@ -1404,11 +1498,11 @@ class ECharts extends Eventful<ECEventDefinition> {
             });
         }
         catch (e) {
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_CYCLE_KEY] = false;
             throw e;
         }
 
-        this[IN_MAIN_PROCESS_KEY] = false;
+        this[IN_EC_CYCLE_KEY] = false;
 
         flushPendingActions.call(this, silent);
 
@@ -1502,7 +1596,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         }
 
         // May dispatchAction in rendering procedure
-        if (this[IN_MAIN_PROCESS_KEY]) {
+        if (this[IN_EC_CYCLE_KEY]) {
             this._pendingActions.push(payload);
             return;
         }
@@ -1555,14 +1649,13 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         seriesModel.appendData(params);
 
-        // Note: `appendData` does not support that update extent of coordinate
-        // system, util some scenario require that. In the expected usage of
-        // `appendData`, the initial extent of coordinate system should better
-        // be fixed by axis `min`/`max` setting or initial data, otherwise if
-        // the extent changed while `appendData`, the location of the painted
-        // graphic elements have to be changed, which make the usage of
-        // `appendData` meaningless.
-
+        // NOTICE:
+        // `appendData` does not support to update axis scale extent of coordinate
+        // systems. In the expected usage of `appendData`, the initial extent of
+        // coordinate system should be explicitly specified (by `xxxAxis.data` for
+        // 'category' axis or by `xxxAxis.min/max` for other axes). Otherwise, if
+        // the extent keep changing while `appendData`, the location of the painted
+        // graphic elements have to be changed frequently.
         this._scheduler.unfinished = true;
 
         this.getZr().wakeUp();
@@ -1574,9 +1667,11 @@ class ECharts extends Eventful<ECEventDefinition> {
     private static internalField = (function () {
 
         prepare = function (ecIns: ECharts): void {
+            resetCachePerECPrepare(ecIns._model);
+
             const scheduler = ecIns._scheduler;
 
-            scheduler.restorePipelines(ecIns._model);
+            scheduler.restorePipelines(ecIns._zr, ecIns._model);
             scheduler.prepareStageTasks();
 
             prepareView(ecIns, true);
@@ -1684,7 +1779,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             ecModel.setUpdatePayload(payload);
 
-            // broadcast
+            // broadcast (e.g., for ':updateAxisPointer')
             if (!mainType) {
                 // FIXME
                 // Chart will not be update directly here, except set dirty.
@@ -1693,13 +1788,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 return;
             }
 
-            const query: QueryConditionKindA['query'] = {};
-            query[mainType + 'Id'] = payload[mainType + 'Id'] as any;
-            query[mainType + 'Index'] = payload[mainType + 'Index'] as any;
-            query[mainType + 'Name'] = payload[mainType + 'Name'] as any;
-
-            const condition = {mainType: mainType, query: query} as QueryConditionKindA;
-            subType && (condition.subType = subType); // subType may be '' by parseClassType;
+            const condition = modelUtil.makeQueryConditionKindA(payload, mainType, subType);
 
             const excludeSeriesId = payload.excludeSeriesId;
             let excludeSeriesIdMap: HashMap<true, string>;
@@ -1799,6 +1888,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     return;
                 }
 
+                resetCachePerECFullUpdate(ecModel);
                 ecModel.setUpdatePayload(payload);
 
                 scheduler.restoreData(ecModel, payload);
@@ -1812,6 +1902,8 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // Create new coordinate system each update
                 // In LineView may save the old coordinate system and use it to get the original point.
                 coordSysMgr.create(ecModel, api);
+
+                lifecycle.trigger('coordsys:aftercreate', ecModel, api);
 
                 scheduler.performDataProcessorTasks(ecModel, payload);
 
@@ -1844,9 +1936,13 @@ class ECharts extends Eventful<ECEventDefinition> {
                 lifecycle.trigger('afterupdate', ecModel, api);
             },
 
+            /**
+             * PENDING: See INCONSISTENCY_OF_BRUSH_SELECTED_EVENT_IN_UPDATE_TRANSFORM
+             */
             updateTransform(this: ECharts, payload: Payload): void {
-                const ecModel = this._model;
-                const api = this._api;
+                const ecIns = this;
+                const ecModel = ecIns._model;
+                const api = ecIns._api;
 
                 // update before setOption
                 if (!ecModel) {
@@ -1858,12 +1954,11 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // ChartView.markUpdateMethod(payload, 'updateTransform');
 
                 const componentDirtyList = [];
-                ecModel.eachComponent((componentType, componentModel) => {
-                    if (componentType === 'series') {
+                ecModel.eachComponent(function (mainType, componentModel) {
+                    if (mainType === COMPONENT_MAIN_TYPE_SERIES) {
                         return;
                     }
-
-                    const componentView = this.getViewOfComponentModel(componentModel);
+                    const componentView = ecIns.getViewOfComponentModel(componentModel);
                     if (componentView && componentView.__alive) {
                         if (componentView.updateTransform) {
                             const result = componentView.updateTransform(componentModel, ecModel, api, payload);
@@ -1876,9 +1971,15 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
 
                 const seriesDirtyMap = createHashMap();
-                ecModel.eachSeries((seriesModel) => {
-                    const chartView = this._chartsMap[seriesModel.__viewId];
-                    if (chartView.updateTransform) {
+                ecModel.eachSeries(function (seriesModel) {
+                    const chartView = ecIns._chartsMap[seriesModel.__viewId];
+                    const pipelineContext = seriesModel.pipelineContext;
+                    if (chartView.updateTransform
+                        // Use the progressive pass if enabled, where each frame renders only a small amount.
+                        // And `ISymbolDraw['updateLayout']` and `ILineDraw['updateLayout']` do not support
+                        // progressive case.
+                        && !pipelineContext.progressiveRender
+                    ) {
                         const result = chartView.updateTransform(seriesModel, ecModel, api, payload);
                         result && result.update && seriesDirtyMap.set(seriesModel.uid, 1);
                     }
@@ -1887,16 +1988,21 @@ class ECharts extends Eventful<ECEventDefinition> {
                     }
                 });
 
-                clearColorPalette(ecModel);
+                // Palette should not be cleared, otherwise the variation of dirty series
+                // can cause color change unexpectedly.
+                // clearColorPalette(ecModel);
+
+                // NOTICE: series data tasks must NOT be dirty, otherwise series data will be recreated.
+
                 // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
                 // this._scheduler.performVisualTasks(ecModel, payload, 'layout', true);
-                this._scheduler.performVisualTasks(
+                ecIns._scheduler.performVisualTasks(
                     ecModel, payload, {setDirty: true, dirtyMap: seriesDirtyMap}
                 );
 
                 // Currently, not call render of components. Geo render cost a lot.
                 // renderComponents(ecIns, ecModel, api, payload, componentDirtyList);
-                renderSeries(this, ecModel, api, payload, {}, seriesDirtyMap);
+                renderSeries(ecIns, ecModel, api, payload, {}, seriesDirtyMap);
 
                 lifecycle.trigger('afterupdate', ecModel, api);
             },
@@ -1924,8 +2030,6 @@ class ECharts extends Eventful<ECEventDefinition> {
             },
 
             updateVisual(this: ECharts, payload: Payload): void {
-                // updateMethods.update.call(this, payload);
-
                 const ecModel = this._model;
 
                 // update before setOption
@@ -1948,6 +2052,11 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // Keep pipe to the exist pipeline because it depends on the render task of the full pipeline.
                 this._scheduler.performVisualTasks(ecModel, payload, {visualType: 'visual', setDirty: true});
 
+                // FIXME: `visualType` may be removed, since it conflicts with `priority` of task. `updateVisual`
+                // can be altered to start the pipeline with a certain priority, rather than only execute tasks
+                // with `visualType: 'visual'`, otherwise, PRIORITY_VISUAL_POST_CHART_LAYOUT is omitted in this
+                // case. Currently, only "brush" uses `updateVisual`, and it works by coincidence.
+
                 ecModel.eachComponent((componentType, componentModel) => {  // TODO componentType may be series.
                     if (componentType !== 'series') {
                         const componentView = this.getViewOfComponentModel(componentModel);
@@ -1964,6 +2073,9 @@ class ECharts extends Eventful<ECEventDefinition> {
                 lifecycle.trigger('afterupdate', ecModel, this._api);
             },
 
+            /**
+             * @deprecated
+             */
             updateLayout(this: ECharts, payload: Payload): void {
                 updateMethods.update.call(this, payload);
             }
@@ -2042,8 +2154,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             const updateMethod = cptTypeTmp.pop();
             const cptType = cptTypeTmp[0] != null && parseClassType(cptTypeTmp[0]);
 
-            this[IN_MAIN_PROCESS_KEY] = true;
-            updateMainProcessVersion(this);
+            this[IN_EC_CYCLE_KEY] = true;
+            updateECUpdateCycleVersion(this);
 
             let payloads: Payload[] = [payload];
             let batched = false;
@@ -2114,7 +2226,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     }
                 }
                 catch (e) {
-                    this[IN_MAIN_PROCESS_KEY] = false;
+                    this[IN_EC_CYCLE_KEY] = false;
                     throw e;
                 }
             }
@@ -2131,7 +2243,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 eventObj = eventObjBatch[0] as ECActionEvent;
             }
 
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_CYCLE_KEY] = false;
 
             if (!silent) {
                 let refinedEvent: ECActionEvent;
@@ -2186,10 +2298,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             zr.on('rendered', function (params: RenderedEventParam) {
 
                 ecIns.trigger('rendered', params);
-
                 // The `finished` event should not be triggered repeatedly,
                 // so it should only be triggered when rendering indeed happens
-                // in zrender. (Consider the case that dipatchAction is keep
+                // in zrender. (Consider the case that dispatchAction is keep
                 // triggering when mouse move).
                 if (
                     // Although zr is dirty if initial animation is not finished
@@ -2199,8 +2310,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                     && !ecIns[PENDING_UPDATE]
                     && !ecIns._scheduler.unfinished
                     && !ecIns._pendingActions.length
+                    // No need to check EC_OVERALL_ANIMATION, since `zr.animation.isFinished()`
+                    // has cover that.
                 ) {
                     ecIns.trigger('finished');
+                }
+                else {
+                    // Make sure this method can be entered again in next frames.
+                    zr.refresh();
                 }
             });
         };
@@ -2426,8 +2543,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             ecIns.getZr().wakeUp();
         };
 
-        updateMainProcessVersion = function (ecIns: ECharts): void {
-            ecIns[MAIN_PROCESS_VERSION_KEY] = (ecIns[MAIN_PROCESS_VERSION_KEY] + 1) % 1000;
+        updateECUpdateCycleVersion = function (ecIns: ECharts): void {
+            ecIns[EC_UPDATE_CYCLE_VERSION_KEY] = (ecIns[EC_UPDATE_CYCLE_VERSION_KEY] + 1) % 1e6;
         };
 
         applyChangedStates = function (ecIns: ECharts): void {
@@ -2473,6 +2590,11 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         function updateHoverLayerStatus(ecIns: ECharts, ecModel: GlobalModel): void {
             const zr = ecIns._zr;
+
+            if (zr.painter.type !== 'canvas') {
+                return;
+            }
+
             const storage = zr.storage;
             let elCount = 0;
 
@@ -2482,7 +2604,11 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
             });
 
-            if (elCount > ecModel.get('hoverLayerThreshold') && !env.node && !env.worker) {
+            const shouldUseHoverLayer = elCount > retrieve2(
+                ecModel.get('hoverLayerThreshold'), globalDefault.hoverLayerThreshold
+            ) && !env.node && !env.worker;
+
+            if (ecIns._usingTHL || shouldUseHoverLayer) {
                 ecModel.eachSeries(function (seriesModel) {
                     if (seriesModel.preventUsingHoverLayer) {
                         return;
@@ -2490,12 +2616,18 @@ class ECharts extends Eventful<ECEventDefinition> {
                     const chartView = ecIns._chartsMap[seriesModel.__viewId];
                     if (chartView.__alive) {
                         chartView.eachRendered((el: ECElement) => {
-                            if (el.states.emphasis) {
-                                el.states.emphasis.hoverLayer = true;
+                            // NOTICE: Do not call any method that can set REDRAW_BIT,
+                            // otherwise progressive rendering is broken.
+                            const emphasis = el.states.emphasis;
+                            if (emphasis && emphasis.hoverLayer !== graphic.HOVER_LAYER_FOR_INCREMENTAL) {
+                                emphasis.hoverLayer = shouldUseHoverLayer
+                                    ? graphic.HOVER_LAYER_FROM_THRESHOLD
+                                    : graphic.HOVER_LAYER_NO;
                             }
                         });
                     }
                 });
+                ecIns._usingTHL = shouldUseHoverLayer;
             }
         };
 
@@ -2505,6 +2637,9 @@ class ECharts extends Eventful<ECEventDefinition> {
         function updateBlend(seriesModel: SeriesModel, chartView: ChartView): void {
             const blendMode = seriesModel.get('blendMode') || null;
             chartView.eachRendered((el: Displayable) => {
+                // NOTICE: Do not call any method that can set REDRAW_BIT,
+                // otherwise progressive rendering is broken.
+
                 // FIXME marker and other components
                 if (!el.isGroup) {
                     // DON'T mark the element dirty. In case element is incremental and don't want to rerender.
@@ -2658,8 +2793,11 @@ class ECharts extends Eventful<ECEventDefinition> {
                 getViewOfSeriesModel(seriesModel: SeriesModel): ChartView {
                     return ecIns.getViewOfSeriesModel(seriesModel);
                 }
-                getMainProcessVersion(): number {
-                    return ecIns[MAIN_PROCESS_VERSION_KEY];
+                getECUpdateCycleVersion(): number {
+                    return ecIns[EC_UPDATE_CYCLE_VERSION_KEY];
+                }
+                usingTHL(): boolean {
+                    return ecIns._usingTHL;
                 }
             })(ecIns);
         };
@@ -2922,6 +3060,9 @@ export function registerPreprocessor(preprocessorFunc: OptionPreprocessor): void
     }
 }
 
+/**
+ * NOTICE: Alway run in block way (no progessive is allowed).
+ */
 export function registerProcessor(
     priority: number | StageHandler | StageHandlerOverallReset,
     processor?: StageHandler | StageHandlerOverallReset
@@ -3083,7 +3224,7 @@ function registerLayout(
     priority: number | StageHandler | StageHandlerOverallReset,
     layoutTask?: StageHandler | StageHandlerOverallReset
 ): void {
-    normalizeRegister(visualFuncs, priority, layoutTask, PRIORITY_VISUAL_LAYOUT, 'layout');
+    normalizeRegister(visualFuncs, priority, layoutTask, PRIORITY_VISUAL_LAYOUT, 'layout', true);
 }
 
 function registerVisual(priority: number, layoutTask: StageHandler | StageHandlerOverallReset): void;
@@ -3092,7 +3233,7 @@ function registerVisual(
     priority: number | StageHandler | StageHandlerOverallReset,
     visualTask?: StageHandler | StageHandlerOverallReset
 ): void {
-    normalizeRegister(visualFuncs, priority, visualTask, PRIORITY_VISUAL_CHART, 'visual');
+    normalizeRegister(visualFuncs, priority, visualTask, PRIORITY_VISUAL_CHART, 'visual', true);
 }
 
 export {registerLayout, registerVisual};
@@ -3104,7 +3245,8 @@ function normalizeRegister(
     priority: number | StageHandler | StageHandlerOverallReset,
     fn: StageHandler | StageHandlerOverallReset,
     defaultPriority: number,
-    visualType?: StageHandlerInternal['visualType']
+    visualType?: StageHandlerInternal['visualType'],
+    checkBlock?: boolean
 ): void {
     if (isFunction(priority) || isObject(priority)) {
         fn = priority as (StageHandler | StageHandlerOverallReset);
@@ -3132,6 +3274,16 @@ function normalizeRegister(
     stageHandler.__prio = priority;
     stageHandler.__raw = fn;
     targetList.push(stageHandler);
+
+    if (__DEV__) {
+        if (checkBlock) {
+            assert(
+                !stageHandler.dirtyOnOverallProgress,
+                `dirtyOnOverallProgress is not allowed in ${visualType} stage;`
+                + ' otherwise progressive rendering is disabled on all series.'
+            );
+        }
+    }
 }
 
 export function registerLoading(
@@ -3188,7 +3340,7 @@ export function getMap(mapName: string) {
 export const registerTransform = registerExternalTransform;
 
 /**
- * Globa dispatchAction to a specified chart instance.
+ * Global dispatchAction to a specified chart instance.
  */
 // export function dispatchAction(payload: { chartId: string } & Payload, opt?: Parameters<ECharts['dispatchAction']>[1]) {
 //     if (!payload || !payload.chartId) {
@@ -3211,10 +3363,10 @@ registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataColorPaletteTask);
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesSymbolTask);
 registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataSymbolTask);
 
-registerVisual(PRIORITY_VISUAL_DECAL, decal);
+registerVisual(PRIORITY_VISUAL_DECAL, decalVisualStageHandler);
 
 registerPreprocessor(backwardCompat);
-registerProcessor(PRIORITY_PROCESSOR_DATASTACK, dataStack);
+registerProcessor(PRIORITY_PROCESSOR_DATASTACK, dataStackStageHandler);
 registerLoading('default', loadingDefault);
 
 // Default actions

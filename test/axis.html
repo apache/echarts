@@ -21,26 +21,24 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-            }
         </style>
-        <div id="main"></div>
-        <script>
 
+        <div id="main0"></div>
+
+
+        <script>
             require(['echarts'], function (echarts) {
                 var graphic = echarts.graphic;
-
-                var chart = echarts.init(document.getElementById('main'), null, {
-
-                });
 
                 var xAxisData = [];
                 var data1 = [];
@@ -91,7 +89,7 @@ under the License.
                     }
                 };
 
-                chart.setOption({
+                var option = {
                     legend: {
                         data: ['line', 'line2', 'line3']
                     },
@@ -152,9 +150,22 @@ under the License.
                         },
                         smooth: true
                     }]
+                };
+
+                var myChart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Typical axis',
+                    ],
+                    option: option,
+                    height: 600,
+                    inputsStyle: 'compact',
                 });
             });
-
         </script>
+
+
+
+
+
     </body>
 </html>

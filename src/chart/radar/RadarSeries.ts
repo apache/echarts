@@ -70,9 +70,11 @@ export interface RadarSeriesOption
     data?: (RadarSeriesDataItemOption | RadarSeriesDataValue)[]
 }
 
+export const SERIES_TYPE_RADAR = 'radar';
+
 class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
 
-    static readonly type = 'series.radar';
+    static readonly type = 'series.' + SERIES_TYPE_RADAR;
     readonly type = RadarSeriesModel.type;
 
     static dependencies = ['radar'];

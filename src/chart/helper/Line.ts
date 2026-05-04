@@ -35,11 +35,12 @@ import {
     BlurScope
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
-import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
+import type { LineDrawSeriesScope } from './LineDraw';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import Model from '../../model/Model';
 import tokens from '../../visual/tokens';
+import { LineDrawModelOption } from './baseDraw';
 
 const SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
@@ -303,7 +304,9 @@ class Line extends graphic.Group {
             defaultText: (rawVal == null
                 ? lineData.getName(idx)
                 : isFinite(rawVal)
-                ? round(rawVal)
+                // PENDING: the `rawVal` is not supposed to be rounded. But this rounding was introduced
+                // in the early stages, so changing it would likely be breaking.
+                ? round(rawVal, 10)
                 : rawVal) + ''
         });
         const label = this.getTextContent() as InnerLineLabel;
@@ -342,6 +345,7 @@ class Line extends graphic.Group {
     }
 
     updateLayout(lineData: SeriesData, idx: number) {
+        this.childOfName('line').stopAnimation();
         this.setLinePoints(lineData.getItemLayout(idx));
     }
 

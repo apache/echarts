@@ -23,6 +23,7 @@ import SeriesModel from '../model/Series';
 import { SeriesOption, SeriesStackOptionMixin } from '../util/types';
 import SeriesData, { DataCalculationInfo } from '../data/SeriesData';
 import { addSafe } from '../util/number';
+import { createSimpleOverallStageHandler2 } from '../util/model';
 
 type StackInfo = Pick<
     DataCalculationInfo<SeriesOption & SeriesStackOptionMixin>,
@@ -36,12 +37,14 @@ type StackInfo = Pick<
     seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>
 };
 
+export const dataStackStageHandler = createSimpleOverallStageHandler2(dataStack);
+
 // (1) [Caution]: the logic is correct based on the premises:
 //     data processing stage is blocked in stream.
 //     See <module:echarts/stream/Scheduler#performDataProcessorTasks>
 // (2) Only register once when import repeatedly.
 //     Should be executed after series is filtered and before stack calculation.
-export default function dataStack(ecModel: GlobalModel) {
+function dataStack(ecModel: GlobalModel) {
     const stackInfoMap = createHashMap<StackInfo[]>();
     ecModel.eachSeries(function (seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>) {
         const stack = seriesModel.get('stack');

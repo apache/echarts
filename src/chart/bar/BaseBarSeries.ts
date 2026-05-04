@@ -33,6 +33,9 @@ import SeriesData from '../../data/SeriesData';
 import {dimPermutations} from '../../component/marker/MarkAreaView';
 import { each } from 'zrender/src/core/util';
 import type Axis2D from '../../coord/cartesian/Axis2D';
+import type Model from '../../model/Model';
+import { CategoryAxisBaseOption } from '../../coord/axisCommonTypes';
+import type Axis from '../../coord/Axis';
 
 
 export interface BaseBarSeriesOption<StateOption, ExtraStateOption extends StatesMixinBase = DefaultStatesMixin>
@@ -106,7 +109,8 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
                     // If axis type is category, use tick coords instead
                     if (axis.type === 'category' && dims != null) {
                         const tickCoords = axis.getTicksCoords();
-                        const alignTicksWithLabel = axis.getTickModel().get('alignWithLabel');
+                        const alignTicksWithLabel = (axis.getTickModel() as Model<CategoryAxisBaseOption['axisTick']>)
+                            .get('alignWithLabel');
 
                         let targetTickId = clampData[idx];
                         // The index of rightmost tick of markArea is 1 larger than x1/y1 index
@@ -184,6 +188,13 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
             return pt;
         }
         return [NaN, NaN];
+    }
+
+    /**
+     * @implements
+     */
+    __requireStartValue(axis: Axis): boolean {
+        return this.getBaseAxis() !== axis;
     }
 
     static defaultOption: BaseBarSeriesOption<unknown, unknown> = {

@@ -31,6 +31,7 @@ import { isIntervalOrLogScale } from '../../scale/helper';
 import type Cartesian2D from './Cartesian2D';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { NullUndefined } from 'zrender/src/core/types';
+import type Axis2D from './Axis2D';
 
 interface CartesianAxisLayout {
     position: AxisBuilderCfg['position'];
@@ -201,4 +202,10 @@ export function updateCartesianAxisViewCommonPartBuilder(
     }
 
     axisBuilder.updateCfg(newRaw);
+}
+
+export type CartesianAxisHashKey = string;
+
+export function getCartesianAxisHashKey(axis: Axis2D): CartesianAxisHashKey {
+    return axis.dim + '_' + axis.index;
 }

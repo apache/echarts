@@ -141,13 +141,16 @@ export interface PieSeriesOption extends
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | PieDataItemOption)[]
 }
 
+export const SERIES_TYPE_PIE = 'pie';
+
 const innerData = modelUtil.makeInner<{
     seats?: number[]
 }, SeriesData>();
 
 class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
-    static type = 'series.pie' as const;
+    static readonly type = 'series.' + SERIES_TYPE_PIE;
+    readonly type = PieSeriesModel.type;
 
     /**
      * @overwrite

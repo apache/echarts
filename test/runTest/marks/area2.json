@@ -1,5 +1,13 @@
 [
   {
+    "link": "",
+    "comment": "Introduced by dataZoom label show fixing.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1774724338129
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/21059",
     "comment": "Due to the axis name avoiding overlapping by default.",
     "type": "New Feature",

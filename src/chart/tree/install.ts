@@ -21,14 +21,14 @@ import { EChartsExtensionInstallRegisters } from '../../extension';
 import TreeView from './TreeView';
 import TreeSeriesModel from './TreeSeries';
 import treeLayout from './treeLayout';
-import treeVisual from './treeVisual';
 import {installTreeAction} from './treeAction';
+import { treeVisualStageHandler } from './treeVisual';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(TreeView);
     registers.registerSeriesModel(TreeSeriesModel);
     registers.registerLayout(treeLayout);
-    registers.registerVisual(treeVisual);
+    registers.registerVisual(treeVisualStageHandler);
 
     installTreeAction(registers);
 }

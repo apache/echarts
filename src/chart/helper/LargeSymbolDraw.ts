@@ -31,6 +31,10 @@ import { StageHandlerProgressParams } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { getECData } from '../../util/innerStore';
 import Element from 'zrender/src/Element';
+import Displayable, { BeforeBrushParam } from 'zrender/src/graphic/Displayable';
+import { validateUpstreamOutputRange } from '../../util/model';
+import { ISymbolDraw, SymbolDrawUpdateOpt } from './baseDraw';
+
 
 const BOOST_SIZE_THRESHOLD = 4;
 
@@ -78,6 +82,12 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
     reset() {
         this.notClear = false;
         this._off = 0;
+    }
+
+    beforeBrush(param: BeforeBrushParam) {
+        if (param && !param.contentRetained) {
+            this.reset();
+        }
     }
 
     buildPath(path: PathProxy | CanvasRenderingContext2D, shape: LargeSymbolPathShape) {
@@ -234,22 +244,20 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
     }
 }
 
-interface UpdateOpt {
-    clipShape?: CoordinateSystemClipArea
-}
-
-class LargeSymbolDraw {
+class LargeSymbolDraw implements ISymbolDraw {
 
     group = new graphic.Group();
 
     // New add element in this frame of progressive render.
     private _newAdded: LargeSymbolPath[];
+    private _data: SeriesData;
 
     /**
      * Update symbols draw by new data
      */
-    updateData(data: SeriesData, opt?: UpdateOpt) {
+    updateData(data: SeriesData, opt?: SymbolDrawUpdateOpt) {
         this._clear();
+        this._data = data;
 
         const symbolEl = this._create();
         symbolEl.setShape({
@@ -258,7 +266,11 @@ class LargeSymbolDraw {
         this._setCommon(symbolEl, data, opt);
     }
 
-    updateLayout(data: SeriesData) {
+    updateLayout(opt: SymbolDrawUpdateOpt) {
+        const data = this._data;
+        if (!data) {
+            return;
+        }
         let points = data.getLayout('points');
         this.group.eachChild(function (child: LargeSymbolPath) {
             if (child.startIndex != null) {
@@ -269,6 +281,7 @@ class LargeSymbolDraw {
             child.setShape('points', points);
             // Reset draw cursor.
             child.reset();
+            child.stopAnimation();
         });
     }
 
@@ -276,10 +289,20 @@ class LargeSymbolDraw {
         this._clear();
     }
 
-    incrementalUpdate(taskParams: StageHandlerProgressParams, data: SeriesData, opt: UpdateOpt) {
+    incrementalUpdate(
+        taskParams: StageHandlerProgressParams,
+        data: SeriesData<SeriesModel>,
+        incrementalId: Displayable['incremental'],
+        opt: SymbolDrawUpdateOpt
+    ) {
         const lastAdded = this._newAdded[0];
         const points = data.getLayout('points');
         const oldPoints = lastAdded && lastAdded.shape.points;
+
+        if (__DEV__) {
+            validateUpstreamOutputRange(data.getLayout('pointsRange'), taskParams);
+        }
+
         // Merging the exists. Each element has 1e4 points.
         // Consider the performance balance between too much elements and too much points in one shape(may affect hover optimization)
         if (oldPoints && oldPoints.length < 2e4) {
@@ -293,13 +316,12 @@ class LargeSymbolDraw {
             lastAdded.setShape({ points: newPoints });
         }
         else {
-            // Clear
             this._newAdded = [];
 
             const symbolEl = this._create();
             symbolEl.startIndex = taskParams.start;
             symbolEl.endIndex = taskParams.end;
-            symbolEl.incremental = true;
+            symbolEl.incremental = incrementalId;
             symbolEl.setShape({
                 points
             });
@@ -324,7 +346,7 @@ class LargeSymbolDraw {
     private _setCommon(
         symbolEl: LargeSymbolPath,
         data: SeriesData,
-        opt: UpdateOpt
+        opt: SymbolDrawUpdateOpt
     ) {
         const hostModel = data.hostModel;
 

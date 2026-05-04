@@ -22,24 +22,28 @@ import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
-import {createClipPath} from '../helper/createClipPathFromCoordSys';
-import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
+import {
+    createClipPath, SHAPE_CLIP_KIND_FULLY_CLIPPED, SHAPE_CLIP_KIND_NOT_CLIPPED,
+    SHAPE_CLIP_KIND_PARTIALLY_CLIPPED, updateClipPath
+} from '../helper/createClipPathFromCoordSys';
+import CandlestickSeriesModel, { SERIES_TYPE_CANDLESTICK, CandlestickDataItemOption } from './CandlestickSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { StageHandlerProgressParams } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import {CandlestickItemLayout} from './candlestickLayout';
-import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
 import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
 import { getBorderColor, getColor } from './candlestickVisual';
+import { resolveNormalBoxClipping } from '../helper/whiskerBoxCommon';
+import { getIncrementalId } from '../../util/model';
 
 const SKIP_PROPS = ['color', 'borderColor'] as const;
 
 class CandlestickView extends ChartView {
 
-    static readonly type = 'candlestick';
+    static readonly type = SERIES_TYPE_CANDLESTICK;
     readonly type = CandlestickView.type;
 
     private _isLargeDraw: boolean;
@@ -96,9 +100,10 @@ class CandlestickView extends ChartView {
         const group = this.group;
         const isSimpleBox = data.getLayout('isSimpleBox');
 
-        const needsClip = seriesModel.get('clip', true);
-        const coord = seriesModel.coordinateSystem;
-        const clipArea = coord.getArea && coord.getArea();
+        const needClip = seriesModel.get('clip', true);
+        const coordSys = seriesModel.coordinateSystem;
+        const clipArea = coordSys.getArea && coordSys.getArea();
+        const clipPath = needClip && createClipPath(coordSys, false, seriesModel);
 
         // There is no old data only when first rendering or switching from
         // stream mode to normal mode, where previous elements should be removed.
@@ -113,12 +118,19 @@ class CandlestickView extends ChartView {
                 if (data.hasValue(newIdx)) {
                     const itemLayout = data.getItemLayout(newIdx) as CandlestickItemLayout;
 
-                    if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
+                    const clipKind = needClip
+                        ? resolveNormalBoxClipping(clipArea, itemLayout) : SHAPE_CLIP_KIND_NOT_CLIPPED;
+                    if (clipKind === SHAPE_CLIP_KIND_FULLY_CLIPPED) {
                         return;
                     }
 
                     const el = createNormalBox(itemLayout, newIdx, transPointDim, true);
                     graphic.initProps(el, {shape: {points: itemLayout.ends}}, seriesModel, newIdx);
+
+                    // When an item is partially inside and partially outside the Cartesian bounding rect,
+                    // the disappearance of the entire item may confuse users. Therefore, clipping is needed.
+                    // Consider performance of zr Element['clipPath'], only set to partially clipped elements.
+                    updateClipPath(clipKind === SHAPE_CLIP_KIND_PARTIALLY_CLIPPED, el, clipPath);
 
                     setBoxCommon(el, data, newIdx, isSimpleBox);
 
@@ -137,7 +149,10 @@ class CandlestickView extends ChartView {
                 }
 
                 const itemLayout = data.getItemLayout(newIdx) as CandlestickItemLayout;
-                if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
+
+                const clipKind = needClip
+                    ? resolveNormalBoxClipping(clipArea, itemLayout) : SHAPE_CLIP_KIND_NOT_CLIPPED;
+                if (clipKind === SHAPE_CLIP_KIND_FULLY_CLIPPED) {
                     group.remove(el);
                     return;
                 }
@@ -156,6 +171,9 @@ class CandlestickView extends ChartView {
                 }
 
                 setBoxCommon(el, data, newIdx, isSimpleBox);
+
+                // See `updateClipPath` in `add`.
+                updateClipPath(clipKind === SHAPE_CLIP_KIND_PARTIALLY_CLIPPED, el, clipPath);
 
                 group.add(el);
                 data.setItemGraphicEl(newIdx, el);
@@ -177,13 +195,7 @@ class CandlestickView extends ChartView {
         const clipPath = seriesModel.get('clip', true)
             ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
             : null;
-        if (clipPath) {
-            this.group.setClipPath(clipPath);
-        }
-        else {
-            this.group.removeClipPath();
-        }
-
+        updateClipPath(!!clipPath, this.group, clipPath);
     }
 
     _incrementalRenderNormal(params: StageHandlerProgressParams, seriesModel: CandlestickSeriesModel) {
@@ -198,7 +210,7 @@ class CandlestickView extends ChartView {
             const el = createNormalBox(itemLayout, dataIndex, transPointDim);
             setBoxCommon(el, data, dataIndex, isSimpleBox);
 
-            el.incremental = true;
+            el.incremental = getIncrementalId(seriesModel);
             this.group.add(el);
 
             this._progressiveEls.push(el);
@@ -215,6 +227,7 @@ class CandlestickView extends ChartView {
 
     _clear() {
         this.group.removeAll();
+        updateClipPath(false, this.group, null);
         this._data = null;
     }
 }
@@ -281,18 +294,6 @@ function createNormalBox(
         },
         z2: 100
     });
-}
-
-function isNormalBoxClipped(clipArea: CoordinateSystemClipArea, itemLayout: CandlestickItemLayout) {
-    let clipped = true;
-    for (let i = 0; i < itemLayout.ends.length; i++) {
-        // If any point are in the region.
-        if (clipArea.contain(itemLayout.ends[i][0], itemLayout.ends[i][1])) {
-            clipped = false;
-            break;
-        }
-    }
-    return clipped;
 }
 
 function setBoxCommon(el: NormalBoxPath, data: SeriesData, dataIndex: number, isSimpleBox?: boolean) {
@@ -410,12 +411,13 @@ function createLarge(
     setLargeStyle(0, elDoji, seriesModel, data);
 
     if (incremental) {
-        elP.incremental = true;
-        elN.incremental = true;
+        elP.incremental = getIncrementalId(seriesModel);
+        elN.incremental = getIncrementalId(seriesModel);
+        elDoji.incremental = getIncrementalId(seriesModel);
     }
 
     if (progressiveEls) {
-        progressiveEls.push(elP, elN);
+        progressiveEls.push(elP, elN, elDoji);
     }
 }
 

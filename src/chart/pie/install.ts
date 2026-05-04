@@ -20,20 +20,19 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 
 import {createLegacyDataSelectAction} from '../../legacy/dataSelectAction';
-import pieLayout from '../pie/pieLayout';
 import dataFilter from '../../processor/dataFilter';
-import { curry } from 'zrender/src/core/util';
 import PieView from './PieView';
-import PieSeriesModel from './PieSeries';
+import PieSeriesModel, { SERIES_TYPE_PIE } from './PieSeries';
 import negativeDataFilter from '../../processor/negativeDataFilter';
+import { pieLayoutStageHandler } from './pieLayout';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(PieView);
     registers.registerSeriesModel(PieSeriesModel);
 
-    createLegacyDataSelectAction('pie', registers.registerAction);
+    createLegacyDataSelectAction(SERIES_TYPE_PIE, registers.registerAction);
 
-    registers.registerLayout(curry(pieLayout, 'pie'));
-    registers.registerProcessor(dataFilter('pie'));
-    registers.registerProcessor(negativeDataFilter('pie'));
+    registers.registerLayout(pieLayoutStageHandler);
+    registers.registerProcessor(dataFilter(SERIES_TYPE_PIE));
+    registers.registerProcessor(negativeDataFilter(SERIES_TYPE_PIE));
 }

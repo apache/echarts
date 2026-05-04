@@ -155,39 +155,89 @@ under the License.
         <script>
             require(['echarts'], function (echarts) {
 
-                var option = option = {
-                    xAxis: {
-                        type: 'category',
-                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                var _ctx = {
+                    yAxisMin: {
+                        value: 'NOT_SET',
+                        values: ['NOT_SET', 200, 1500]
                     },
-                    yAxis: {
-                        type: 'value',
-                        // it works
-                        // max: 820
-                        // less than the min value of data
-                        max: 500
+                    yAxisMax: {
+                        value: 500,
+                        values: ['NOT_SET', 500, 820, 1000]
                     },
-                    series: [
-                        {
-                            data: [820, 932, 901, 934, 1290, 1330, 1320],
-                            type: 'line'
-                        },
-                        {
-                            data: [820, 932, 901, 934, 1290, 1330, 1320],
-                            type: 'bar'
-                        }
-                    ]
+                    br: {},
+                    yAxisScale: {
+                        value: 'NOT_SET',
+                        values: ['NOT_SET', false, true],
+                    },
+                    series1Type: {
+                        value: 'bar',
+                        values: ['scatter', 'bar'],
+                    },
+                    yAxisInverse: {
+                        value: 'NOT_SET',
+                        values: ['NOT_SET', false, true],
+                    },
                 };
+
+                function createOption() {
+                    var option = {
+                        legend: {},
+                        xAxis: {
+                            type: 'category',
+                            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        },
+                        yAxis: {
+                            type: 'value',
+                            // it works
+                            // max: 820
+                            // less than the min value of data
+                            // max: 500
+                        },
+                        series: [
+                            {
+                                data: [820, 932, 901, 934, 1290, 1330, 1320],
+                                type: 'line',
+                                name: 'line',
+                            },
+                            {
+                                data: [820, 932, 901, 934, 1290, 1330, 1320],
+                                type: _ctx.series1Type.value,
+                                name: 'bar',
+                            }
+                        ]
+                    };
+                    if (_ctx.yAxisMin.value !== 'NOT_SET') {
+                        option.yAxis.min = _ctx.yAxisMin.value;
+                    }
+                    if (_ctx.yAxisMax.value !== 'NOT_SET') {
+                        option.yAxis.max = _ctx.yAxisMax.value;
+                    }
+                    if (_ctx.yAxisScale.value !== 'NOT_SET') {
+                        option.yAxis.scale = _ctx.yAxisScale.value;
+                    }
+                    if (_ctx.yAxisInverse.value !== 'NOT_SET') {
+                        option.yAxis.inverse = _ctx.yAxisInverse.value;
+                    }
+
+                    return option;
+                }
+
+                function updateChart() {
+                    chart.setOption(createOption(), {notMerge: true});
+                }
 
                 var chart = testHelper.create(echarts, 'main2', {
                     title: [
                         'The **line** series should be **invisible**',
                         'The **bar** series should be **partially visible**',
+                        'NOTE: series data range is **[820, 1320]**',
                         'The y-axis should be shown',
-                        'The max value of y-axis should be 500'
+                        'The initial max value of y-axis should be **500**'
                     ],
-                    option: option,
-                    height: 300
+                    option: createOption(),
+                    height: 300,
+                    inputsStyle: 'compact',
+                    inputs: testHelper.createInputsSimply(_ctx, updateChart)
                 });
             });
         </script>

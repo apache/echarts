@@ -24,6 +24,9 @@ import CartesianAxisModel from '@/src/coord/cartesian/AxisModel';
 import IntervalScale from '@/src/scale/Interval';
 import { intervalScaleNiceTicks } from '@/src/scale/helper';
 import { getPrecisionSafe } from '@/src/util/number';
+import { scaleCalcNice2 } from '@/src/coord/axisNiceTicks';
+import { NumericAxisBaseOptionCommon, ValueAxisBaseOption } from '@/src/coord/axisCommonTypes';
+import { AxisBaseModel } from '@/src/coord/AxisBaseModel';
 
 
 describe('scale_interval', function () {
@@ -115,10 +118,36 @@ describe('scale_interval', function () {
     describe('ticks', function () {
 
         function randomNumber(quantity: number): number {
-            return (Math.random() - 0.5) * Math.pow(10, (Math.random() - 0.5) * quantity);
+            return randomSign() * (1 + Math.random()) * Math.pow(10, randomSign() * quantity);
+        }
+        function randomSign() {
+            return (Math.random() - 0.5) > 0 ? 1 : -1;
         }
 
-        function doSingleTest(extent: [number, number], splitNumber: number): void {
+        function doSingleTest(
+            extent: number[],
+            splitNumber: number,
+            fixMinMax: boolean
+        ) {
+            try {
+                doSingleTestDeal(extent, splitNumber, fixMinMax);
+            }
+            catch (err) {
+                err.message += [
+                    '     [RAW_INPUTS] '
+                    + ` extent: [${extent.join(',')}],`
+                    + ` splitNumber: ${splitNumber},`
+                    + ` fixMinMax: ${fixMinMax}.`
+                ].join('');
+                throw err;
+            }
+        }
+
+        function doSingleTestDeal(
+            extent: number[],
+            splitNumber: number,
+            fixMinMax: boolean
+        ): void {
             const span = extent[1] - extent[0];
             const result = intervalScaleNiceTicks(extent, span, splitNumber);
             const intervalPrecision = result.intervalPrecision;
@@ -131,21 +160,39 @@ describe('scale_interval', function () {
             expect(niceTickExtent[1]).toBeFinite();
 
             expect(niceTickExtent[0]).toBeGreaterThanOrEqual(extent[0]);
-            expect(niceTickExtent[1]).not.toBeGreaterThan(extent[1]);
+            expect(niceTickExtent[1]).toBeLessThanOrEqual(extent[1]);
             expect(niceTickExtent[1]).toBeGreaterThanOrEqual(niceTickExtent[1]);
+            expect(niceTickExtent[0] - niceTickExtent[1] <= resultInterval);
 
-            const interval = new IntervalScale();
-            interval.setExtent(extent[0], extent[1]);
-            interval.calcNiceExtent({
-                fixMin: true,
-                fixMax: true,
-                splitNumber
-            });
-            const ticks = interval.getTicks();
+            const intervalScale = new IntervalScale();
+            const option: ValueAxisBaseOption = {
+                splitNumber: splitNumber
+            };
+            if (fixMinMax) {
+                option.min = extent[0];
+                option.max = extent[1];
+            }
+            const axisModel = new CartesianAxisModel(option, null, null);
+            scaleCalcNice2(
+                intervalScale,
+                axisModel as AxisBaseModel<NumericAxisBaseOptionCommon>,
+                null,
+                null,
+                extent
+            );
 
-            expect(ticks.length > 0);
-            expect(ticks[0].value).toEqual(extent[0]);
-            expect(ticks[ticks.length - 1].value).toEqual(extent[1]);
+            const ticks = intervalScale.getTicks();
+
+            expect(ticks.length > 1);
+
+            if (fixMinMax) {
+                expect(ticks[0].value).toEqual(extent[0]);
+                expect(ticks[ticks.length - 1].value).toEqual(extent[1]);
+            }
+            else {
+                expect(ticks[0].value).toBeLessThanOrEqual(extent[0]);
+                expect(ticks[ticks.length - 1].value).toBeGreaterThanOrEqual(extent[1]);
+            }
 
             for (let i = 1; i < ticks.length; i++) {
                 expect(ticks[i - 1].value).not.toBeGreaterThanOrEqual(ticks[i].value);
@@ -168,19 +215,22 @@ describe('scale_interval', function () {
                 if (extent[0] > extent[1]) {
                     extent.reverse();
                 }
-                doSingleTest(extent as [number, number], splitNumber);
+                // console.log(extent);
+                doSingleTest(extent, splitNumber, false);
+                doSingleTest(extent, splitNumber, true);
             }
         }
 
         it('cases', function () {
-            doSingleTest([3.7210923755786733e-8, 176.4352516752083], 1);
-            doSingleTest([1550932.3941785, 1550932.3941786], 5);
-            doSingleTest([-3711126.9907707, -3711126.990770699], 5);
+            doSingleTest([-4.487313802559083e-9, -3.371319349409791e-9], 5, false);
+            doSingleTest([3.7210923755786733e-8, 176.4352516752083], 1, true);
+            doSingleTest([1550932.3941785, 1550932.3941786], 5, true);
+            doSingleTest([-3711126.9907707, -3711126.990770699], 5, true);
         });
 
         it('randomCover', function () {
-            doRandomTest(500, 5, 20);
-            doRandomTest(200, 1, 20);
+            doRandomTest(500, 5, 10);
+            doRandomTest(200, 1, 10);
         });
     });
 

@@ -29,7 +29,7 @@ under the License.
     <script src="lib/jquery.min.js"></script>
     <script src="lib/facePrint.js"></script>
     <script src="lib/testHelper.js"></script>
-    <script src="lib/frameInsight.js"></script>
+    <!-- <script src="lib/frameInsight.js"></script> -->
     <link rel="stylesheet" href="lib/reset.css" />
 </head>
 
@@ -53,62 +53,87 @@ under the License.
 
             function init() {
 
-                frameInsight.init(echarts, 'duration');
+                // frameInsight.init(echarts, 'duration');
 
-                var xAxisData = [];
-                var data1 = [];
-                for (var i = 0; i < 10000; i++) {
-                    xAxisData.push('Category ' + i);
-                    data1.push((Math.random() * 5).toFixed(2));
+                var _ctx = {
+                    largeThreshold: {
+                        value: 10,
+                        values: ['NOT_SET', 10, 1e3, 5e3]
+                    },
+                };
+
+                function createOption() {
+
+                    var xAxisData = [];
+                    var data1 = [];
+                    for (var i = 0; i < 10000; i++) {
+                        xAxisData.push('Category ' + i);
+                        data1.push((Math.random() * 5).toFixed(2));
+                    }
+
+                    var option = {
+                        legend: {
+                            top: 5,
+                            data: ['bar'],
+                            align: 'left'
+                        },
+                        tooltip: {},
+                        dataZoom: [{
+                            start: 30,
+                            end: 100,
+                            type: 'slider'
+                        }, {
+                            start: 30,
+                            end: 100,
+                            type: 'inside',
+                        }],
+                        xAxis: {
+                            data: xAxisData,
+                            silent: false,
+                            splitLine: {
+                                show: false
+                            },
+                            splitArea: {
+                                show: false
+                            }
+                        },
+                        yAxis: {
+                            splitArea: {
+                                show: false
+                            }
+                        },
+                        series: [{
+                            name: 'bar',
+                            type: 'bar',
+                            large: true,
+                            data: data1,
+                            itemStyle: {
+                                borderWidth: 2,
+                                borderColor: 'red'
+                            }
+                        }]
+                    };
+                    if (_ctx.largeThreshold.value !== 'NOT_SET') {
+                        option.series[0].largeThreshold = _ctx.largeThreshold.value;
+                    }
+
+                    return option;
                 }
 
-                var option = {
-                    legend: {
-                        data: ['bar'],
-                        align: 'left'
-                    },
-                    tooltip: {},
-                    dataZoom: [{
-                        start: 30,
-                        end: 100,
-                        type: 'slider'
-                    }],
-                    xAxis: {
-                        data: xAxisData,
-                        silent: false,
-                        splitLine: {
-                            show: false
-                        },
-                        splitArea: {
-                            show: false
-                        }
-                    },
-                    yAxis: {
-                        splitArea: {
-                            show: false
-                        }
-                    },
-                    series: [{
-                        name: 'bar',
-                        type: 'bar',
-                        large: true,
-                        largeThreshold: 10,
-                        data: data1,
-                        itemStyle: {
-                            borderWidth: 1,
-                            borderColor: 'red'
-                        }
-                    }]
-                };
+                function updateChart() {
+                    chart.setOption(createOption(), {notMerge: true});
+                }
 
                 var panel = document.getElementById('panel0');
                 var chart = testHelper.create(echarts, 'main0', {
                     title: [
                         'Bar chart border and color',
-                        'Check if **stroke and border** are correcly rendered on **dense** data',
+                        'border color (red) should not be rendered when exceeding largeThreshold',
                     ],
-                    option: option,
-                    height: 550
+                    option: createOption(),
+                    height: 550,
+                    inputsStyle: 'compact',
+                    inputs: testHelper.createInputsSimply(_ctx, updateChart),
                 });
             }
             run();

@@ -1,5 +1,13 @@
 [
   {
+    "link": "",
+    "comment": "acceptable and expected.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775585629924
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/21067",
     "comment": "fix(jitter): fix overlap when there is enough space to avoid",
     "type": "Bug Fixing",

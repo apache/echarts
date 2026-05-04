@@ -18,10 +18,10 @@
 */
 
 import { EChartsExtensionInstallRegisters } from '../../extension';
-import ariaVisual from '../../visual/aria';
+import { ariaVisualStageHandler } from '../../visual/aria';
 import ariaPreprocessor from './preprocessor';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerPreprocessor(ariaPreprocessor);
-    registers.registerVisual(registers.PRIORITY.VISUAL.ARIA, ariaVisual);
+    registers.registerVisual(registers.PRIORITY.VISUAL.ARIA, ariaVisualStageHandler);
 }

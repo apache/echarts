@@ -45,65 +45,80 @@ under the License.
         require([
             'echarts',
         ], function (echarts) {
-            var option;
 
-            function makeYAxisOption(type) {
-                return {
-                    type: type,
-                    scale: true,
-                    axisLabel: {
-                        // formatter(value) {
-                        //     return value.toExponential();
-                        // }
-                    },
-                    axisLine: {
-                        show: true,
-                    },
-                    axisTick: {
-                        show: true,
-                    },
-                    minorTick: {
-                        show: true,
-                    },
-                };
-            }
+            var _ctx = {
+                yAxisType: {
+                    text: 'yAxis.type:',
+                    value: 'value',
+                    values: ['value', 'log', 'time'],
+                }
+            };
 
-            option = {
-                xAxis: {
-                    type: 'category',
-                    data: ['2017-10-24', '2017-10-25', '2017-10-26', '2017-10-27']
-                },
-                yAxis: makeYAxisOption(),
-                tooltip: {},
-                series: [{
-                    type: 'line',
-                    data: [
+            function createOption() {
+                var data;
+                if (_ctx.yAxisType.value === 'time') {
+                    var timeBase = 1775675465411;
+                    data = [
+                        [0, timeBase + 1],
+                        [1, timeBase + 2],
+                        [2, timeBase + 5],
+                        [3, timeBase + 7]
+                    ];
+                }
+                else {
+                    data = [
                         [0, 0.000000000012],
                         [1, 0.000000000034],
                         [2, 0.000000000010],
                         [3, 0.000000000038]
-                    ]
-                }]
-            };
+                    ];
+                }
 
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['2017-10-24', '2017-10-25', '2017-10-26', '2017-10-27']
+                    },
+                    yAxis: {
+                        type: _ctx.yAxisType.value,
+                        scale: true,
+                        axisLabel: {
+                            // formatter(value) {
+                            //     return value.toExponential();
+                            // }
+                        },
+                        axisLine: {
+                            show: true,
+                        },
+                        axisTick: {
+                            show: true,
+                        },
+                        splitLine: {
+                            show: true,
+                        },
+                        minorTick: {
+                            show: true,
+                        },
+                    },
+                    tooltip: {},
+                    series: [{
+                        type: 'line',
+                        data: data
+                    }]
+                };
+                return option;
+            }
+
+            function updateChart() {
+                chart.setOption(createOption(), {notMerge: true});
+            }
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
                     'extreme small number in scale (line)',
                 ],
-                option: option,
-                inputs: [
-                    {
-                        type: 'select',
-                        text: 'yAxis.type:',
-                        values: ['value', 'log', 'time'],
-                        onchange() {
-                            chart.setOption({
-                                yAxis: makeYAxisOption(this.value)
-                            });
-                        }
-                    }
-                ]
+                option: createOption(),
+                inputs: testHelper.createInputsSimply(_ctx, updateChart)
             });
         });
         </script>

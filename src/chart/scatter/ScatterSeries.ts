@@ -119,11 +119,10 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
     }
 
     getZLevelKey() {
-        // Each progressive series has individual key.
+        // PENDING: See `GET_ZLEVEL_KEY_FOR_PROGRESSIVE`
         return this.getData().count() > this.getProgressiveThreshold()
             ? this.id : '';
     }
-
 
     static defaultOption: ScatterSeriesOption = {
         coordinateSystem: 'cartesian2d',
@@ -131,8 +130,8 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
         z: 2,
         legendHoverLink: true,
 
-        symbolSize: 10,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
-        // symbolRotate: null,  // 图形旋转控制
+        symbolSize: 10,
+        // symbolRotate: null,
 
         large: false,
         // Available when large is true
@@ -141,15 +140,12 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
         itemStyle: {
             opacity: 0.8
-            // color: 各异
         },
 
         emphasis: {
             scale: true
         },
 
-        // If clip the overflow graphics
-        // Works on cartesian / polar series
         clip: true,
 
         select: {

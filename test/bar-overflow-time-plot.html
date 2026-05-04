@@ -31,93 +31,491 @@ under the License.
     </head>
     <body>
 
-        <div id="main0" class="chart"></div>
-        <div id="main1" class="chart"></div>
-
-
+        <div id="main_time_axis" class="chart"></div>
+        <div id="main_value_axis" class="chart"></div>
 
 
         <script>
 
             require(['echarts'], function (echarts) {
 
-                var data1 = [[new Date(1498258800000), 10], [new Date(1498345200000), 15], [new Date(1498431600000), 15], [new Date(1498518000000), 15]];
-                var data2 = [[new Date(1498258800000), 15], [new Date(1498345200000), 20], [new Date(1498431600000), 15], [new Date(1498518000000), 15]];
-                var data3 = [[new Date(1498258800000), 20], [new Date(1498345200000), 10], [new Date(1498431600000), 15], [new Date(1498518000000), 15]];
-
-                var itemStyle = {
-                    normal: {
-                        barBorderRadius: 5,
-                        label: {
-                            show: true,
-                            position: 'outside'
-                        }
-                    },
-                    emphasis: {
-                        label: {
-                            position: 'outside'
-                        },
-                        barBorderColor: '#fff',
-                        barBorderWidth: 1,
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0,
-                        shadowColor: 'rgba(0,0,0,0.5)'
-                    }
+                var _ctx = {
+                    useDataZoom: true,
+                    stack: false,
+                    xAxisInverse: undefined,
+                    datasource: 'simple',
+                    xAxisType: 'time',
+                    seriesType: 'bar',
+                    useCustomValues: true,
+                    xAxisLabelHideOverlap: true,
+                    dataZoomFilterMode: undefined,
+                    seriesBarClip: 'unspecified',
+                    barCBarWidth: undefined,
+                    barGap: undefined,
+                    barCategoryGap: undefined,
+                    xAxisLabelShowMinMaxLabel: undefined,
+                    xAxisBoundaryGap: undefined,
+                    xAxisContainShape: undefined,
                 };
 
-                var option = {
-                    backgroundColor: '#eee',
-                    legend: {
-                    },
-                    xAxis: {
-                        type: 'time',
-                        axisLabel: {
-                            formatter: function (val) {
-                                return echarts.format.formatTime('yyyy-MM-dd\nhh:ss:mm.SSS', val);
+                function makeLogDataIfNeeded(linearData) {
+                    if (_ctx.xAxisType !== 'log') {
+                        return linearData;
+                    }
+                    var logData = [];
+                    for (var i = 0; i < linearData.length; i++) {
+                        logData.push([Math.round(Math.pow(10, linearData[i][0])), linearData[i][1]]);
+                    }
+                    return logData;
+                }
+
+                function makeOption() {
+                    var _datasource = {
+                        simple: {
+                            data1: [[1498258800000, 10], [1498345200000, 15], [1498431600000, 15], [1498518000000, 15]],
+                            data2: [[1498258800000, 15], [1498345200000, 20], [1498431600000, 25], [1498518000000, 5]],
+                            data3: [[1498258800000, 20], [1498345200000, 10], [1498431600000, 10], [1498518000000, 35]],
+                        },
+                        massive_regular: (function () {
+                            var data1 = [];
+                            var data2 = [];
+                            var data3 = [];
+                            var baseX = _ctx.xAxisType === 'log' ? 135
+                                : _ctx.xAxisType === 'value' ? 0
+                                : 1498258800000;
+                            var step = _ctx.xAxisType === 'log' ? 1000
+                                : _ctx.xAxisType === 'value' ? 5
+                                : 3600 * 24 * 1000;
+                            for (var i = 0; i < 50; i++) {
+                                var valX = baseX + i * step;
+                                data1.push([valX, Math.round(Math.random() * 100)]);
+                                data2.push([valX, Math.round(Math.random() * 100)]);
+                                data3.push([valX, Math.round(Math.random() * 100)]);
+                            }
+                            return {
+                                data1: data1,
+                                data2: data2,
+                                data3: data3,
+                            };
+                        })(),
+                        massive_irregular: (function () {
+                            var data1 = [];
+                            var data2 = [];
+                            var data3 = [];
+                            var count = 50;
+                            var min = _ctx.xAxisType === 'log' ? 100
+                                : _ctx.xAxisType === 'value' ? 0
+                                : 1498258800000;
+                            var span = _ctx.xAxisType === 'log' ? 5e14
+                                : _ctx.xAxisType === 'value' ? 0
+                                : count * 3600 * 24 * 1000;
+                            for (var i = 0; i < count; i++) {
+                                var valX = min + Math.round(Math.random() * span);
+                                data1.push([valX, Math.round(Math.random() * 100)]);
+                                data2.push([valX, Math.round(Math.random() * 100)]);
+                                data3.push([valX, Math.round(Math.random() * 100)]);
+                            }
+                            return {
+                                data1: data1,
+                                data2: data2,
+                                data3: data3,
+                            };
+                        })(),
+                        single_value_with_x_min_max: {
+                            data1: [[1498258800000, 10]],
+                            data2: [[1498258800000, 15]],
+                            data3: [[1498258800000, 20]],
+                            xAxisMin: 1498258800000 - 3600 * 24 * 1000 * 150,
+                            xAxisMax: 1498258800000 + 3600 * 24 * 1000 * 130
+                        },
+                        single_value_no_x_min_max: {
+                            data1: [[1498258800000, 10]],
+                            data2: [[1498258800000, 15]],
+                            data3: [[1498258800000, 20]],
+                        },
+                        multiple_values_with_x_min: {
+                            data1: [[1498258800000, 10], [1498345200000, 15], [1498431600000, 15], [1498518000000, 15]],
+                            data2: [[1498258800000, 15], [1498345200000, 20], [1498431600000, 25], [1498518000000, 5]],
+                            data3: [[1498258800000, 20], [1498345200000, 10], [1498431600000, 10], [1498518000000, 35]],
+                            xAxisMin: 1498258800000 - 3600 * 24 * 1000 * 5,
+                        }
+                    };
+
+                    function collectXValues() {
+                        var xValues = [];
+                        function collectXValuesSingle(data) {
+                            for (var i = 0; i < data.length; i++) {
+                                xValues.push(data[i][0]);
                             }
                         }
-                    },
-                    yAxis: {
-                        // axisLabel: {
-                        //     show: false
-                        // },
-                        axisTick: {
-                            show: false
-                        },
-                        splitArea: {
-                            show: false
-                        }
-                    },
-                    grid: {
-                        bottom: 80
-                    },
-                    dataZoom: [{
-                        type: 'slider',
-                        labelFormatter: function (val) {
-                            return echarts.format.formatTime('yyyy-MM-dd\nhh:ss:mm.SSS', val);
-                        }
-                    }, {
-                        type: 'inside'
-                    }],
-                    series: [{
-                        name: 'bar',
-                        type: 'bar',
-                        data: data1
-                    }, {
-                        name: 'bar2',
-                        type: 'bar',
-                        data: data2
-                    }, {
-                        name: 'bar3',
-                        type: 'bar',
-                        data: data3
-                    }]
-                };
+                        collectXValuesSingle(_datasource[_ctx.datasource].data1);
+                        collectXValuesSingle(_datasource[_ctx.datasource].data2);
+                        collectXValuesSingle(_datasource[_ctx.datasource].data3);
+                        xValues.sort(function (a, b) { return a - b; });
+                        return xValues;
+                    }
 
-                testHelper.create(echarts, 'main0', {
-                    title: 'time axis',
-                    option: option
+                    var customValues = _ctx.useCustomValues ? collectXValues() : null;
+
+                    var itemStyle = {
+                        borderWidth: _ctx.seriesType === 'pictorialBar'
+                            // FIXME: borderWidth: 2 in pictorialBar cause scale incorrection.
+                            ? 0
+                            : 2,
+                        borderColor: '#333',
+                        opacity: _ctx.seriesType === 'pictorialBar'
+                            ? 0.8
+                            : 1,
+                    };
+
+                    var symbol = _ctx.seriesType === 'pictorialBar'
+                        ? 'path://M0,10 L10,10 L5,0 L0,10 z'
+                        : undefined;
+
+                    var option = {
+                        legend: {
+                            top: 5,
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        xAxis: {
+                            type: _ctx.xAxisType,
+                            scale: true,
+                            min: _datasource[_ctx.datasource].xAxisMin,
+                            max: _datasource[_ctx.datasource].xAxisMax,
+                            axisLabel: {
+                                formatter: function (val) {
+                                    return !isFinite(val) ? ''
+                                        : _ctx.xAxisType === 'time' ? echarts.format.formatTime('yyyy\nMM-dd\nhh:ss', val)
+                                        : val;
+                                },
+                                hideOverlap: _ctx.xAxisLabelHideOverlap,
+                                customValues: customValues,
+                                showMinLabel: _ctx.xAxisLabelShowMinMaxLabel,
+                                showMaxLabel: _ctx.xAxisLabelShowMinMaxLabel,
+                            },
+                            axisTick: {
+                                customValues: customValues,
+                            },
+                            inverse: _ctx.xAxisInverse,
+                            boundaryGap: _ctx.xAxisBoundaryGap,
+                            containShape: _ctx.xAxisContainShape,
+                            splitArea: {
+                                show: true,
+                            },
+                        },
+                        yAxis: {
+                            axisTick: {
+                                show: false
+                            },
+                            splitArea: {
+                                show: false
+                            }
+                        },
+                        grid: {
+                            bottom: 110,
+                            left: 50,
+                            right: 50,
+                            outerBoundsMode: 'none',
+                            // show: true,
+                            backgroundColor: '#eec',
+                            borderWidth: 0,
+                        },
+                        dataZoom: _ctx.useDataZoom
+                            ? [{
+                                type: 'slider',
+                                filterMode: _ctx.dataZoomFilterMode,
+                                labelFormatter: function (val) {
+                                    return !isFinite(val) ? ''
+                                        : _ctx.xAxisType === 'time' ? echarts.format.formatTime('yyyy-MM-dd\nhh:ss:mm.SSS', val)
+                                        : val;
+                                }
+                            }, {
+                                type: 'inside'
+                            }]
+                            : undefined,
+                        series: [{
+                            name: 'barA',
+                            type: _ctx.seriesType,
+                            data: _datasource[_ctx.datasource].data1,
+                            clip: _ctx.seriesBarClip,
+                            label: {
+                                show: true,
+                                formatter: function (param) {
+                                    return 'only this series show label: ' + param.value[1];
+                                },
+                                textBorderColor: '#fff',
+                                textBorderWidth: 1,
+                                position: 'top',
+                                fontSize: 12,
+                                minMargin: 2
+                            },
+                            barWidth: _ctx.barABarWidth,
+                            barGap: _ctx.barGap,
+                            barCategoryGap: _ctx.barCategoryGap,
+                            itemStyle,
+                            symbol,
+                        }, {
+                            name: 'barB',
+                            type: _ctx.seriesType,
+                            data: _datasource[_ctx.datasource].data2,
+                            barWidth: _ctx.barBBarWidth,
+                            barGap: _ctx.barGap,
+                            barCategoryGap: _ctx.barCategoryGap,
+                            itemStyle,
+                            symbol,
+                        }, {
+                            name: 'barC',
+                            type: _ctx.seriesType,
+                            data: _datasource[_ctx.datasource].data3,
+                            barWidth: _ctx.barCBarWidth,
+                            barGap: _ctx.barGap,
+                            barCategoryGap: _ctx.barCategoryGap,
+                            itemStyle,
+                            symbol,
+                        }]
+                    };
+
+                    if (_ctx.seriesBarClip !== 'unspecified') {
+                        option.series.forEach(function (series) {
+                            series.clip = _ctx.seriesBarClip;
+                        });
+                    }
+                    if (_ctx.stack) {
+                        option.series.forEach(individualSeries => {
+                            individualSeries.stack = 'a';
+                        });
+                    }
+
+                    return option;
+                }
+
+                function resetOption() {
+                    myChart.setOption(makeOption(), {notMerge: true});
+                }
+
+                var myChart = testHelper.create(echarts, 'main_time_axis', {
+                    title: [
+                        'Multiple bar series on time/value/log axis.',
+                        'Bars should **not overflow** the grid boundary.',
+                    ],
+                    option: makeOption(),
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'data:',
+                        values: [
+                            _ctx.datasource, 'massive_regular', 'massive_irregular',
+                            'single_value_with_x_min_max', 'single_value_no_x_min_max',
+                            'multiple_values_with_x_min'
+                        ],
+                        onchange: function () {
+                            _ctx.datasource = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'br',
+                    }, {
+                        type: 'select',
+                        text: 'xAxis.type:',
+                        values: [_ctx.xAxisType, 'value', 'log'],
+                        onchange: function () {
+                            _ctx.xAxisType = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'series.type:',
+                        values: [_ctx.seriesType, 'pictorialBar'],
+                        onchange: function () {
+                            _ctx.seriesType = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'useDataZoom:',
+                        values: [_ctx.useDataZoom, false],
+                        onchange() {
+                            _ctx.useDataZoom = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'stack:',
+                        values: [false, true],
+                        onchange() {
+                            _ctx.stack = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'br',
+                    }, {
+                        type: 'select',
+                        text: 'use xAxis.axisTick/axisLabel.customValues:',
+                        values: [_ctx.useCustomValues, false],
+                        onchange: function () {
+                            _ctx.useCustomValues = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'xAxis.axisLabel.hideOverlap:',
+                        values: [_ctx.xAxisLabelHideOverlap, false],
+                        onchange: function () {
+                            _ctx.xAxisLabelHideOverlap = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'br',
+                    }, {
+                        type: 'select',
+                        text: 'xAxis.axisLabel.showMin/MaxLabel:',
+                        values: [_ctx.xAxisLabelShowMinMaxLabel, false, true],
+                        onchange: function () {
+                            _ctx.xAxisLabelShowMinMaxLabel = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'xAxis.inverse:',
+                        values: [_ctx.xAxisInverse, true, false],
+                        onchange: function () {
+                            _ctx.xAxisInverse = this.value;
+                            resetOption();
+                        },
+                    }, {
+                        type: 'br',
+                    }, {
+                        type: 'select',
+                        text: 'xAxis.boundaryGap:',
+                        values: [
+                            _ctx.xAxisBoundaryGap,
+                            ['30%', '15%'],
+                        ],
+                        onchange() {
+                            _ctx.xAxisBoundaryGap = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'xAxis.containShape:',
+                        values: [_ctx.xAxisContainShape, false, true],
+                        onchange() {
+                            _ctx.xAxisContainShape = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'br',
+                    }, {
+                        type: 'select',
+                        text: 'dataZoom.filterMode:',
+                        values: [_ctx.dataZoomFilterMode, 'filter', 'none', 'empty'],
+                        onchange: function () {
+                            _ctx.dataZoomFilterMode = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'series.bar.clip:',
+                        values: [_ctx.seriesBarClip, false, true],
+                        onchange: function () {
+                            _ctx.seriesBarClip = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'br',
+                    },
+                    {
+                        type: 'select',
+                        text: 'barGap:',
+                        options: [{
+                            value: undefined,
+                        }, {
+                            text: 'percent',
+                            id: 'barGap:percent',
+                            input: {
+                                type: 'range',
+                                suffix: '%',
+                                min: -200,
+                                max: 200,
+                            }
+                        }],
+                        onchange() {
+                            _ctx.barGap = this.value == null
+                                ? undefined
+                                : this.value + '%';
+                            resetOption();
+                        }
+                    },
+                    {
+                        type: 'select',
+                        text: 'barCategoryGap:',
+                        options: [{
+                            value: undefined,
+                        }, {
+                            text: 'percent',
+                            id: 'barCategoryGap:percent',
+                            input: {
+                                type: 'range',
+                                suffix: '%',
+                                min: -100,
+                                max: 100,
+                            }
+                        }],
+                        onchange() {
+                            _ctx.barCategoryGap = this.value != null ? this.value + '%' : undefined;
+                            resetOption();
+                        }
+                    },
+                    {
+                        type: 'br',
+                    },
+                    ...(function () {
+                        return [
+                            makeInput({text: 'barA.barWidth:', ctxProp: 'barABarWidth'}),
+                            {type: 'br'},
+                            makeInput({text: 'barB.barWidth:', ctxProp: 'barBBarWidth'}),
+                            {type: 'br'},
+                            makeInput({text: 'barC.barWidth:', ctxProp: 'barCBarWidth'}),
+                        ];
+                        function makeInput(item) {
+                            return {
+                                type: 'select',
+                                text: item.text,
+                                options: [{
+                                    value: undefined,
+                                }, {
+                                    text: 'percent',
+                                    id: 'series.barWidth:percent',
+                                    input: {
+                                        type: 'range',
+                                        min: -100,
+                                        max: 100,
+                                        suffix: '%',
+                                    }
+                                }, {
+                                    text: 'px',
+                                    id: 'series.barWidth:px',
+                                    input: {
+                                        type: 'range',
+                                        min: 0,
+                                        max: 300,
+                                    }
+                                }],
+                                onchange() {
+                                    _ctx[item.ctxProp] = this.optionId === 'series.barWidth:percent'
+                                        ? (this.value != null ? this.value + '%' : undefined)
+                                        : this.value;
+                                    resetOption();
+                                }
+                            };
+                        }
+                    })()
+                    ]
                 });
 
             });
@@ -135,90 +533,190 @@ under the License.
         <script type="text/javascript">
             require(['echarts'], function (echarts) {
 
-                var data0 = [];
-
-                var MAX_DIM1 = 100;
-
-                var itemStyle = {
-                    normal: {
-                        opacity: 0.8,
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.3)'
-                    }
+                var _ctx = {
+                    dataZoomRange: {startValue: undefined, endValue: undefined},
+                    dataZoomLabelPrecision: undefined,
+                    xAxisShowMinLabel: undefined,
+                    xAxisShowMaxLabel: undefined,
+                    dataZoomFilterMode: 'unspecified',
                 };
 
-                var last = 60;
-                var lastDelta = 20;
-                for (var i = 0; i < MAX_DIM1; i++) {
-                    lastDelta += (Math.random() - 0.5) * 15;
-                    data0.push([
-                        i,
-                        last += lastDelta
-                    ]);
+                var MIN_X = 0;
+                var MAX_X = 95;
+
+                function createData() {
+                    var data0 = [];
+
+                    var last = 360;
+                    var lastDelta = 20;
+                    for (var i = MIN_X; i <= MAX_X; i++) {
+                        lastDelta += (Math.random() - 0.5) * 5;
+                        data0.push([
+                            i,
+                            last += lastDelta
+                        ]);
+                    }
+                    return data0;
                 }
 
-                var option = {
-                    grid: {
-                        top: 100,
-                        bottom: 100
-                    },
-                    xAxis: {
-                        type: 'value',
-                        splitLine: {
-                            show: false
+                var data0 = createData();
+
+                function createOption() {
+                    var itemStyle = {
+                        normal: {
+                            opacity: 0.8,
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowOffsetY: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.3)'
                         }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        splitLine: {
-                            show: false
-                        }
-                    },
-                    visualMap: [
-                        {
+                    };
+
+                    var option = {
+                        grid: {
+                            top: 100,
+                            bottom: 100,
+                            show: true,
+                            backgroundColor: '#eec',
+                            borderWidth: 0,
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        dataZoom: [{
+                            type: 'slider',
+                            startValue: _ctx.dataZoomRange.startValue,
+                            endValue: _ctx.dataZoomRange.endValue,
+                            labelPrecision: _ctx.dataZoomLabelPrecision,
+                            filterMode: _ctx.dataZoomFilterMode,
+                        }, {
+                            type: 'inside',
+                            startValue: _ctx.dataZoomRange.startValue,
+                            endValue: _ctx.dataZoomRange.endValue,
+                            labelPrecision: _ctx.dataZoomLabelPrecision,
+                            filterMode: _ctx.dataZoomFilterMode,
+                        }],
+                        xAxis: {
+                            type: 'value',
+                            // splitLine: {
+                            //     show: true
+                            // },
+                            splitArea: {
+                                show: true,
+                            },
+                            axisLabel: {
+                                showMinLabel: _ctx.xAxisShowMinLabel,
+                                showMaxLabel: _ctx.xAxisShowMaxLabel,
+                            },
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine: {
+                            },
+                            splitLine: {
+                                show: false
+                            }
+                        },
+                        visualMap: [{
                             show: true,
                             left: 'center',
-                            bottom: 20,
+                            top: 10,
                             orient: 'horizontal',
                             itemWidth: 20,
                             itemHeight: 200,
-                            min: 0,
-                            max: MAX_DIM1,
+                            min: MIN_X,
+                            max: MAX_X,
                             calculable: true,
-                            range: [5, 95],
+                            range: [MIN_X, MAX_X],
                             dimension: 0,
                             inRange: {
                                 colorHue: [0, 300],
                                 colorLightness: 0.35,
-                                colorSaturation: 1
+                                colorSaturation: 1,
                             },
                             outOfRange: {
-                                color: '#eee'
+                                color: '#eee',
                             }
-                        }
-                    ],
-                    series: [
-                        {
+                        }],
+                        series: [{
                             name: 'bar',
                             type: 'bar',
                             barMaxWidth: 10,
                             itemStyle: itemStyle,
                             data: data0
-                        }
-                    ]
-                };
+                        }]
+                    };
 
-                testHelper.create(echarts, 'main1', {
-                    title: 'value axis',
-                    option: option
+                    return option;
+                }
+
+                function updateChart() {
+                    myChart.setOption(createOption(), {notMerge: true});
+                }
+
+                var myChart = testHelper.create(echarts, 'main_value_axis', {
+                    title: [
+                        'Single bar series on value axis.',
+                        '**Nice extent** should be proper (no considerable expansion).',
+                        'Bars should **not overflow** the grid boundary.',
+                        `xAxis start/end ticks should be **${MIN_X}~${MAX_X} or the same as dataZoom** regardless of expansion.`,
+                    ],
+                    option: createOption(),
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'dataZoom range:',
+                        values: [
+                            _ctx.dataZoomRange,
+                            {startValue: 3, endValue: 40},
+                        ],
+                        onchange: function () {
+                            _ctx.dataZoomRange = this.value;
+                            updateChart();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'dataZoom labelPrecision:',
+                        values: [_ctx.dataZoomLabelPrecision, 0, 1, 2, 3],
+                        onchange: function () {
+                            _ctx.dataZoomLabelPrecision = this.value;
+                            updateChart();
+                        }
+                    }, {
+                        type: 'br'
+                    }, {
+                        type: 'select',
+                        text: 'xAxis.axisLabel.showMinLabel:',
+                        values: [_ctx.xAxisShowMinLabel, false, true],
+                        onchange: function () {
+                            _ctx.xAxisShowMinLabel = this.value;
+                            updateChart();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'xAxis.axisLabel.showMaxLabel:',
+                        values: [_ctx.xAxisShowMaxLabel, false, true],
+                        onchange: function () {
+                            _ctx.xAxisShowMaxLabel = this.value;
+                            updateChart();
+                        }
+                    }, {
+                        type: 'br',
+                    }, {
+                        type: 'select',
+                        text: 'dataZoom.filterMode:',
+                        values: [_ctx.dataZoomFilterMode, 'filter', 'none', 'empty'],
+                        onchange: function () {
+                            _ctx.dataZoomFilterMode = this.value;
+                            updateChart();
+                        }
+                    }]
                 });
             })
         </script>
-
-
-
 
 
 

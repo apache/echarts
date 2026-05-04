@@ -20,12 +20,16 @@
 import { lift } from 'zrender/src/tool/color';
 import { extend, isString } from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSeries';
+import SunburstSeriesModel, { SERIES_TYPE_SUNBURST, SunburstSeriesNodeItemOption } from './SunburstSeries';
 import { Dictionary, ColorString } from '../../util/types';
 import { TreeNode } from '../../data/Tree';
 import tokens from '../../visual/tokens';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
-export default function sunburstVisual(ecModel: GlobalModel) {
+
+export const sunburstVisualStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_SUNBURST, sunburstVisual);
+
+function sunburstVisual(ecModel: GlobalModel) {
 
     const paletteScope: Dictionary<ColorString> = {};
 
@@ -49,7 +53,7 @@ export default function sunburstVisual(ecModel: GlobalModel) {
         return color;
     }
 
-    ecModel.eachSeriesByType('sunburst', function (seriesModel: SunburstSeriesModel) {
+    ecModel.eachSeriesByType(SERIES_TYPE_SUNBURST, function (seriesModel: SunburstSeriesModel) {
         const data = seriesModel.getData();
         const tree = data.tree;
 

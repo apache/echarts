@@ -19,12 +19,16 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import RadarSeriesModel from './RadarSeries';
+import RadarSeriesModel, { SERIES_TYPE_RADAR } from './RadarSeries';
 import Radar from '../../coord/radar/Radar';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
 type Point = number[];
-export default function radarLayout(ecModel: GlobalModel) {
-    ecModel.eachSeriesByType('radar', function (seriesModel: RadarSeriesModel) {
+
+export const radarLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_RADAR, radarLayout);
+
+function radarLayout(ecModel: GlobalModel) {
+    ecModel.eachSeriesByType(SERIES_TYPE_RADAR, function (seriesModel: RadarSeriesModel) {
         const data = seriesModel.getData();
         const points: Point[][] = [];
         const coordSys = seriesModel.coordinateSystem;

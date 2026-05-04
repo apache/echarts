@@ -1,5 +1,13 @@
 [
   {
+    "link": "https://github.com/apache/echarts/issues/21430",
+    "comment": "The diff is introduced by changing the precision choosing of dataZoom. Intentional.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1767944513407
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/21059",
     "comment": "Introduce by the `outerBounds` feature that avoid axis name overflowing the canvas by default. In the previous result the label touches the canvas edge by coincidence.",
     "type": "New Feature",

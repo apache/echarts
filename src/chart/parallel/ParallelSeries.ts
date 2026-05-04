@@ -149,7 +149,7 @@ class ParallelSeriesModel extends SeriesModel<ParallelSeriesOption> {
             }
         },
 
-        progressive: 500,
+        progressive: 300,
         smooth: false, // true | false | number
 
         animationEasing: 'linear'

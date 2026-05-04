@@ -1,0 +1,10 @@
+[
+  {
+    "link": "",
+    "comment": "Fix overflow when boxplot on value/time axis.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1774602749234
+  }
+]

@@ -18,17 +18,21 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import {groupData} from '../../util/model';
+import {createSimpleOverallStageHandler, groupData} from '../../util/model';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import SankeySeriesModel, { SankeySeriesOption, SankeyNodeItemOption } from './SankeySeries';
+import SankeySeriesModel, { SankeySeriesOption, SankeyNodeItemOption, SERIES_TYPE_SANKEY } from './SankeySeries';
 import { GraphNode, GraphEdge } from '../../data/Graph';
 import { LayoutOrient } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { createBoxLayoutReference, getLayoutRect } from '../../util/layout';
+import { asc } from '../../util/number';
 
-export default function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
-    ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
+export const sankeyLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_SANKEY, sankeyLayout);
+
+function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
+
+    ecModel.eachSeriesByType(SERIES_TYPE_SANKEY, function (seriesModel: SankeySeriesModel) {
 
         const nodeWidth = seriesModel.get('nodeWidth');
         const nodeGap = seriesModel.get('nodeGap');
@@ -290,9 +294,7 @@ function prepareNodesByBreadth(nodes: GraphNode[], orient: LayoutOrient) {
     const groupResult = groupData(nodes, function (node) {
         return node.getLayout()[keyAttr] as number;
     });
-    groupResult.keys.sort(function (a, b) {
-        return a - b;
-    });
+    asc(groupResult.keys);
     zrUtil.each(groupResult.keys, function (key) {
         nodesByBreadth.push(groupResult.buckets.get(key));
     });

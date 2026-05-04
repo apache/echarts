@@ -21,138 +21,201 @@ under the License.
 <html>
     <head>
         <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
         <script src='lib/simpleRequire.js'></script>
         <script src='lib/config.js'></script>
         <script src='lib/jquery.min.js'></script>
         <script src='lib/testHelper.js'></script>
+        <script src="lib/canteen.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
-        <meta name='viewport' content='width=device-width, initial-scale=1' />
     </head>
     <body>
-        <style>
-            html, body, #main0 {
-                width: 100%;
-                height: 100%;
-                margin: 0;
-            }
-        </style>
         <div id='main0'></div>
+        <div id="record"></div>
+
         <script>
 
-        var xs = [440000, 450000];
-        var ys = [4368000, 4537000];
+        var recordContainer = document.getElementById('record');
+        var chart;
+
+        testHelper.controlFrame({
+            pauseAt: 1,
+            onFrame: function (frameNumber) {
+                testHelper.printCanvasLayerDrawOperationsOnFrame(chart, frameNumber, recordContainer);
+            }
+        });
 
         require([
             'echarts',
             'map/js/world'
         ], function (echarts) {
-            var count = 35663;
-            var lngCount = 1000;
-            var chart;
 
-            var points = [];
-
-            var lngStep = 0.3;
-            var latStep = 1;
-            var lng0 = -160;
-            var lng1 = lng0 + lngCount * lngStep;
-            var lat0 = 0;
-            var lat1 = lat0 + Math.floor(count / lngCount) * latStep;
-
-            for (var i = 0; i < count; i++) {
-                var iLng = i % lngCount;
-                var iLat = Math.floor(i / lngCount);
-                var lng = lng0 + iLng * lngStep;
-                var lat = lat0 + iLat * latStep;
-                points.push([lng, lat]);
-            }
-
-            var option = {
-                title: {
-                    text: 'World Flights',
-                    left: 'center',
-                    textStyle: {
-                        color: '#eee'
-                    }
+            const _ctx = {
+                dataKind: {
+                    valueIndex: 0,
+                    values: [
+                        {count: 100, lngCount: 10},
+                        {count: 200, lngCount: 10},
+                        {count: 35663, lngCount: 1000},
+                    ]
                 },
-                backgroundColor: '#003',
-                tooltip: {
-                    formatter: function (param) {
-                        return 'Point: ' + param.value[0] + ', ' + param.value[1];
-                    }
+                br1: {},
+                largeSettings: {
+                    valueIndex: 0,
+                    values: [{
+                        large: true,
+                        progressive: 1,
+                        largeThreshold: 1,
+                        progressiveThreshold: 1,
+                    }, {
+                        large: true,
+                        progressive: 100,
+                        largeThreshold: 100,
+                        progressiveThreshold: 101
+                    }, {
+                        large: false,
+                        progressive: 0,
+                        largeThreshold: 1e8,
+                        progressiveThreshold: 1e8
+                    }]
                 },
-                geo: {
-                    map: 'world',
-                    left: 0,
-                    right: 0,
-                    zoom: 0.5,
-                    roam: true,
-                    silent: true,
-                    itemStyle: {
-                        normal: {
+                br2: {},
+                blendMode: {
+                    value: 'NOT_SET',
+                    values: ['NOT_SET', 'lighter']
+                },
+                symbolSize: {
+                    text: 'symbolSize (all rect if < 4):',
+                    value: 20,
+                    values: [20, 3]
+                }
+            };
+
+            function createOption() {
+                var countDef = _ctx.dataKind.values[_ctx.dataKind.valueIndex];
+
+                var count = countDef.count;
+                var lngCount = countDef.lngCount;
+
+                var points = [];
+
+                var _largeSettings = _ctx.largeSettings.values[_ctx.largeSettings.valueIndex];
+
+                var lng0 = -160;
+                var lng1 = lng0 + 300;
+                var lat0 = -20;
+                var lat1 = lat0 + 50
+                var lngStep = (lng1 - lng0) / (lngCount - 1);
+                var latStep = (lat1 - lat0) / ((count / lngCount) - 1);
+
+                for (var i = 0; i < count; i++) {
+                    var iLng = i % lngCount;
+                    var iLat = Math.floor(i / lngCount);
+                    var lng = lng0 + iLng * lngStep;
+                    var lat = lat0 + iLat * latStep;
+                    points.push([lng, lat]);
+                }
+
+                var option = {
+                    title: {
+                        text: 'World Flights',
+                        left: 'center',
+                        textStyle: {
+                            color: '#eee'
+                        }
+                    },
+                    backgroundColor: '#003',
+                    tooltip: {
+                        formatter: function (param) {
+                            return 'Point: ' + param.value[0] + ', ' + param.value[1];
+                        }
+                    },
+                    geo: {
+                        map: 'world',
+                        left: 0,
+                        right: 0,
+                        zoom: 0.5,
+                        roam: true,
+                        silent: true,
+                        itemStyle: {
                             borderColor: '#003',
                             color: '#005'
                         }
-                    }
-                },
-                series: [{
-                    type: 'scatter',
-                    coordinateSystem: 'geo',
-                    blendModel: 'lighter',
-                    data: points,
-                    symbol: 'rect',
-                    symbolSize: 6,
-                    large: true,
-                    // large: false,
-                    largeThreshold: 100,
-                    progressiveThreshold: 101
-                }, {
-                    type: 'scatter',
-                    coordinateSystem: 'geo',
-                    symbolSize: 5,
-                    color: ['green'],
-                    data: [
-                        {
-                            value: [lng0, lat0],
-                            label: {
-                                show: true,
-                                position: 'top',
-                                formatter: 'bottom-left'
+                    },
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'geo',
+                        blendMode: 'lighter',
+                        data: points,
+                        symbol: 'circle',
+                        symbolSize: _ctx.symbolSize.value,
+                        itemStyle: {
+                            borderColor: '#333',
+                            borderWidth: 1,
+                        },
+                        ..._largeSettings,
+                    }, {
+                        type: 'scatter',
+                        coordinateSystem: 'geo',
+                        symbolSize: 5,
+                        color: ['orange'],
+                        itemStyle: {opacity: 1},
+                        z: 100,
+                        data: [
+                            {
+                                value: [lng0, lat0],
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: 'bottom-left'
+                                }
+                            }, {
+                                value: [lng1, lat0],
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: 'bottom-right'
+                                }
+                            }, {
+                                value: [lng0, lat1],
+                                label: {
+                                    show: true,
+                                    position: 'bottom',
+                                    formatter: 'top-left'
+                                }
+                            }, {
+                                value: [lng1, lat1],
+                                label: {
+                                    show: true,
+                                    position: 'bottom',
+                                    formatter: 'top-right'
+                                }
                             }
-                        }, {
-                            value: [lng1, lat0],
-                            label: {
-                                show: true,
-                                position: 'top',
-                                formatter: 'bottom-right'
-                            }
-                        }, {
-                            value: [lng0, lat1],
-                            label: {
-                                show: true,
-                                position: 'bottom',
-                                formatter: 'top-left'
-                            }
-                        }, {
-                            value: [lng1, lat1],
-                            label: {
-                                show: true,
-                                position: 'bottom',
-                                formatter: 'top-right'
-                            }
-                        }
-                    ]
-                }]
-            };
+                        ]
+                    }]
+                };
 
-            var chart = testHelper.create(echarts, 'main0', {
+                if (_ctx.blendMode.value === 'NOT_SET') {
+                    option.series[0].blendMode = _ctx.blendMode.value;
+                }
+
+                return option;
+            }
+
+            function updateChart() {
+                chart.setOption(createOption(), {notMerge: true});
+            }
+
+            chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    count + ' points should be rendered in the area of the 4 green points',
-                    '( large:true and el.incremetal = true) ',
-                    'And check roam.'
+                    'should be rendered in the area defined by the 4 orange points',
+                    '( large:true and el.incremental = true) ',
+                    'And check roam **(1) before progressive finished (2) after finished**'
                 ],
-                option: option,
-                height: 550
+                option: createOption(),
+                height: 350,
+                inputsStyle: 'compact',
+                inputs: testHelper.createInputsSimply(_ctx, updateChart)
             });
             chart.on('finished', function () {
                 console.log('finished');

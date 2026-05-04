@@ -24,10 +24,13 @@
 import Single, { singleDimensions } from './Single';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import SingleAxisModel from './AxisModel';
+import SingleAxisModel, {
+    COMPONENT_TYPE_SINGLE_AXIS, COORD_SYS_TYPE_SINGLE, COORD_SYS_TYPE_SINGLE_AXIS_COMPATIBLE
+} from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
 import { SINGLE_REFERRING } from '../../util/model';
+import { associateSeriesWithAxis } from '../axisStatistics';
 
 /**
  * Create single coordinate system and inject it into seriesModel.
@@ -35,7 +38,7 @@ import { SINGLE_REFERRING } from '../../util/model';
 function create(ecModel: GlobalModel, api: ExtensionAPI) {
     const singles: Single[] = [];
 
-    ecModel.eachComponent('singleAxis', function (axisModel: SingleAxisModel, idx: number) {
+    ecModel.eachComponent(COMPONENT_TYPE_SINGLE_AXIS, function (axisModel: SingleAxisModel, idx: number) {
 
         const single = new Single(axisModel, ecModel, api);
         single.name = 'single_' + idx;
@@ -49,11 +52,14 @@ function create(ecModel: GlobalModel, api: ExtensionAPI) {
         singleAxisIndex?: number
         singleAxisId?: string
     }>) {
-        if (seriesModel.get('coordinateSystem') === 'singleAxis') {
+        if (seriesModel.get('coordinateSystem') === COORD_SYS_TYPE_SINGLE_AXIS_COMPATIBLE) {
             const singleAxisModel = seriesModel.getReferringComponents(
-                'singleAxis', SINGLE_REFERRING
+                COMPONENT_TYPE_SINGLE_AXIS, SINGLE_REFERRING
             ).models[0] as SingleAxisModel;
-            seriesModel.coordinateSystem = singleAxisModel && singleAxisModel.coordinateSystem;
+            const single = seriesModel.coordinateSystem = singleAxisModel && singleAxisModel.coordinateSystem;
+            if (single) {
+                associateSeriesWithAxis(single.getAxis(), seriesModel, COORD_SYS_TYPE_SINGLE);
+            }
         }
     });
 

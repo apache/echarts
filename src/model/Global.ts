@@ -184,7 +184,7 @@ class GlobalModel extends Model<ECUnitOption> {
      * Key: seriesIndex.
      * Keep consistent with `_seriesIndices`.
      */
-    private _seriesIndicesMap: HashMap<any>;
+    private _seriesIndicesMap: HashMap<number, number>;
 
     /**
      * Model for store update payload
@@ -641,7 +641,7 @@ echarts.use([${seriesImportName}]);`);
      *     {mainType: 'series',
      *     filter: function (model, index) {...}}
      * );
-     * // result like [component0, componnet1, ...]
+     * // result like [component0, component1, ...]
      */
     findComponents(condition: QueryConditionKindA): ComponentModel[] {
         const query = condition.query;
@@ -810,9 +810,6 @@ echarts.use([${seriesImportName}]);`);
 
     /**
      * Iterate raw series before filtered.
-     *
-     * @param {Function} cb
-     * @param {*} context
      */
     eachRawSeries<T>(
         cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => void,
@@ -852,6 +849,9 @@ echarts.use([${seriesImportName}]);`);
         return each(this.getSeriesByType(subType), cb, context);
     }
 
+    /**
+     * It means "filtered out".
+     */
     isSeriesFiltered(seriesModel: SeriesModel): boolean {
         assertSeriesInitialized(this);
         return this._seriesIndicesMap.get(seriesModel.componentIndex) == null;
@@ -874,7 +874,7 @@ echarts.use([${seriesImportName}]);`);
         }, this);
 
         this._seriesIndices = newSeriesIndices;
-        this._seriesIndicesMap = createHashMap(newSeriesIndices);
+        this._seriesIndicesMap = createHashMap<number, number>(newSeriesIndices);
     }
 
     restoreData(payload?: Payload): void {
@@ -915,7 +915,7 @@ echarts.use([${seriesImportName}]);`);
                 // series may have been removed by `replaceMerge`.
                 series && seriesIndices.push(series.componentIndex);
             });
-            ecModel._seriesIndicesMap = createHashMap(seriesIndices);
+            ecModel._seriesIndicesMap = createHashMap<number, number>(seriesIndices);
         };
 
         assertSeriesInitialized = function (ecModel: GlobalModel): void {
@@ -959,21 +959,25 @@ echarts.use([${seriesImportName}]);`);
 
 
 /**
- * @param condition.mainType Mandatory.
- * @param condition.subType Optional.
- * @param condition.query like {xxxIndex, xxxId, xxxName},
- *        where xxx is mainType.
- *        If query attribute is null/undefined or has no index/id/name,
- *        do not filtering by query conditions, which is convenient for
- *        no-payload situations or when target of action is global.
- * @param condition.filter parameter: component, return boolean.
+ * Either `mainType` or `query` should be provided.
+ * A valid `query` (containing either xxxId, xxxName or xxxIndex) takes precedence
+ * if `query` and `mainType` are both provided.
+ * `query` is like `{xxxIndex, xxxId, xxxName}`,
+ *      where xxx is mainType.
+ *      If query attribute is null/undefined or has no index/id/name,
+ *      do not filtering by query conditions, which is convenient for
+ *      no-payload situations or when target of action is global.
+ * `subType` and `filter` provide further filtering to the above result.
+ * `subType` is determined by `hasOwnProperty`.
+ *
+ * @see {makeQueryConditionKindA}
  */
 export interface QueryConditionKindA {
-    mainType: ComponentMainType;
-    subType?: ComponentSubType;
     query?: {
         [k: string]: number | number[] | string | string[]
     };
+    mainType?: ComponentMainType;
+    subType?: ComponentSubType;
     filter?: (cmpt: ComponentModel) => boolean;
 }
 

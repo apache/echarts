@@ -273,7 +273,7 @@ function createMatrixCell(
     tooltipOption: MatrixOption['tooltip'],
     targetType: MatrixTargetType
 ): void {
-    // Do not use getModel for handy performance optimization.
+    // Do not use getModel - a quick performance optimization.
     _tmpCellItemStyleModel.option = cellOption ? cellOption.itemStyle : null;
     _tmpCellItemStyleModel.parentModel = parentItemStyleModel;
     _tmpCellModel.option = cellOption;

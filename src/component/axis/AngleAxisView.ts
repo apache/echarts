@@ -31,6 +31,7 @@ import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types'
 import { getECData } from '../../util/innerStore';
 import OrdinalScale from '../../scale/Ordinal';
 import { AxisLabelBaseOptionNuance } from '../../coord/axisCommonTypes';
+import { getTickValueOutermost } from '../../coord/axisHelper';
 
 const elementList = [
     'axisLine',
@@ -72,7 +73,7 @@ function fixAngleOverlap(list: TickCoord[]) {
     }
 }
 
-type TickCoord = ReturnType<AngleAxis['getTicksCoords']>[number];
+type TickCoord = Pick<ReturnType<AngleAxis['getTicksCoords']>[number], 'coord'>;
 type TickLabel = ReturnType<AngleAxis['getViewLabels']>[number] & {
     coord: number
 };
@@ -97,14 +98,15 @@ class AngleAxisView extends AxisView {
         const ticksAngles = angleAxis.getTicksCoords({breakTicks: 'none'});
         const minorTickAngles = angleAxis.getMinorTicksCoords();
 
-        const labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem: TickLabel) {
+        const labels: TickLabel[] = [];
+        zrUtil.each(angleAxis.getViewLabels(), function (labelItem: TickLabel) {
+            if (labelItem.tick.offInterval) {
+                return;
+            }
             labelItem = zrUtil.clone(labelItem);
             const scale = angleAxis.scale;
-            const tickValue = scale.type === 'ordinal'
-                ? (scale as OrdinalScale).getRawOrdinalNumber(labelItem.tickValue)
-                : labelItem.tickValue;
-            labelItem.coord = angleAxis.dataToCoord(tickValue);
-            return labelItem;
+            labelItem.coord = angleAxis.dataToCoord(getTickValueOutermost(scale, labelItem.tick));
+            labels.push(labelItem);
         });
 
         fixAngleOverlap(labels);
@@ -250,7 +252,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
         // Use length of ticksAngles because it may remove the last tick to avoid overlapping
         zrUtil.each(labels, function (labelItem, idx) {
             let labelModel = commonLabelModel;
-            const tickValue = labelItem.tickValue;
+            const tickValue = labelItem.tick.value;
 
             const r = radiusExtent[getRadiusIdx(polar)];
             const p = polar.coordToPoint([r + labelMargin, labelItem.coord]);

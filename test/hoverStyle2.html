@@ -114,13 +114,27 @@ under the License.
 
                 if (chart) {
                     var zr = chart.getZr();
-                    var originalRefreshImmediately = zr.refreshImmediately;
-                    zr.refreshImmediately = function () {
-                        var result = originalRefreshImmediately.apply(this, arguments);
-                        // Make sure refreshImmediately is not called when `useHoverLayer`.
-                        genInfo(+new Date());
-                        return result;
-                    };
+
+                    if (zr._refresh) {
+                        var originalRefresh = zr._refresh;
+                        zr._refresh = function () {
+                            var result = originalRefresh.apply(this, arguments);
+                            // Make sure refreshImmediately is not called when `useHoverLayer`.
+                            genInfo(+new Date());
+                            return result;
+                        };
+                    }
+                    else {
+                        var originalRefreshImmediately = zr.refreshImmediately;
+                        // In the old version zrender (6.1.0-), zr.refreshImmediately is called internally.
+                        zr.refreshImmediately = function () {
+                            var result = originalRefreshImmediately.apply(this, arguments);
+                            // Make sure refreshImmediately is not called when `useHoverLayer`.
+                            genInfo(+new Date());
+                            return result;
+                        };
+                    }
+
                 }
 
                 return chart;

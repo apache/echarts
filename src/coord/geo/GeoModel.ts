@@ -39,7 +39,8 @@ import {
     StatesMixinBase,
     PreserveAspectMixin,
     ComponentOnCalendarOptionMixin,
-    ComponentOnMatrixOptionMixin
+    ComponentOnMatrixOptionMixin,
+    RoamHostModel
 } from '../../util/types';
 import { GeoProjection, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
@@ -150,7 +151,7 @@ export interface GeoOption extends
     defaultItemStyleColor?: ZRColor;
 }
 
-class GeoModel extends ComponentModel<GeoOption> {
+class GeoModel extends ComponentModel<GeoOption> implements RoamHostModel {
 
     static type = 'geo';
     readonly type = GeoModel.type;
@@ -310,14 +311,6 @@ class GeoModel extends ComponentModel<GeoOption> {
         }
     }
 
-    setZoom(zoom: number): void {
-        this.option.zoom = zoom;
-    }
-
-    setCenter(center: number[]): void {
-        this.option.center = center;
-    }
-
     // PENGING If selectedMode is null ?
     select(name?: string): void {
         const option = this.option;
@@ -347,6 +340,10 @@ class GeoModel extends ComponentModel<GeoOption> {
     isSelected(name?: string): boolean {
         const selectedMap = this.option.selectedMap;
         return !!(selectedMap && selectedMap[name]);
+    }
+
+    __ownRoamView() {
+        return this.coordinateSystem.view;
     }
 
 }

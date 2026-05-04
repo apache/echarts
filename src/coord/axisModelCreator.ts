@@ -108,6 +108,8 @@ export default function axisModelCreator<
                 // warning if called before all of 'getInitailData' finished.
                 if (option.type === 'category') {
                     if (rawData) {
+                        // NOTICE: return the raw data even if not existing; never use a fallback like `[]`;
+                        // Its existence matters in some legacy cases.
                         return (option as CategoryAxisBaseOption).data;
                     }
                     return this.__ordinalMeta.categories;

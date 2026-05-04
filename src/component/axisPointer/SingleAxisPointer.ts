@@ -27,6 +27,7 @@ import { ScaleDataValue, VerticalAlign, CommonAxisPointerOption } from '../../ut
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SingleAxisModel from '../../coord/single/AxisModel';
 import Model from '../../model/Model';
+import type GlobalModel from '../../model/Global';
 
 const XY = ['x', 'y'] as const;
 const WH = ['width', 'height'] as const;
@@ -48,14 +49,21 @@ class SingleAxisPointer extends BaseAxisPointer {
     ) {
         const axis = axisModel.axis;
         const coordSys = axis.coordinateSystem;
-        const otherExtent = getGlobalExtent(coordSys, 1 - getPointDimIndex(axis));
+        const pointDimIndex = getPointDimIndex(axis);
+        const thisExtent = getGlobalExtent(coordSys, pointDimIndex);
+        const otherExtent = getGlobalExtent(coordSys, 1 - pointDimIndex);
         const pixelValue = coordSys.dataToPoint(value)[0];
 
         const axisPointerType = axisPointerModel.get('type');
         if (axisPointerType && axisPointerType !== 'none') {
             const elStyle = viewHelper.buildElStyle(axisPointerModel);
             const pointerOption = pointerShapeBuilder[axisPointerType](
-                axis, pixelValue, otherExtent
+                axis,
+                pixelValue,
+                thisExtent,
+                otherExtent,
+                axisPointerModel.get('seriesDataIndices'),
+                axisPointerModel.ecModel
             );
             pointerOption.style = elStyle;
 
@@ -129,7 +137,12 @@ class SingleAxisPointer extends BaseAxisPointer {
 
 const pointerShapeBuilder = {
 
-    line: function (axis: SingleAxis, pixelValue: number, otherExtent: number[]): PathProps & {
+    line: function (
+        axis: SingleAxis,
+        pixelValue: number,
+        thisExtent: number[],
+        otherExtent: number[]
+    ): PathProps & {
         type: 'Line'
     } {
         const targetShape = viewHelper.makeLineShape(
@@ -144,16 +157,24 @@ const pointerShapeBuilder = {
         };
     },
 
-    shadow: function (axis: SingleAxis, pixelValue: number, otherExtent: number[]): PathProps & {
+    shadow: function (
+        axis: SingleAxis,
+        pixelValue: number,
+        thisExtent: number[],
+        otherExtent: number[],
+        seriesDataIndices: CommonAxisPointerOption['seriesDataIndices'],
+        ecModel: GlobalModel
+    ): PathProps & {
         type: 'Rect'
     } {
-        const bandWidth = axis.getBandWidth();
+        const bandWidth = viewHelper.calcAxisPointerShadowBandWidth(axis, seriesDataIndices, ecModel);
         const span = otherExtent[1] - otherExtent[0];
+        const [min, max] = viewHelper.calcAxisPointerShadowEnds(pixelValue, thisExtent, bandWidth);
         return {
             type: 'Rect',
             shape: viewHelper.makeRectShape(
-                [pixelValue - bandWidth / 2, otherExtent[0]],
-                [bandWidth, span],
+                [min, otherExtent[0]],
+                [max - min, span],
                 getPointDimIndex(axis)
             )
         };

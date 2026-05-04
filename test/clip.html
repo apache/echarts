@@ -43,6 +43,22 @@ under the License.
             }
         </style>
 
+        <div class="chart" id="scatter-clip-cartesian"></div>
+        <div class="chart" id="large-scatter-clip"></div>
+        <div class="chart" id="scatter-clip-polar"></div>
+        <div class="chart" id="line-dataZoom-time"></div>
+        <div class="chart" id="line-dataZoom-category"></div>
+        <div class="chart" id="bar-clip"></div>
+        <div class="chart" id="bar-large-clip"></div>
+        <div class="chart" id="lines-clip"></div>
+        <div class="chart" id="custom-clip"></div>
+        <div class="chart" id="candlestick-clip"></div>
+        <div class="chart" id="candlestick-large-clip"></div>
+        <div class="chart" id="line-highlight-point"></div>
+        <div class="chart" id="line-clip"></div>
+        <div class="chart" id="polar-clip"></div>
+
+
         <script>
             function makeToggleChartButtons(toggleClip) {
                 return  [{
@@ -59,7 +75,7 @@ under the License.
             }
         </script>
 
-        <div class="chart" id="scatter-clip-cartesian"></div>
+
         <script>
             require([
                 'echarts'
@@ -103,7 +119,7 @@ under the License.
             })
         </script>
 
-        <div class="chart" id="scatter-clip-polar"></div>
+
         <script>
             require([
                 'echarts'
@@ -164,9 +180,6 @@ under the License.
 
 
 
-
-
-        <div class="chart" id="large-scatter-clip"></div>
         <script>
             require([
                 'echarts'
@@ -246,7 +259,7 @@ under the License.
 
 
 
-        <div class="chart" id="lines-clip"></div>
+
         <script>
             require([
                 'echarts'
@@ -307,21 +320,27 @@ under the License.
                         type:'value',
                         min: -1000,
                         max: 1000,
+                        // axisLine: {
+                        //     onZero: true
+                        // },
                         splitLine:{
-                    　　　　lineStyle: {
-                    　　　　    width: 1
-                    　　　　}
-                    　　}
+                            lineStyle: {
+                                width: 1
+                            },
+                        }
                     },
                     yAxis: {
                         type:'value',
                         min: -1000,
                         max: 1000,
+                        // axisLine: {
+                        //     onZero: true
+                        // },
                         splitLine:{
-                    　　　　lineStyle: {
-                    　　　　    width: 1
-                    　　　　}
-                    　　}
+                            lineStyle: {
+                                width: 1
+                            },
+                        }
                     },
                     dataZoom: [{
                             type: 'inside',
@@ -375,7 +394,6 @@ under the License.
 
 
 
-        <div class="chart" id="line-dataZoom-time"></div>
         <script>
             require([
                 'echarts'
@@ -543,7 +561,6 @@ under the License.
 
 
 
-        <div class="chart" id="line-dataZoom-category"></div>
         <script>
             require([
                 'echarts'
@@ -655,7 +672,6 @@ under the License.
         </script>
 
 
-        <div class="chart" id="bar-clip"></div>
         <script>
 
             require([
@@ -778,7 +794,6 @@ under the License.
         </script>
 
 
-        <div class="chart" id="bar-large-clip"></div>
         <script>
             require([
                 'echarts'/*, 'map/js/china' */
@@ -886,7 +901,7 @@ under the License.
             });
         </script>
 
-        <div class="chart" id="custom-clip"></div>
+
         <script>
             require([
                 'echarts'
@@ -967,7 +982,6 @@ under the License.
         </script>
 
 
-        <div class="chart" id="candlestick-clip"></div>
         <script>
             require([
                 'echarts'
@@ -1217,7 +1231,6 @@ under the License.
         </script>
 
 
-        <div class="chart" id="candlestick-large-clip"></div>
         <script>
             require([
                 'echarts',
@@ -1344,7 +1357,6 @@ under the License.
 
 
 
-        <div class="chart" id="line-highlight-point"></div>
         <script>
             require([
                 'echarts'
@@ -1403,7 +1415,6 @@ under the License.
         </script>
 
 
-        <div class="chart" id="line-clip"></div>
         <script>
             require([
                 'echarts'
@@ -1435,7 +1446,7 @@ under the License.
             });
         </script>
 
-        <div class="chart" id="polar-clip"></div>
+
         <script>
             require([
                 'echarts'

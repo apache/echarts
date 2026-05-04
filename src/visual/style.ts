@@ -133,15 +133,13 @@ const seriesStyleTask: StageHandler = {
 const sharedModel = new Model();
 const dataStyleTask: StageHandler = {
     createOnAllSeries: true,
-    performRawSeries: true,
     reset(seriesModel, ecModel) {
-        if (seriesModel.ignoreStyleOnData || ecModel.isSeriesFiltered(seriesModel)) {
+        if (seriesModel.ignoreStyleOnData) {
             return;
         }
 
         const data = seriesModel.getData();
-        const stylePath = seriesModel.visualStyleAccessPath
-            || 'itemStyle';
+        const stylePath = seriesModel.visualStyleAccessPath || 'itemStyle';
         // Set in itemStyle
         const getStyle = getStyleMapper(seriesModel, stylePath);
 
@@ -181,22 +179,15 @@ const dataColorPaletteTask: StageHandler = {
         // Pie and funnel are using different scopes.
         const paletteScopeGroupByType = createHashMap<object>();
         ecModel.eachSeries((seriesModel: SeriesModel) => {
-            const colorBy = seriesModel.getColorBy();
-            if (seriesModel.isColorBySeries()) {
-                return;
+            if (!seriesModel.isColorBySeries()) {
+                const key = seriesModel.type + '-' + seriesModel.getColorBy();
+                inner(seriesModel).scope = paletteScopeGroupByType.get(key)
+                    || paletteScopeGroupByType.set(key, {});
             }
-            const key = seriesModel.type + '-' + colorBy;
-            let colorScope = paletteScopeGroupByType.get(key);
-            if (!colorScope) {
-                colorScope = {};
-                paletteScopeGroupByType.set(key, colorScope);
-            }
-            inner(seriesModel).scope = colorScope;
         });
 
-
         ecModel.eachSeries((seriesModel: SeriesModel) => {
-            if (seriesModel.isColorBySeries() || ecModel.isSeriesFiltered(seriesModel)) {
+            if (seriesModel.isColorBySeries()) {
                 return;
             }
 
@@ -205,8 +196,7 @@ const dataColorPaletteTask: StageHandler = {
             const data = seriesModel.getData();
             const colorScope = inner(seriesModel).scope;
 
-            const stylePath = seriesModel.visualStyleAccessPath
-                || 'itemStyle';
+            const stylePath = seriesModel.visualStyleAccessPath || 'itemStyle';
             const colorKey = getDefaultColorKey(seriesModel, stylePath);
 
             data.each(function (idx) {

@@ -20,14 +20,22 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import PictorialBarView from './PictorialBarView';
 import PictorialBarSeriesModel from './PictorialBarSeries';
-import { createProgressiveLayout, layout } from '../../layout/barGrid';
-import { curry } from 'zrender/src/core/util';
+import {
+    createProgressiveLayout, createCrossSeriesLayoutHandler, registerBarGridAxisHandlers
+} from '../../layout/barGrid';
+import { SERIES_TYPE_PICTORIAL_BAR } from '../../layout/barCommon';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(PictorialBarView);
     registers.registerSeriesModel(PictorialBarSeriesModel);
 
-    registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, curry(layout, 'pictorialBar'));
+    registers.registerLayout(
+        registers.PRIORITY.VISUAL.LAYOUT, createCrossSeriesLayoutHandler(SERIES_TYPE_PICTORIAL_BAR)
+    );
     // Do layout after other overall layout, which can prepare some information.
-    registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, createProgressiveLayout('pictorialBar'));
+    registers.registerLayout(
+        registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, createProgressiveLayout(SERIES_TYPE_PICTORIAL_BAR)
+    );
+
+    registerBarGridAxisHandlers(registers);
 }

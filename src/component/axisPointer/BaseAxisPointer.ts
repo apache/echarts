@@ -33,6 +33,7 @@ import { VerticalAlign, HorizontalAlign, CommonAxisPointerOption } from '../../u
 import { PathProps } from 'zrender/src/graphic/Path';
 import Model from '../../model/Model';
 import { TextProps } from 'zrender/src/graphic/Text';
+import { calcBandWidth } from '../../coord/axisBand';
 
 const inner = makeInner<{
     lastProp?: DisplayableProps
@@ -220,7 +221,7 @@ class BaseAxisPointer implements AxisPointer {
 
         if (animation === 'auto' || animation == null) {
             const animationThreshold = this.animationThreshold;
-            if (isCategoryAxis && axis.getBandWidth() > animationThreshold) {
+            if (isCategoryAxis && calcBandWidth(axis).w > animationThreshold) {
                 return true;
             }
 
@@ -251,7 +252,7 @@ class BaseAxisPointer implements AxisPointer {
         axisPointerModel: AxisPointerModel,
         api: ExtensionAPI
     ) {
-        // Should be implemenented by sub-class.
+        // Should be implemented by sub-class.
     }
 
     /**

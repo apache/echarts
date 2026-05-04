@@ -30,8 +30,6 @@ under the License.
         <script src="lib/testHelper.js"></script>
         <script src="lib/canteen.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
-        <link rel="stylesheet" href="./stream-basic.css" />
-        <script src="./stream-basic.js"></script>
     </head>
     <body>
 
@@ -44,9 +42,9 @@ under the License.
         var chart;
 
         testHelper.controlFrame({
-            pauseAt: 120,
+            pauseAt: 30,
             onFrame: function (frameNumber) {
-                window.printIncrementalOnFrame(chart, frameNumber, recordContainer);
+                testHelper.printCanvasLayerDrawOperationsOnFrame(chart, frameNumber, recordContainer);
             }
         });
 
@@ -99,7 +97,7 @@ under the License.
 
             chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Click **run** and check the printed records:',
+                    'Click **Resume**',
                 ],
                 option: option,
                 height: 450,

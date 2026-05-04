@@ -28,7 +28,7 @@ import { Dictionary } from 'zrender/src/core/types';
 type DispatchActionMethod = ExtensionAPI['dispatchAction'];
 
 type Handler = (
-    currTrigger: 'click' | 'mousemove' | 'leave',
+    currTrigger: 'click' | 'mousemove' | 'mousewheel' | 'leave',
     event: ZRElementEvent,
     dispatchAction: DispatchActionMethod
 ) => void;
@@ -59,13 +59,6 @@ interface Pendings {
 const inner = makeInner<InnerStore, ZRenderType>();
 const each = zrUtil.each;
 
-/**
- * @param {string} key
- * @param {module:echarts/ExtensionAPI} api
- * @param {Function} handler
- *      param: {string} currTrigger
- *      param: {Array.<number>} point
- */
 export function register(key: string, api: ExtensionAPI, handler?: Handler) {
     if (env.node) {
         return;
@@ -89,6 +82,10 @@ function initGlobalListeners(zr: ZRenderType, api?: ExtensionAPI) {
 
     useHandler('click', zrUtil.curry(doEnter, 'click'));
     useHandler('mousemove', zrUtil.curry(doEnter, 'mousemove'));
+    // For example, dataZoom may update series layout while mousewheel,
+    // axisPointer and tooltip need to follow that updates, otherwise,
+    // highlighted items (by axisPointer) may have no chance to downplay.
+    useHandler('mousewheel', zrUtil.curry(doEnter, 'mousewheel'));
     // useHandler('mouseout', onLeave);
     useHandler('globalout', onLeave);
 
@@ -134,7 +131,7 @@ function onLeave(
 }
 
 function doEnter(
-    currTrigger: 'click' | 'mousemove' | 'leave',
+    currTrigger: 'click' | 'mousemove' | 'mousewheel' | 'leave',
     record: Record,
     e: ZRElementEvent,
     dispatchAction: DispatchActionMethod

@@ -22,7 +22,7 @@ import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states
 import * as zrUtil from 'zrender/src/core/util';
 import * as symbolUtil from '../../util/symbol';
 import ChartView from '../../view/Chart';
-import RadarSeriesModel, { RadarSeriesDataItemOption } from './RadarSeries';
+import RadarSeriesModel, { RadarSeriesDataItemOption, SERIES_TYPE_RADAR } from './RadarSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
 import { ColorString } from '../../util/types';
@@ -37,8 +37,8 @@ type RadarSymbol = ReturnType<typeof symbolUtil.createSymbol> & {
 };
 
 class RadarView extends ChartView {
-    static type = 'radar';
-    type = RadarView.type;
+    static readonly type = SERIES_TYPE_RADAR;
+    readonly type = SERIES_TYPE_RADAR;
 
     private _data: SeriesData<RadarSeriesModel>;
 

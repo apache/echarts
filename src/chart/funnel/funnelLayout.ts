@@ -19,11 +19,12 @@
 
 import * as layout from '../../util/layout';
 import {parsePercent, linearMap} from '../../util/number';
-import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption } from './FunnelSeries';
+import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption, SERIES_TYPE_FUNNEL } from './FunnelSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import { isFunction } from 'zrender/src/core/util';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
 
 function getSortedIndices(data: SeriesData, sort: FunnelSeriesOption['sort']) {
@@ -238,8 +239,10 @@ function labelLayout(data: SeriesData) {
     });
 }
 
-export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
-    ecModel.eachSeriesByType('funnel', function (seriesModel: FunnelSeriesModel) {
+export const funnelLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_FUNNEL, funnelLayout);
+
+function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
+    ecModel.eachSeriesByType(SERIES_TYPE_FUNNEL, function (seriesModel: FunnelSeriesModel) {
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');
         const sort = seriesModel.get('sort');

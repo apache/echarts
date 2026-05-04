@@ -1,5 +1,13 @@
 [
   {
+    "link": "https://github.com/apache/echarts/issues/21220",
+    "comment": "",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1774769537778
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/20986",
     "comment": "Tooltip for angleAxis",
     "type": "Others",

@@ -18,23 +18,17 @@
 */
 
 import GraphSeriesModel from './GraphSeries';
-import View from '../../coord/View';
+import { calcCompensationScaleToPreserveNodeSize, isViewCoordSys } from '../../coord/View';
 import { GraphNode } from '../../data/Graph';
 
 export function getNodeGlobalScale(seriesModel: GraphSeriesModel) {
-    const coordSys = seriesModel.coordinateSystem as View;
-    if (coordSys.type !== 'view') {
-        return 1;
-    }
-
-    const nodeScaleRatio = seriesModel.option.nodeScaleRatio;
-
-    const groupZoom = coordSys.scaleX;
-    // Scale node when zoom changes
-    const roamZoom = coordSys.getZoom();
-    const nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
-
-    return nodeScale / groupZoom;
+    const coordSys = seriesModel.coordinateSystem;
+    return isViewCoordSys(coordSys)
+        ? calcCompensationScaleToPreserveNodeSize(coordSys, seriesModel)
+        // Geo coord sys do not use `Transformable`.
+        // PENDING: historially `nodeScaleRatio` has not been applied on
+        // geo based graph series.
+        : 1;
 }
 
 export function getSymbolSize(node: GraphNode) {

@@ -21,32 +21,31 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
-            }
-            #main {
-                background: #fff;
-            }
         </style>
-        <div id="main"></div>
+
+        <div id="main_bars_on_category_radius_axis"></div>
+        <div id="main_bars_on_time_radius_axis"></div>
+
+
         <script>
 
             require(['echarts'], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'));
-
-                chart.setOption({
+                var option = {
                     angleAxis: {
                         // clockwise: false
                     },
+                    tooltip: {},
                     radiusAxis: {
                         type: 'category',
                         data: ['周一', '周二', '周三', '周四'],
@@ -74,14 +73,123 @@ under the License.
                         show: true,
                         data: ['A', 'B', 'C']
                     }
+                };
+
+                var chart = testHelper.create(echarts, 'main_bars_on_category_radius_axis', {
+                    title: [
+                        'Multiple bars on "category" radius axis',
+                    ],
+                    option: option,
+                    height: 500,
                 });
 
                 chart.on('click', function (params) {
                     console.log(params);
                 });
 
-                window.onresize = chart.resize;
             });
+
         </script>
+
+
+
+        <script>
+
+            require(['echarts'], function (echarts) {
+
+                function createOption() {
+
+                    function createData() {
+                        var MIN_X = 1772555412141;
+                        var MAX_X = MIN_X + 24 * 60 * 60 * 1000;
+                        var step = 60 * 1000;
+                        var COUNT = 20;
+                        var actualMinX = Infinity;
+                        var data0 = [];
+                        var data1 = [];
+                        var bar_partially_negative = [];
+
+                        var last = 360;
+                        var lastDelta = 20;
+                        var dataSet = {bar_a: [], bar_b: []};
+                        var minXSet = {bar_a: Infinity, bar_b: Infinity};
+
+                        for (var time = MIN_X, idx = 0; time <= MAX_X && idx < COUNT; time += step, idx++) {
+                            lastDelta += (Math.random() - 0.5) * 5;
+                            last += lastDelta;
+                            addItem('bar_a', time, last);
+                            addItem('bar_b', time, Math.max(90, last - Math.random() * 700));
+                        }
+                        function addItem(prop, x, y) {
+                            dataSet[prop].push([x, y]);
+                            minXSet[prop] = Math.min(minXSet[prop], x);
+                        }
+                        console.log(dataSet, minXSet)
+
+                        return {dataSet, minXSet};
+                    }
+
+                    const {dataSet, minXSet} = createData();
+
+                    return {
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow',
+                            }
+                        },
+                        polar: {
+                        },
+                        angleAxis: {
+                            type: 'value',
+                        },
+                        radiusAxis: {
+                            type: 'time',
+                        },
+                        dataZoom: [{
+                            type: 'slider',
+                            radiusAxisIndex: 0,
+                            orient: 'vertical',
+                            right: 20,
+                        }],
+                        series: [{
+                            type: 'bar',
+                            name: 'bar_a',
+                            coordinateSystem: 'polar',
+                            data: dataSet.bar_a,
+                        }, {
+                            type: 'bar',
+                            name: 'bar_b',
+                            coordinateSystem: 'polar',
+                            data: dataSet.bar_b,
+                        }],
+                        legend: {
+                            left: 10,
+                            top: 'middle',
+                            orient: 'vertical',
+                            show: true,
+                        }
+                    };
+                }
+
+                var chart = testHelper.create(echarts, 'main_bars_on_time_radius_axis', {
+                    title: [
+                        'Multiple bars on "value" radius axis',
+                        'PENDING: baseAxis can not be specified yet when both are value axes',
+                    ],
+                    option: createOption(),
+                    height: 500,
+                });
+
+                chart.on('click', function (params) {
+                    console.log(params);
+                });
+
+            });
+
+        </script>
+
+
+
     </body>
 </html>

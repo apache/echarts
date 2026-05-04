@@ -112,7 +112,7 @@ export class Task<Ctx extends TaskContext> {
     // Injected in schedular
     __pipeline: Pipeline;
     __idxInPipeline: number;
-    __block: boolean;
+    __block: boolean; // FIXME: simplify it - merge with PerformStageTaskOpt['block']?
 
     // Context must be specified implicitly, to
     // avoid miss update context when model changed.
@@ -242,6 +242,14 @@ export class Task<Ctx extends TaskContext> {
         return this.unfinished();
     }
 
+    /**
+     * @tutorial [EC_TASK_DIRTY]
+     *  Task `dirty()` calls typically originate from a trigger of EC_FULL_UPDATE_CYCLE and
+     *  EC_PARTIAL_UPDATE_CYCLE) (See comments in EC_CYCLE. Generally, task dirty propagates
+     *  to downstream tasks.
+     *  Task dirty leads to the `StageHandler['reset']` or `StageHandler['overallReset']` call,
+     *  which discards the previous result and starts over the processing.
+     */
     dirty(): void {
         this._dirty = true;
         this._onDirty && this._onDirty(this.context);

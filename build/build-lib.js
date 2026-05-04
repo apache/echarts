@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,22 +19,19 @@
 * under the License.
 */
 
-.print-incremental-record-title {
-    margin: 10px;
-    font-size: 18px;
-    font-weight: 700;
+
+/**
+ * [CAUTION]!!!
+ *  Ensure this script to be able to run in low versions of Node.js, since
+ *  npm local install or npm install from git can call `npm run prepare`
+ *  automatically, which calls this script. Users existing pipelines may
+ *  use old versions of Node.js. But `build/build.js` requires Node.js
+ *  version > v19 or higher due to some lib like rollup-terser.
+ */
+const prePublish = require('./pre-publish');
+
+async function run() {
+    await prePublish();
 }
-.print-incremental-record-title .print-incremental-cmd-count {
-    color: red;
-}
-.print-incremental-record {
-    margin: 5px 20px;
-}
-.print-incremental-record-line {
-    margin: 10px 10px;
-    font-size: 10px;
-}
-.print-incremental-record-line .print-incremental-cmd-count {
-    color: red;
-    font-size: 12px;
-}
+
+run();

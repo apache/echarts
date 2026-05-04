@@ -1,5 +1,13 @@
 [
   {
+    "link": "",
+    "comment": "label",
+    "type": "Others",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775832919749
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/16978",
     "comment": "",
     "type": "Bug Fixing",

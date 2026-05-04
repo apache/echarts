@@ -19,7 +19,7 @@
 
 import RadiusAxis from './RadiusAxis';
 import AngleAxis from './AngleAxis';
-import PolarModel from './PolarModel';
+import PolarModel, { COORD_SYS_TYPE_POLAR } from './PolarModel';
 import { CoordinateSystem, CoordinateSystemMaster, CoordinateSystemClipArea } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
@@ -37,7 +37,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
 
     readonly dimensions = polarDimensions;
 
-    readonly type = 'polar';
+    readonly type = COORD_SYS_TYPE_POLAR;
 
     /**
      * x of polar center
@@ -117,7 +117,6 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
 
     /**
      * Base axis will be used on stacking.
-     *
      */
     getBaseAxis() {
         return this.getAxesByScale('ordinal')[0]
@@ -140,6 +139,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
      */
     dataToPoint(data: ScaleDataValue[], clamp?: boolean, out?: number[]) {
         return this.coordToPoint([
+            // Must be the same order as polarDimensions
             this._radiusAxis.dataToRadius(data[0], clamp),
             this._angleAxis.dataToAngle(data[1], clamp)
         ], out);
@@ -151,6 +151,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
     pointToData(point: number[], clamp?: boolean, out?: number[]) {
         out = out || [];
         const coord = this.pointToCoord(point);
+        // Must be the same order as polarDimensions
         out[0] = this._radiusAxis.radiusToData(coord[0], clamp);
         out[1] = this._angleAxis.angleToData(coord[1], clamp);
         return out;

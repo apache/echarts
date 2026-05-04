@@ -62,16 +62,45 @@ const useCNMirror = process.argv.includes('--useCNMirror') || !!process.env.USE_
 
 console.info(chalk.green('useCNMirror:'), useCNMirror);
 
+const ECHARTS_EXAMPLES_DIR = path.resolve(__dirname, '../../../echarts-examples');
 const CLI_FIXED_THREADS_COUNT = 1;
 
 function serve() {
     clearStaledResults();
 
     const server = http.createServer((request, response) => {
+
+        // This is for visual test cases from `npm run test:visual:copy:examples`.
+        // NOTE: `server-handler` `rewrites` does not support to visit ancestor directories.
+        function rewrite(urlPrefix) {
+            if (request.url.startsWith(urlPrefix)) {
+                // request.url is like '/xxx/yyy'
+                const filePath = path.join(ECHARTS_EXAMPLES_DIR, request.url);
+                // console.log('custom rewrite: ', filePath, request.url);
+                if (path.extname(filePath) === '.json') {
+                    // Then jQuery can automatically parse JSON string to JSON object.
+                    // Some cases rely on that.
+                    response.setHeader('Content-Type', 'application/json');
+                }
+                return fs.createReadStream(filePath)
+                    .on('error', () => {
+                        response.statusCode = 404;
+                        response.end('Not found');
+                    })
+                    .pipe(response);
+            }
+        }
+        let rewriteResult;
+        if ((rewriteResult = rewrite('/public/data/asset/data'))
+            || (rewriteResult = rewrite('/e2e/e2e-asset'))
+        ) {
+            return rewriteResult;
+        }
+
         return handler(request, response, {
             cleanUrls: false,
             // Root folder of echarts
-            public: __dirname + '/../../'
+            public: __dirname + '/../../',
         });
     });
 

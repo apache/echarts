@@ -28,19 +28,16 @@ import type ExtensionAPI from '../../core/ExtensionAPI';
 import type VisualMapModel from '../../component/visualMap/VisualMapModel';
 import type PiecewiseModel from '../../component/visualMap/PiecewiseModel';
 import type ContinuousModel from '../../component/visualMap/ContinuousModel';
-import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
+import { GeoLikeCoordSys, isCoordinateSystemType, isGeoLikeCoordSys } from '../../coord/CoordinateSystem';
 import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import type Element from 'zrender/src/Element';
 import type Matrix from '../../coord/matrix/Matrix';
+import { calcBandWidth } from '../../coord/axisBand';
+import { getIncrementalId } from '../../util/model';
 
-// Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
-interface GeoLikeCoordSys extends CoordinateSystem {
-    dimensions: ['lng', 'lat']
-    getViewRect(): graphic.BoundingRect
-}
 
 function getIsInPiecewiseRange(
     dataExtent: number[],
@@ -93,12 +90,6 @@ function getIsInContinuousRange(dataExtent: number[], range: number[]) {
     };
 }
 
-function isGeoCoordSys(coordSys: CoordinateSystem): coordSys is GeoLikeCoordSys {
-    const dimensions = coordSys.dimensions;
-    // Not use coordSys.type === 'geo' because coordSys maybe extended
-    return dimensions[0] === 'lng' && dimensions[1] === 'lat';
-}
-
 class HeatmapView extends ChartView {
 
     static readonly type = 'heatmap';
@@ -136,7 +127,7 @@ class HeatmapView extends ChartView {
         ) {
             this._renderOnGridLike(seriesModel, api, 0, seriesModel.getData().count());
         }
-        else if (isGeoCoordSys(coordSys)) {
+        else if (isGeoLikeCoordSys(coordSys)) {
             this._renderOnGeo(
                 coordSys, seriesModel, visualMapOfThisSeries, api
             );
@@ -156,7 +147,7 @@ class HeatmapView extends ChartView {
         const coordSys = seriesModel.coordinateSystem;
         if (coordSys) {
             // geo does not support incremental rendering?
-            if (isGeoCoordSys(coordSys)) {
+            if (isGeoLikeCoordSys(coordSys)) {
                 this.render(seriesModel, ecModel, api);
             }
             else {
@@ -175,7 +166,7 @@ class HeatmapView extends ChartView {
         api: ExtensionAPI,
         start: number,
         end: number,
-        incremental?: boolean
+        useIncremental?: boolean
     ) {
         const coordSys = seriesModel.coordinateSystem as Cartesian2D | Calendar | Matrix;
         const isCartesian2d = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d');
@@ -199,8 +190,8 @@ class HeatmapView extends ChartView {
             }
 
             // add 0.5px to avoid the gaps
-            width = xAxis.getBandWidth() + .5;
-            height = yAxis.getBandWidth() + .5;
+            width = calcBandWidth(xAxis).w + .5;
+            height = calcBandWidth(yAxis).w + .5;
             xAxisExtent = xAxis.scale.getExtent();
             yAxisExtent = yAxis.scale.getExtent();
         }
@@ -241,10 +232,10 @@ class HeatmapView extends ChartView {
                 if (isNaN(data.get(dataDims[2], idx) as number)
                     || isNaN(dataDimX as number)
                     || isNaN(dataDimY as number)
-                    || dataDimX < xAxisExtent[0]
-                    || dataDimX > xAxisExtent[1]
-                    || dataDimY < yAxisExtent[0]
-                    || dataDimY > yAxisExtent[1]
+                    || (dataDimX as number) < xAxisExtent[0]
+                    || (dataDimX as number) > xAxisExtent[1]
+                    || (dataDimY as number) < yAxisExtent[0]
+                    || (dataDimY as number) > yAxisExtent[1]
                 ) {
                     continue;
                 }
@@ -341,11 +332,11 @@ class HeatmapView extends ChartView {
 
             toggleHoverEmphasis(rect, focus, blurScope, emphasisDisabled);
 
-            rect.incremental = incremental;
+            rect.incremental = getIncrementalId(seriesModel, useIncremental);
             // PENDING
-            if (incremental) {
+            if (useIncremental) {
                 // Rect must use hover layer if it's incremental.
-                rect.states.emphasis.hoverLayer = true;
+                rect.states.emphasis.hoverLayer = graphic.HOVER_LAYER_FOR_INCREMENTAL;
             }
 
             group.add(rect);

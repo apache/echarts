@@ -112,3 +112,11 @@ See `MIN_VERSION` in `echarts/build/testDts.js` for the minimal supported TS ver
     + `echarts/type/dist/all.d.ts` `echarts/type/dist/core.d.ts` `echarts/type/dist/option.d.ts` `echarts/type/dist/features.d.ts` `echarts/type/dist/components.d.ts` `echarts/type/dist/charts.d.ts` `echarts/type/dist/renderers.d.ts` import type declarations from a single source `echarts/types/dist/shared.d.ts`; otherwise TS error `TS2442` may occur.
 
 + TSv4.7~TSv5.7 disallows `require` a ESM file from a CJS file when `moduleResolution: "NodeNext"` (introduced in TSv4.7); otherwise TS error `TS1471` may arise. `tsc` recognizes `.cts` as CJS rather than ESM even when `package.json` uses `"type": "module"`.
+
+
+
+## Library dependency records
+
++ @rollup/plugin-terser:
+    + Temporarily deliberately use v0.4.4, since v1.0.0+ require newer versions of Node.js (may v19+) and may break users existing pipeline, and v0.4.4 has no security issue yet and produces the same size of min file. It can be upgraded to v1.0.0+ in future if concrete requirements arise.
+

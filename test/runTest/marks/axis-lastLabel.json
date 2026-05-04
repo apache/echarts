@@ -1,5 +1,29 @@
 [
   {
+    "link": "",
+    "comment": "By axis change",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775156183157
+  },
+  {
+    "link": "",
+    "comment": "Expected by fixing category axis start end labels hide by \"showMin/MaxLabel\".",
+    "type": "New Feature",
+    "markedBy": "100pah",
+    "lastVersion": "6.1.0",
+    "markTime": 1774545952303
+  },
+  {
+    "link": "",
+    "comment": "Fix min max label show in category axis. 15af0db028d0092ecf56e3c97a59b8f78721401f",
+    "type": "New Feature",
+    "markedBy": "100pah",
+    "lastVersion": "6.1.0",
+    "markTime": 1774368642831
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/21059",
     "comment": "Introduce by the `outerBounds` feature that avoid axis name overflowing the canvas by default. In the previous result the label overflow the viewport slightly.",
     "type": "New Feature",

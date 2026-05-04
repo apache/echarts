@@ -27,16 +27,16 @@
 
 import Group from 'zrender/src/graphic/Group';
 import Element, {ElementEvent, ElementTextConfig} from 'zrender/src/Element';
-import { DataFormatMixin } from '../model/mixin/dataFormat';
-import GlobalModel from '../model/Global';
-import ExtensionAPI from '../core/ExtensionAPI';
-import SeriesModel from '../model/Series';
+import type { DataFormatMixin } from '../model/mixin/dataFormat';
+import type GlobalModel from '../model/Global';
+import type ExtensionAPI from '../core/ExtensionAPI';
+import type SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
-import SeriesData from '../data/SeriesData';
+import type SeriesData from '../data/SeriesData';
 import { Dictionary, ElementEventName, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
-import { TooltipMarker } from './format';
+import type { TooltipMarker } from './format';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
 import { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
@@ -45,11 +45,15 @@ import { TSpanStyleProps } from 'zrender/src/graphic/TSpan';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
-import { Source } from '../data/Source';
-import Model from '../model/Model';
-import { DataStoreDimensionType } from '../data/DataStore';
-import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
-import { PrimaryTimeUnit } from './time';
+import type { Source } from '../data/Source';
+import type Model from '../model/Model';
+import type { DataStoreDimensionType } from '../data/DataStore';
+import type { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
+import type { PrimaryTimeUnit } from './time';
+import type ChartView from '../view/Chart';
+import type ComponentModel from '../model/Component';
+import type View from '../coord/View';
+import type ComponentView from '../view/Component';
 
 
 // ---------------------------
@@ -59,7 +63,15 @@ import { PrimaryTimeUnit } from './time';
 export {Dictionary};
 
 export type RendererType = 'canvas' | 'svg';
+/**
+ * NOTICE: For historical reason, echarts and zrender have not enabled TS config
+ * `strictNullChecks` yet. Therefore, a explicitly declared `NullUndefined` can
+ * indicate a variable can be `null` or `undefined` without more investigation,
+ * but a variable without `NullUndefined` may also be `null` or `undefined`,
+ * which has to be determined by the implementation.
+ */
 export type NullUndefined = null | undefined;
+export const UNDEFINED_STR = 'undefined';
 
 export type LayoutOrient = 'vertical' | 'horizontal';
 export type HorizontalAlign = 'left' | 'center' | 'right';
@@ -103,6 +115,8 @@ export interface ComponentTypeInfo {
     main: ComponentMainType; // Never null/undefined. `''` represents absence.
     sub: ComponentSubType; // Never null/undefined. `''` represents absence.
 }
+
+export const COMPONENT_MAIN_TYPE_SERIES = 'series';
 
 export interface ECElement extends Element {
     highDownSilentOnTouch?: boolean;
@@ -176,7 +190,7 @@ export interface DownplayPayload extends Payload {
     notBlur?: boolean
 }
 
-// Payload includes override anmation info
+// Payload includes override animation info
 export interface PayloadAnimationPart {
     duration?: number
     easing?: AnimationEasing
@@ -286,7 +300,18 @@ export interface ActionInfo {
     type: string;
     // If not provided, use the same string of `type`.
     event?: string;
-    // update method.
+    // Update method. Can be:
+    //  - `ECUpdateMethodName`
+    //    - e.g., 'update'
+    //  - `ComponentMainType.ComponentSubType:ECUpdateMethodName`: (FIXME: Not a rigorous mechanism!)
+    //    Only call a specified view method directly.
+    //    - e.g., 'series:focusNodeAdjacency': (DANGEROUS!)
+    //      Call `View['focusNodeAdjacency']` method of all series or filtered if payload
+    //      `{xxxId, xxxName, xxxIndex}` is provided.
+    //    - e.g., ':updateAxisPointer': (DANGEROUS!)
+    //      Call `View['updateAxisPointer']` method of all series and components or filtered
+    //      if payload `{xxxId, xxxName, xxxIndex}` is provided.
+    // By default 'update' (i.e., EC_FULL_UPDATE).
     update?: string;
     // `ActionHandler` is designed to do nothing other than modify models.
     action?: ActionHandler;
@@ -300,6 +325,8 @@ export interface ActionInfo {
     // When `refineEvent` is provided, still publish the auto generated "event for connect" to users.
     // Only for backward compatibility, do not use it in future actions and events.
     publishNonRefinedEvent?: boolean;
+    // Experimental - may change in future; only internal usage is allowed.
+    componentQuery?: boolean;
 }
 export interface ActionHandler {
     (payload: Payload, ecModel: GlobalModel, api: ExtensionAPI): void | ECEventData;
@@ -311,6 +338,10 @@ export interface ActionRefineEvent {
         eventContent: ECActionRefinedEventContent<ECActionRefinedEvent>
     }
 }
+export type ActionUpdateComponentQuery = {
+    mainType: ComponentMainType
+    indexList: number[]
+}[];
 
 export interface OptionPreprocessor {
     (option: ECUnitOption, isTheme: boolean): void
@@ -328,18 +359,26 @@ export interface StageHandlerOverallReset {
     (ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload): void
 }
 export interface StageHandler {
+
     /**
-     * Indicate that the task will be piped all series
-     * (`performRawSeries` indicate whether includes filtered series).
+     * Indicate that the "series stage task" will be piped for all series
+     * (filtered series is included iff `performRawSeries: true`).
+     *
+     * OVERALL_STAGE_TASK (See `overallReset`) can not set `createOnAllSeries: true`.
      */
     createOnAllSeries?: boolean;
+
     /**
-     * Indicate that the task will be only piped in the pipeline of this type of series.
-     * (`performRawSeries` indicate whether includes filtered series).
+     * Indicate that the task will only be piped in the pipeline of this type of series.
+     * (filtered series is included iff `performRawSeries: true`).
+     * It is available for both `reset` and `overallReset`.
      */
     seriesType?: string;
+
     /**
-     * Indicate that the task will be only piped in the pipeline of the returned series.
+     * Indicate that the task will only be piped in the pipeline of the returned series.
+     * It is called in EC_PREPARE, before `CoordinateSystem['create']`.
+     * It is available for both `reset` and `overallReset`.
      */
     getTargetSeries?: (ecModel: GlobalModel, api: ExtensionAPI) => HashMap<SeriesModel>;
 
@@ -352,18 +391,55 @@ export interface StageHandler {
      * Called only when this task in a pipeline.
      */
     plan?: StageHandlerPlan;
+
     /**
-     * If `overallReset` specified, an "overall task" will be created.
-     * "overall task" does not belong to a certain pipeline.
-     * They always be "performed" in certain phase (depends on when they declared).
-     * They has "stub"s to connect with pipelines (one stub for one pipeline),
-     * delivering info like "dirty" and "output end".
+     * If `overallReset` is specified, an OVERALL_STAGE_TASK will be created.
+     *
+     * @tutorial [OVERALL_STAGE_TASK]
+     *  An OVERALL_STAGE_TASK resides across multiple pipelines, and is associated with
+     *  pipelines by "stub"s, which deliver messages like "dirty" and "output end".
+     *  OVERALL_STAGE_TASK does not support `progess` method.
+     *
+     * The `overallReset` method is called iff this task is "dirty" (See `Task['dirty']`).
+     * See EC_TASK_DIRTY for a summary of possible `dirty()` calls.
+     *
+     * @see dirtyOnOverallProgress If a OVERALL_STAGE_TASK need to handle series data.
      */
     overallReset?: StageHandlerOverallReset;
+
     /**
-     * Called only when this task in a pipeline, and "dirty".
+     * If `reset` is specified, a SERIES_STAGE_TASK will be created.
+     *
+     * @tutorial [SERIES_STAGE_TASK]
+     *  A SERIES_STAGE_TASK is owned by a pipeline and is specific to a single series.
+     *
+     * The `reset` method is called iff this task is "dirty" (See `Task['dirty']`).
+     * See EC_TASK_DIRTY for a summary of possible `dirty()` calls.
+     *
+     * NOTICE: `dirtyOnOverallProgress: true` cause that the corresponding `overallReset`
+     *  and `reset` of downsteams tasks may also be called in EC_PROGRESSIVE_CYCLE.
+     *  But in this case, `CoordinateSystem#create` and `CoordinateSystem#update` are not called.
+     *  Only lifecycle like `coordsys:aftercreate` can be ensured to be only called in EC_FULL_UPDATE
+     *  of EC_FULL_UPDATE_CYCLE and EC_PARTIAL_UPDATE_CYCLE, but not in EC_PROGRESSIVE_CYCLE and
+     *  EC_APPEND_DATA_CYCLE.
      */
     reset?: StageHandlerReset;
+
+    /**
+     * This is a temporary mechanism primarily for a dataZoom case in `appendData`.
+     *
+     * Ordinarily, `overallReset` is NOT called in progress in the subsequent frames, which is suitable
+     * for most OVERALL_STAGE_TASK, where no series data related operations is performed (e.g., color
+     * palette task).
+     * But some certain OVERALL_STAGE_TASK need to handle series data, where `dirtyOnOverallProgress: true`
+     * is required. It allows all pipelines to be blocked until this stage, thereby no `overallReset` call
+     * being omitted. (See PerformStageTaskOpt['block'] for its meaning.) (e.g., dataZoom task)
+     *
+     * NOTE_IMPL: It will set this OVERALL_STAGE_TASK dirty when the pipeline progress.
+     * Moreover, to avoid calling the OVERALL_STAGE_TASK each frame (too frequent),
+     * it block the pipeline until this stage (via `task.__block`).
+     */
+    dirtyOnOverallProgress?: boolean;
 }
 
 export interface StageHandlerInternal extends StageHandler {
@@ -421,12 +497,20 @@ export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
 
 /**
- * @usage For example,
- * ```js
- * { ordinalNumbers: [2, 5, 3, 4] }
- * ```
- * means that ordinal 2 should be displayed on tick 0,
- * ordinal 5 should be displayed on tick 1, ...
+ * @usage
+ * For example,
+ *  ```js
+ *  { ordinalNumbers: [2, 5, 3, 4] }
+ *  ```
+ *  means that "ordinal number" 2 should be displayed on `tick.value` 0,
+ *  "ordinal number" 5 should be displayed on `tick.value` 1, ...
+ * NOTICE:
+ *  - The index/key of `ordinalNumbers` is "tick.value" rather than the index of
+ *    `scale.getTicks()`. They are differnet when `axis.min` is set to be not zero,
+ *    or `axisTick/axisLabel.interval > 0`.
+ *  - The value of `ordinalNumbers` must be a valid `OrdinalNumber`;
+ *    null/undefined is not supported.
+ *  - `OrdinalNumber` is always from `0` to `ordinalMeta.categories.length - 1`.
  */
 export type OrdinalSortInfo = {
     ordinalNumbers: OrdinalNumber[];
@@ -533,9 +617,39 @@ export type AxisLabelFormatterExtraBreakPart = {
 };
 
 export interface ScaleTick {
-    value: number,
-    break?: VisualAxisBreak,
-    time?: TimeScaleTick['time'],
+    /**
+     * This is a number corresponding to the the original business value,
+     * that is, a value in the "outmost" space, the result of `Scale['parse']`.
+     *
+     * NOTICE:
+     *  - In `LogScale`, this the value in the pow space (the original space).
+     *  - In `TimeScale`, this is a timestamp.
+     *  - In `OrdinalScale`, this is NOT an `OrdinalNumber`, since `OrdinalSortInfo` exists.
+     *    This `value` is effectively an `OrdinalNumber` before being sorted.
+     *    Should use the conversion `const tickValue = getTickValueOutermost(scale, tick)`
+     *    accordingly, e.g., as the input of user callbacks, `dataToCoord` and `scale.normalize`.
+     *    PENDING:
+     *      And this case is not properly covered by `scaleMapping` polymorphism as `LogScale`
+     *      does - the manual call of `getTickValueOutermost` is still required everywhere.
+     *    Note use cases below:
+     *      - `axis.min/max` should be specified in "unsorted" space.
+     *      - Futher position calculation requires values in "unsorted" space, such as
+     *        `splitLine`, `splitArea`, minor ticks, etc.
+     *      - `anid` (animation id) requires a value in "unsorted" space, since the animation
+     *        typically represents the location (in `axisTick`, `splitLine` and `splitArea`,
+     *        especially when `boundaryGap: true`).
+     *      - Axis label requires a value in "sorted" space.
+     *      - User interactions (tooltip, axis pointer, etc.) gets values in "sorted" space.
+     */
+    value: number;
+
+    break?: VisualAxisBreak;
+    time?: TimeScaleTick['time'];
+    // NOTICE: null/undefined mean it is unknown whether this tick is "nice".
+    notNice?: boolean | NullUndefined;
+    // Only works on category axis.
+    // Be `true` if this tick is out of category interval.
+    offInterval?: boolean | NullUndefined,
 };
 export interface TimeScaleTick extends ScaleTick {
     time: {
@@ -560,24 +674,6 @@ export interface TimeScaleTick extends ScaleTick {
         upperTimeUnit: PrimaryTimeUnit,
         lowerTimeUnit: PrimaryTimeUnit,
     }
-};
-export interface OrdinalScaleTick extends ScaleTick {
-    /**
-     * Represents where the tick will be placed visually.
-     * Notice:
-     * The value is not the raw ordinal value. And do not changed
-     * after ordinal scale sorted.
-     * We need to:
-     * ```js
-     * const coord = dataToCoord(ordinalScale.getRawOrdinalNumber(tick.value)).
-     * ```
-     * Why place the tick value here rather than the raw ordinal value (like LogScale did)?
-     * Because ordinal scale sort is the different case from LogScale, where
-     * axis tick, splitArea should better not to be sorted, especially in
-     * anid(animation id) when `boundaryGap: true`.
-     * Only axis label are sorted.
-     */
-    value: number
 };
 
 /**
@@ -708,6 +804,8 @@ export type ECUnitOption = {
     hoverLayerThreshold?: number
 
     legacyViewCoordSysCenterBase?: boolean
+    // A temporary guard in case that some unexpected effect occurs after axis impl refactoring.
+    legacyMinMaxDontInverseAxis?: boolean
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
@@ -1080,18 +1178,26 @@ export interface RoamOptionMixin {
      */
     roamTrigger?: 'global' | 'selfRect' | NullUndefined
     /**
-     * Current center position.
+     * @see VIEW_COORD_SYS_CENTER_ZOOM_DEFINITION
      */
     center?: (number | string)[]
     /**
-     * Current zoom level. Default is 1
+     * Current transformation scale. Default is 1.
+     * @see VIEW_COORD_SYS_CENTER_ZOOM_DEFINITION
      */
     zoom?: number
-
+    /**
+     * Limit of `zoom`. The name is inconsistent for historical reason.
+     */
     scaleLimit?: {
         min?: number
         max?: number
     }
+
+    /**
+     * Symbol size scale ratio on roaming.
+     */
+    nodeScaleRatio?: number
 }
 
 export interface PreserveAspectMixin {
@@ -1530,8 +1636,9 @@ export interface CommonTooltipOption<FormatterParams> {
 
     /**
      * When to trigger
+     * NOTE: mousewheel may modify view by dataZoom.
      */
-    triggerOn?: 'mousemove' | 'click' | 'none' | 'mousemove|click'
+    triggerOn?: 'mousemove' | 'click' | 'none' | 'mousewheel' | 'mousemove|click|mousewheel'
     /**
      * Whether to not hide popup content automatically
      */
@@ -1761,8 +1868,10 @@ export interface ComponentOption {
 }
 
 /**
- * - "data": Use it as "dataCoordSys", each data item is laid out based on a coord sys.
- * - "box": Use it as "boxCoordSys", the overall bounding rect or anchor point is calculated based on a coord sys.
+ * - "data": Each data item is laid out based on a coord sys.
+ *   See `COORD_SYS_USAGE_KIND_DATA`.
+ * - "box": The overall bounding rect or anchor point is calculated based on a coord sys.
+ *   See `COORD_SYS_USAGE_KIND_BOX`.
  *   e.g.,
  *      grid rect (cartesian rect) is calculate based on matrix/calendar coord sys;
  *      pie center is calculated based on calendar/cartesian;
@@ -2062,3 +2171,41 @@ export interface AriaOption extends AriaLabelOption {
 export interface AriaOptionMixin {
     aria?: AriaOption
 }
+
+
+export interface RoamPayload extends Payload {
+    type: `${string}${typeof ROAM_ACTION_TYPE_SUFFIX}`
+    dx: number
+    dy: number
+    // This is a delta zoom, not an absolute zoom.
+    zoom: number
+    originX: number
+    originY: number
+}
+
+export const ROAM_ACTION_TYPE_SUFFIX = 'Roam';
+
+/**
+ * @usage class Xxx implements RoamHostModel {...}
+ */
+export interface RoamHostModel {
+    // Can return a VIEW_COORD_SYS only if the it is owned by this series or component.
+    // For example, if a series graph lays out on a separate geo component, do not return;
+    // Otherwise, graph can return if it has an exclusive VIEW_COORD_SYS.
+    __ownRoamView: () => View | NullUndefined;
+}
+export type RoamHostComponentOrSeries = ComponentModel<ComponentOption & RoamOptionMixin> & RoamHostModel;
+
+export interface RoamHostView {
+    /**
+     * A performance shortcut - called by action handler to update the view directly
+     * without any data/visual processing (which are assumed to be unchanged), while
+     * ensuring consistent behavior between internal and external action triggers.
+     *
+     * Only "own coordinate system" is updated here. Dependent series/components should
+     * be updated in `ChartView['updateTransform']` or `ComponentView['updateTransform']`.
+     */
+    __updateOnOwnRoam(payload: RoamPayload, componentOrSeries: ComponentModel, api: ExtensionAPI): void
+}
+
+export type ChartComponentRoamHostView = (ChartView | ComponentView) & RoamHostView;

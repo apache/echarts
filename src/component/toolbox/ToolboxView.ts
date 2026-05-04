@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
 import * as graphic from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis } from '../../util/states';
@@ -28,7 +27,7 @@ import ComponentView from '../../view/Component';
 import ToolboxModel from './ToolboxModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { DisplayState, Dictionary, Payload } from '../../util/types';
+import { DisplayState, Dictionary, Payload, NullUndefined } from '../../util/types';
 import {
     ToolboxFeature,
     getFeature,
@@ -42,8 +41,10 @@ import ZRText from 'zrender/src/graphic/Text';
 import { getFont } from '../../label/labelStyle';
 import { box, createBoxLayoutReference, getLayoutRect, positionElement } from '../../util/layout';
 import tokens from '../../visual/tokens';
+import { bind, createHashMap, curry, each, filter, HashMap, isFunction, isString } from 'zrender/src/core/util';
 
 type IconPath = ToolboxFeatureModel['iconPaths'][string];
+type FeatureName = string;
 
 type ExtendedPath = IconPath & {
     __title: string
@@ -52,9 +53,15 @@ type ExtendedPath = IconPath & {
 class ToolboxView extends ComponentView {
     static type = 'toolbox' as const;
 
-    _features: Dictionary<ToolboxFeature | UserDefinedToolboxFeature>;
+    /**
+     * Current enabled features, including only features having `show: true`.
+     */
+    _features: HashMap<ToolboxFeature | UserDefinedToolboxFeature | NullUndefined, FeatureName>;
 
-    _featureNames: string[];
+    /**
+     * Current enabled feature names, including only features having `show: true`.
+     */
+    _featureNames: FeatureName[];
 
     render(
         toolboxModel: ToolboxModel,
@@ -74,35 +81,46 @@ class ToolboxView extends ComponentView {
         const itemSize = +toolboxModel.get('itemSize');
         const isVertical = toolboxModel.get('orient') === 'vertical';
         const featureOpts = toolboxModel.get('feature') || {};
-        const features = this._features || (this._features = {});
+        const features = this._features || (this._features = createHashMap());
 
-        const featureNames: string[] = [];
-        zrUtil.each(featureOpts, function (opt, name) {
-            featureNames.push(name);
+        const newFeatureNames: FeatureName[] = []; // Includes both `show: true/false`.
+        each(featureOpts, function (opt, name) {
+            newFeatureNames.push(name);
         });
 
-        (new DataDiffer(this._featureNames || [], featureNames))
+        // Diff by feature name.
+        (new DataDiffer(this._featureNames || [], newFeatureNames))
             .add(processFeature)
             .update(processFeature)
-            .remove(zrUtil.curry(processFeature, null))
+            .remove(curry(processFeature, null))
             .execute();
 
         // Keep for diff.
-        this._featureNames = featureNames;
+        this._featureNames = filter(newFeatureNames, function (name) {
+            return features.hasKey(name);
+        });
 
-        function processFeature(newIndex: number, oldIndex?: number) {
-            const featureName = featureNames[newIndex];
-            const oldName = featureNames[oldIndex];
+        function processFeature(newIndex: number | NullUndefined, oldIndex?: number | NullUndefined) {
+            const isDiffAdd = newIndex != null && oldIndex == null;
+            const isDiffUpdate = newIndex != null && oldIndex != null;
+            const isDiffRemove = newIndex == null;
+
+            const featureName = (isDiffAdd || isDiffUpdate)
+                ? newFeatureNames[newIndex]
+                : newFeatureNames[oldIndex];
             const featureOpt = featureOpts[featureName];
-            const featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel) as ToolboxFeatureModel;
+            const featureModel = (isDiffAdd || isDiffUpdate)
+                ? new Model(featureOpt, toolboxModel, ecModel) as ToolboxFeatureModel
+                : null;
+            // `.get('show')` Also considered UserDefinedToolboxFeature
+            const isFeatureShow = featureModel && featureModel.get('show');
+
             let feature: ToolboxFeature | UserDefinedToolboxFeature;
 
-            // FIX#11236, merge feature title from MagicType newOption. TODO: consider seriesIndex ?
-            if (payload && payload.newTitle != null && payload.featureName === featureName) {
-                featureOpt.title = payload.newTitle;
-            }
-
-            if (featureName && !oldName) { // Create
+            if (isDiffAdd) { // DIFF_ADD
+                if (!isFeatureShow) {
+                    return;
+                }
                 if (isUserFeatureName(featureName)) {
                     feature = {
                         onclick: featureModel.option.onclick,
@@ -116,34 +134,32 @@ class ToolboxView extends ComponentView {
                     }
                     feature = new Feature();
                 }
-                features[featureName] = feature;
+                features.set(featureName, feature);
             }
-            else {
-                feature = features[oldName];
-                // If feature does not exist.
-                if (!feature) {
-                    return;
+            else { // DIFF_UPDATE or DIFF_REMOVE
+                feature = features.get(featureName);
+            }
+
+            if (isDiffRemove || !isFeatureShow) {
+                if (isTooltipFeature(feature) && feature.dispose) {
+                    feature.dispose(ecModel, api);
                 }
+                features.removeKey(featureName);
+                return;
             }
-            feature.uid = getUID('toolbox-feature');
+
+            // FIX#11236, merge feature title from MagicType newOption. TODO: consider seriesIndex ?
+            if (payload && payload.newTitle != null && payload.featureName === featureName) {
+                // FIXME: ec option should not be modified here.
+                featureOpt.title = payload.newTitle;
+            }
+
+            if (isDiffAdd) {
+                feature.uid = getUID('toolbox-feature');
+            }
             feature.model = featureModel;
             feature.ecModel = ecModel;
             feature.api = api;
-
-            const isToolboxFeature = feature instanceof ToolboxFeature;
-            if (!featureName && oldName) {
-                isToolboxFeature
-                    && (feature as ToolboxFeature).dispose
-                    && (feature as ToolboxFeature).dispose(ecModel, api);
-                return;
-            }
-
-            if (!featureModel.get('show') || (isToolboxFeature && (feature as ToolboxFeature).unusable)) {
-                isToolboxFeature
-                    && (feature as ToolboxFeature).remove
-                    && (feature as ToolboxFeature).remove(ecModel, api);
-                return;
-            }
 
             createIconPaths(featureModel, feature, featureName);
 
@@ -157,10 +173,8 @@ class ToolboxView extends ComponentView {
                 }
             };
 
-            if (feature instanceof ToolboxFeature) {
-                if (feature.render) {
-                    feature.render(featureModel, ecModel, api, payload);
-                }
+            if (isTooltipFeature(feature) && feature.render) {
+                feature.render(featureModel, ecModel, api, payload);
             }
         }
 
@@ -188,14 +202,14 @@ class ToolboxView extends ComponentView {
             const titles = featureModel.get('title') || {};
             let iconsMap: Dictionary<string>;
             let titlesMap: Dictionary<string>;
-            if (zrUtil.isString(icons)) {
+            if (isString(icons)) {
                 iconsMap = {};
                 iconsMap[featureName] = icons;
             }
             else {
                 iconsMap = icons;
             }
-            if (zrUtil.isString(titles)) {
+            if (isString(titles)) {
                 titlesMap = {};
                 titlesMap[featureName] = titles as string;
             }
@@ -203,7 +217,7 @@ class ToolboxView extends ComponentView {
                 titlesMap = titles;
             }
             const iconPaths: ToolboxFeatureModel['iconPaths'] = featureModel.iconPaths = {};
-            zrUtil.each(iconsMap, function (iconStr, iconName) {
+            each(iconsMap, function (iconStr, iconName) {
                 const path = graphic.createIcon(
                     iconStr,
                     {},
@@ -286,7 +300,7 @@ class ToolboxView extends ComponentView {
                 (featureModel.get(['iconStatus', iconName]) === 'emphasis' ? enterEmphasis : leaveEmphasis)(path);
 
                 group.add(path);
-                (path as graphic.Path).on('click', zrUtil.bind(
+                (path as graphic.Path).on('click', bind(
                     feature.onclick, feature, ecModel, api, iconName
                 ));
 
@@ -331,7 +345,7 @@ class ToolboxView extends ComponentView {
             const textContent = icon.getTextContent();
             const emphasisTextState = textContent && textContent.ensureState('emphasis');
             // May be background element
-            if (emphasisTextState && !zrUtil.isFunction(emphasisTextState) && titleText) {
+            if (emphasisTextState && !isFunction(emphasisTextState) && titleText) {
                 const emphasisTextStyle = emphasisTextState.style || (emphasisTextState.style = {});
                 const rect = textContain.getBoundingRect(
                     titleText, ZRText.makeFont(emphasisTextStyle)
@@ -363,30 +377,20 @@ class ToolboxView extends ComponentView {
         api: ExtensionAPI,
         payload: unknown
     ) {
-        zrUtil.each(this._features, function (feature) {
-            feature instanceof ToolboxFeature
-                && feature.updateView && feature.updateView(feature.model, ecModel, api, payload);
+        each(this._features, function (feature) {
+            feature
+                && feature instanceof ToolboxFeature
+                && feature.updateView
+                && feature.updateView(feature.model, ecModel, api, payload);
         });
-    }
-
-    // updateLayout(toolboxModel, ecModel, api, payload) {
-    //     zrUtil.each(this._features, function (feature) {
-    //         feature.updateLayout && feature.updateLayout(feature.model, ecModel, api, payload);
-    //     });
-    // },
-
-    remove(ecModel: GlobalModel, api: ExtensionAPI) {
-        zrUtil.each(this._features, function (feature) {
-            feature instanceof ToolboxFeature
-                && feature.remove && feature.remove(ecModel, api);
-        });
-        this.group.removeAll();
     }
 
     dispose(ecModel: GlobalModel, api: ExtensionAPI) {
-        zrUtil.each(this._features, function (feature) {
-            feature instanceof ToolboxFeature
-                && feature.dispose && feature.dispose(ecModel, api);
+        each(this._features, function (feature) {
+            feature
+                && feature instanceof ToolboxFeature
+                && feature.dispose
+                && feature.dispose(ecModel, api);
         });
     }
 }
@@ -395,4 +399,9 @@ class ToolboxView extends ComponentView {
 function isUserFeatureName(featureName: string): boolean {
     return featureName.indexOf('my') === 0;
 }
+
+function isTooltipFeature(feature: ToolboxFeature | UserDefinedToolboxFeature): feature is ToolboxFeature {
+    return feature instanceof ToolboxFeature;
+}
+
 export default ToolboxView;

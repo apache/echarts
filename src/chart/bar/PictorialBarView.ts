@@ -39,6 +39,7 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { getECData } from '../../util/innerStore';
 import { createClipPath } from '../helper/createClipPathFromCoordSys';
+import { SERIES_TYPE_PICTORIAL_BAR } from '../../layout/barCommon';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 
@@ -127,8 +128,8 @@ interface PictorialBarElement extends graphic.Group {
 }
 
 class PictorialBarView extends ChartView {
-    static type = 'pictorialBar';
-    readonly type = PictorialBarView.type;
+    static readonly type = SERIES_TYPE_PICTORIAL_BAR;
+    readonly type = SERIES_TYPE_PICTORIAL_BAR;
 
     private _data: SeriesData;
 

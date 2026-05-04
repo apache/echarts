@@ -20,14 +20,14 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import LegendModel from './LegendModel';
 import LegendView from './LegendView';
-import legendFilter from './legendFilter';
 import { installLegendAction } from './legendAction';
+import { legendFilterStageHandler } from './legendFilter';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerComponentModel(LegendModel);
     registers.registerComponentView(LegendView);
 
-    registers.registerProcessor(registers.PRIORITY.PROCESSOR.SERIES_FILTER, legendFilter);
+    registers.registerProcessor(registers.PRIORITY.PROCESSOR.SERIES_FILTER, legendFilterStageHandler);
     registers.registerSubTypeDefaulter('legend', function () {
         return 'plain';
     });

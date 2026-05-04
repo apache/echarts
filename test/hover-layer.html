@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/perlin.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
+            }
+        </style>
+
+
+        <div id="main_hover_layer_simple"></div>
+        <div id="main_hover_layer_connect_and_progressive"></div>
+        <div id="main_hover_layer_should_not_be_created"></div>
+
+
+        <script>
+        require(['echarts'], function (echarts /*, data */) {
+
+            const _ctx = {
+                hoverLayerThreshold: 1,
+                seriesType: 'line',
+
+                dataCount: 2,
+                seriesAZLevel: 2,
+                seriesBZLevel: undefined,
+
+                large: false,
+                largeThreshold: 1,
+                progressive: 0,
+                progressiveThreshold: 15,
+                enableHoverShowLabel: false,
+            };
+
+            function createOption() {
+
+                let data1 = [];
+                let data2 = [];
+                let xMin = -500;
+                let xMax = (_ctx.dataCount + 0.5) * 1000;
+
+                for (let i = 0; i < _ctx.dataCount; i++) {
+                    data1.push([i * 1000, i * 1000 + 50000]);
+                    data2.push([i * 1000, -i * 1000 + 150000]);
+                }
+
+                const largeSettings = {
+                    large: _ctx.large,
+                    largeThreshold: _ctx.largeThreshold,
+                    progressive: _ctx.progressive,
+                    progressiveThreshold: _ctx.progressiveThreshold,
+                };
+
+                const axisSettings = {
+                    // axisLine: {show: false},
+                    // axisLabel: {show: false},
+                    // axisTick: {show: false},
+                    // splitLine: {show: false},
+                };
+
+                const option = {
+
+                    hoverLayerThreshold: _ctx.hoverLayerThreshold,
+
+                    "animation": false,
+                    // "animation": true,
+
+                    "dataZoom": [{
+                        // "filterMode": "none",
+                        "xAxisIndex": 0,
+                        "type": "inside",
+                    }, {
+                        // "filterMode": "none",
+                        "xAxisIndex": 0,
+                        "type": "slider",
+                        "bottom": 20
+                    }],
+
+                    "legend": {
+                        "show": true,
+                        top: 5,
+                    },
+
+                    "tooltip": {
+                        "show": true,
+                    },
+                    "xAxis": [{
+                        "id": "xAxis_id_1",
+                        "type": "time",
+                        min: xMin,
+                        max: xMax,
+
+                        ...axisSettings,
+                    }],
+                    "yAxis": [{
+                        "id": "yAxis_id_1",
+                        "type": "value",
+                        "scale": true,
+                        "offset": 0,
+
+                        // max: 51200,
+
+                        ...axisSettings,
+
+                    },{
+                        "id": "yAxis_id_2",
+                        "show": true,
+                        "position": "right",
+                        "alignTicks": true,
+                        "axisPointer": {
+                            "show": true,
+                            // "type": "none",
+                            "label": {
+                                "show": false,
+                            }
+                        },
+                        "mainType": "yAxis",
+                        "type": "value",
+                        "scale": true,
+                        "offset": 0,
+
+                        // max: 160000,
+
+                        ...axisSettings,
+
+                    }],
+
+                    "series": [
+
+                    {
+                        "id": "series_id_1",
+                        "name": "A",
+                        "data": data1,
+
+                        // clip: false,
+
+                        ...largeSettings,
+
+                        "type": _ctx.seriesType,
+
+                        "xAxisId": "xAxis_id_1",
+                        "yAxisId": "yAxis_id_1",
+
+                        symbol: "circle",
+                        symbolSize: 20,
+
+                        "itemStyle": {
+                            "opacity": 0.5,
+                            "color": "#dc3939"
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: 'orange',
+                            },
+                            label: {
+                                show: _ctx.enableHoverShowLabel,
+                                color: 'red',
+                            }
+                        },
+                    },
+
+                    {
+                        "id": "series_id_2",
+                        "name": "B",
+                        "data": data2,
+
+                        // zlevel: 1,
+                        // clip: false,
+                        ...largeSettings,
+
+                        "type": _ctx.seriesType,
+
+                        "xAxisId": "xAxis_id_1",
+                        "yAxisId": "yAxis_id_2",
+                        "symbol": "circle",
+                        // "symbol": "none",
+                        "symbolSize": 20,
+
+                        "itemStyle": {
+                            "opacity": 0.8,
+                            "color": "#0c8cd4"
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: 'orange',
+                            },
+                            label: {
+                                show: _ctx.enableHoverShowLabel,
+                                color: 'red',
+                            }
+                        },
+                    }
+
+                    ],
+
+                };
+
+                if (_ctx.seriesAZLevel !== undefined) {
+                    option.series[0].zlevel = _ctx.seriesAZLevel;
+                }
+                if (_ctx.seriesBZLevel !== undefined) {
+                    option.series[1].zlevel = _ctx.seriesBZLevel;
+                }
+
+                return option;
+            }
+
+            function updateChart() {
+                chart.setOption(createOption(), {notMerge: true});
+            }
+
+            var chart = testHelper.create(echarts, 'main_hover_layer_simple', {
+                title: [
+                    'Hover layer test',
+                    '(NOTE: line series does not support progressive rendering)',
+                ],
+                option: createOption(),
+                inputsStyle: 'compact',
+                inputs: [{
+                    type: 'select',
+                    text: 'hoverLayerThreshold:',
+                    values: [_ctx.hoverLayerThreshold, 5e3, 9e8],
+                    onchange() {
+                        _ctx.hoverLayerThreshold = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'select',
+                    text: 'seriesType:',
+                    values: [_ctx.seriesType, 'scatter'],
+                    onchange() {
+                        _ctx.seriesType = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'br',
+                }, {
+                    type: 'select',
+                    text: 'dataCount:',
+                    values: [_ctx.dataCount, 1e4, 1e3, 10],
+                    onchange() {
+                        _ctx.dataCount = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'select',
+                    text: 'seriesAZLevel:',
+                    values: [2, undefined],
+                    onchange() {
+                        _ctx.seriesAZLevel = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'select',
+                    text: 'seriesBZLevel:',
+                    values: [undefined, 3],
+                    onchange() {
+                        _ctx.seriesBZLevel = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'br',
+                }, {
+                    type: 'select',
+                    text: 'large:',
+                    values: [_ctx.large, true],
+                    onchange() {
+                        _ctx.large = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'select',
+                    text: 'largeThreshold:',
+                    values: [_ctx.largeThreshold, 1e3],
+                    onchange() {
+                        _ctx.largeThreshold = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'select',
+                    text: 'progressive:',
+                    values: [_ctx.progressive, 400],
+                    onchange() {
+                        _ctx.progressive = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'select',
+                    text: 'progressiveThreshold:',
+                    values: [_ctx.progressiveThreshold, 3e3],
+                    onchange() {
+                        _ctx.progressiveThreshold = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'select',
+                    text: 'enable hover show label:',
+                    values: [_ctx.enableHoverShowLabel, true],
+                    onchange() {
+                        _ctx.enableHoverShowLabel = this.value;
+                        updateChart();
+                    }
+                }]
+            }); // End of `testHelper.create`
+
+
+        }); // End of `require`
+        </script>
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts /*, data */) {
+
+            const _ctx = {
+                dataKind: '9x9',
+                hoverLayerThreshold: 1,
+                // hoverLayerThreshold: Infinity,
+                progressive: 1,
+            };
+
+            function createOption() {
+                var COUNT;
+                var largeSettings1;
+                var largeSettings2;
+
+                if (_ctx.dataKind === '9x9') {
+                    COUNT = 9;
+                    largeSettings1 = {
+                        progressive: _ctx.progressive,
+                        progressiveThreshold: 1,
+                    };
+                    largeSettings2 = {
+                        hoverLayerThreshold: _ctx.hoverLayerThreshold,
+                    };
+                }
+                else if (_ctx.dataKind === '30x30') {
+                    COUNT = 30;
+                    largeSettings1 = {
+                        progressive: _ctx.progressive,
+                    };
+                    largeSettings2 = {
+                        hoverLayerThreshold: _ctx.hoverLayerThreshold,
+                    };
+                }
+                else if (_ctx.dataKind === '100x100') {
+                    COUNT = 100;
+                    largeSettings1 = {
+                        progressive: _ctx.progressive,
+                    };
+                    largeSettings2 = {
+                        hoverLayerThreshold: _ctx.hoverLayerThreshold,
+                    };
+                }
+
+                var xData = [];
+                var yData = [];
+                noise.seed(Math.random());
+
+                function generateData(theta) {
+                    var data = [];
+                    var min = Infinity;
+                    var max = -Infinity;
+                    for (var i = 0; i <= COUNT; i++) {
+                        for (var j = 0; j <= COUNT; j++) {
+                            var val = noise.perlin2(i / 40, j / 20) + 0.5;
+                            min = Math.min(min, val);
+                            max = Math.max(max, val);
+                            data.push([i, j, val]);
+                        }
+                        yData.push(i);
+                        xData.push(i);
+                    }
+                    return {data, min, max};
+                }
+
+                var {data, min, max} = generateData(2);
+
+                var option = {
+
+                    ...largeSettings2,
+
+                    tooltip: {},
+                    grid: {
+                        left: 150,
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: xData
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: yData
+                    },
+                    visualMap: {
+                        // type: 'piecewise',
+                        min: min,
+                        max: max,
+                        top: 10,
+                        right: 0,
+                        calculable: true,
+                        splitNumber: 8,
+                        inRange: {
+                            color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+                        }
+                    },
+                    series: [{
+                        name: 'Gaussian',
+                        type: 'heatmap',
+                        data: data,
+                        // itemStyle: {
+                        //     borderColor: 'red',
+                        //     borderWidth: 2
+                        // },
+                        emphasis: {
+                            itemStyle: {
+                                borderColor: '#333',
+                                borderWidth: 2
+                            }
+                        },
+                        // silent: true,
+                        ...largeSettings1,
+                        animation: false
+                    }]
+                }
+                return option;
+            }
+
+            function updateChart() {
+                chart.setOption(createOption(), {notMerge: true});
+            }
+
+            var chart = testHelper.create(echarts, 'main_hover_layer_connect_and_progressive', {
+                title: [
+                    'Hover layer test (progressive rendering)',
+                    '(NOTE: hoverLayerThreshold does not affect progressive rendering hovering)',
+                ],
+                option: createOption(),
+                height: 600,
+                inputsStyle: 'compact',
+                inputs: [{
+                    type: 'select',
+                    text: 'dataKind:',
+                    values: [_ctx.dataKind, '30x30', '100x100'],
+                    onchange() {
+                        _ctx.dataKind = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'select',
+                    text: 'hoverLayerThreshold:',
+                    values: [_ctx.hoverLayerThreshold, Infinity, undefined],
+                    onchange() {
+                        _ctx.hoverLayerThreshold = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'select',
+                    text: 'progressive:',
+                    values: [_ctx.progressive, 300, 1000, 0],
+                    onchange() {
+                        _ctx.progressive = this.value;
+                        updateChart();
+                    }
+                }, {
+                    type: 'select',
+                    text: 'hoverLayer:',
+                    values: ['show', 'hide'],
+                    onchange() {
+                        const hoverLayerDom = testHelper.getCanvasLayerDom(chart, 1e5, 0);
+                        if (!hoverLayerDom) {
+                            console.error('hover does not exist!');
+                            return;
+                        }
+                        if (this.value === 'show') {
+                            hoverLayerDom.style.removeProperty('display');
+                        }
+                        else {
+                            hoverLayerDom.style.display = 'none';
+                        }
+                    }
+                }]
+            }); // End of `testHelper.create`
+
+
+        }); // End of `require`
+        </script>
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts /*, data */) {
+
+            function createOption() {
+                var option = {
+                    tooltip: {},
+                    xAxis: {
+                    },
+                    yAxis: {
+                    },
+                    legend: {
+                        top: 10,
+                    },
+                    series: [{
+                        name: 'a',
+                        type: 'scatter',
+                        data: [[1, 1], [9, 9], [1, 9]],
+                        symbolSize: 20,
+                        emphasis: {
+                            itemStyle: {
+                                borderColor: '#333',
+                                borderWidth: 2
+                            },
+                            label: {
+                                show: true
+                            }
+                        },
+                    }]
+                }
+                return option;
+            }
+
+            var chart = testHelper.create(echarts, 'main_hover_layer_should_not_be_created', {
+                title: [
+                    'Hover layer should not be created.',
+                ],
+                option: createOption(),
+                inputsStyle: 'compact',
+                inputs: [{
+                    type: 'button',
+                    text: 'check hover layer not created:',
+                    onclick() {
+                        checkHoverLayerNotCreated();
+                    }
+                }]
+            }); // End of `testHelper.create`
+
+            function checkHoverLayerNotCreated() {
+                testHelper.printAssert('main_hover_layer_should_not_be_created', function (assert) {
+                    const zr = chart.getZr();
+                    assert(!zr.painter._hoverLayer);
+                });
+            }
+
+            if (chart) {
+                checkHoverLayerNotCreated();
+            }
+
+        }); // End of `require`
+        </script>
+
+
+    </body>
+</html>

@@ -50,48 +50,79 @@ under the License.
         <script>
         require([
             'echarts',
-            // 'map/js/china',
-            // './data/nutrients.json'
         ], function (echarts) {
-            var option;
-            var startValue0 = -200;
-            var ymin = -150;
-            option = {
-                xAxis: {
-                    type: 'category',
-                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    axisLine: {
-                        onZero: false
-                    }
+            var _ctx = {
+                yAxisStartValue: {
+                    value: -200,
+                    values: ['NOT_SET', -200, 200]
                 },
-                yAxis: {
-                    type: 'value',
-                    min: ymin,
-                    startValue: startValue0
+                yAxisMin: {
+                    value: -150,
+                    values: ['NOT_SET', -150]
                 },
-                series: [{
-                    data: [-120, 200, 150, 80, 70, 110, 130],
-                    type: 'bar',
-                }]
+                stack: {
+                    value: false,
+                    values: [false, true]
+                }
             };
+
+            function createOption() {
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        axisLine: {
+                            onZero: false
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                    },
+                    tooltip: {},
+                    legend: {},
+                    series: [{
+                        name: 'A',
+                        itemStyle: {opacity: 0.8, borderWidth: 2, borderColor: '#000'},
+                        data: [-120, 200, 150, 80, 70, 110, 130],
+                        type: 'bar',
+                    }, {
+                        name: 'B',
+                        itemStyle: {opacity: 0.8, borderWidth: 2, borderColor: '#000'},
+                        data: [-140, 220, 250, 180, 170, 10, 30],
+                        type: 'bar',
+                    }]
+                };
+                if (_ctx.yAxisStartValue.value !== 'NOT_SET') {
+                    option.yAxis.startValue = _ctx.yAxisStartValue.value;
+                }
+                if (_ctx.yAxisMin.value !== 'NOT_SET') {
+                    option.yAxis.min = _ctx.yAxisMin.value;
+                }
+                if (_ctx.stack.value) {
+                    option.series[0].stack = option.series[1].stack = 'a';
+                }
+                return option;
+            }
+            function updateChart() {
+                chart.setOption(createOption(), {notMerge: true});
+            }
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    `min/max of axis has higher priority over startValue,here startValue = ${startValue0}, yAxis.min = ${ymin}`,
-                    `The starting value of bars should be ${ymin}`,
+                    `min/max of axis has higher priority over startValue`,
+                    `The starting value of bars should be yAxis.min`,
                 ],
-                option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
+                option: createOption(),
+                inputsStyle: 'compact',
+                inputs: testHelper.createInputsSimply(_ctx, updateChart),
             });
         });
         </script>
+
+
         <script>
         require([
             'echarts',
-            // 'map/js/china',
-            // './data/nutrients.json'
         ], function (echarts) {
             var option;
             var startValue0 = -200;
@@ -101,8 +132,9 @@ under the License.
                 dataZoom:[{
                     type: 'slider',
                     yAxisIndex:[0],
-                    right:100
+                    right: 20
                 }],
+                tooltip: {},
                 xAxis: {
                     type: 'category',
                     data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -128,52 +160,93 @@ under the License.
                     `here startValue = ${startValue0}, yAxis.min = ${ymin}, yAxis.max = ${ymax}`,
                 ],
                 option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
         });
         </script>
+
+
+
         <script>
-            require([
-                'echarts',
-                // 'map/js/china',
-                // './data/nutrients.json'
-            ], function (echarts) {
-                var option;
-                var startValue0 = -140;
+        require([
+            'echarts',
+        ], function (echarts) {
+            var _ctx = {
+                radiusAxisStartValue: {
+                    value: -140,
+                    values: ['NOT_SET', -140, -30, 100]
+                },
+                radiusAxisMin: {
+                    value: 'NOT_SET',
+                    values: ['NOT_SET', -150]
+                },
+                radiusAxisMax: {
+                    value: 'NOT_SET',
+                    values: ['NOT_SET', -90]
+                },
+            };
+
+            function createOption() {
                 var radiusMin = -120;
-                option = {
+                var option = {
                     angleAxis: {
                         type: "category",
                         data: ["  0-30", " 30-60", " 60-90", " 90-120", "120-150", "150-180", "180-210", "210-240", "240-270", "270-300", "300-330", "330-360"],
                     },
                     radiusAxis: {
                         scale: true,
-                        startValue: startValue0,
-                        min: radiusMin,
-                        max: -90,
+                    },
+                    tooltip: {},
+                    legend: {
+                        left: 10,
+                        top: 'middle',
+                        orient: 'vertical',
+                        selected: {B: false}
                     },
                     polar: {},
                     series: [{
+                        name: 'A',
                         type: 'bar',
                         color: "#F53700",
+                        itemStyle: {opacity: 0.7},
                         coordinateSystem: "polar",
                         data: [-95,-110,-105,-115,-110,-120,-90,-98,-100,-110,-92,-107]
+                    }, {
+                        name: 'B',
+                        type: 'bar',
+                        color: "#00735F",
+                        itemStyle: {opacity: 0.7},
+                        coordinateSystem: "polar",
+                        data: [-15,-10,5,15,30,-100,-50,-8,10,15,-42,-17]
                     }]
+                };
+                if (_ctx.radiusAxisStartValue.value !== 'NOT_SET') {
+                    option.radiusAxis.startValue = _ctx.radiusAxisStartValue.value;
                 }
-    
-                var chart = testHelper.create(echarts, 'main2', {
-                    title: [
-                        `The starting value of polar bars should be ${radiusMin}`,
-                    ],
-                    option: option
-                    // height: 300,
-                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                    // recordCanvas: true,
-                });
+                if (_ctx.radiusAxisMin.value !== 'NOT_SET') {
+                    option.radiusAxis.min = _ctx.radiusAxisMin.value;
+                }
+                if (_ctx.radiusAxisMax.value !== 'NOT_SET') {
+                    option.radiusAxis.max = _ctx.radiusAxisMax.value;
+                }
+                return option;
+            }
+            function updateChart() {
+                chart.setOption(createOption(), {notMerge: true});
+            }
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    `polar bars startValue`,
+                ],
+                option: createOption(),
+                inputsStyle: 'compact',
+                inputs: testHelper.createInputsSimply(_ctx, updateChart)
             });
-            </script>
+        });
+        </script>
+
+
+
         <script>
         require([
             'echarts',
@@ -196,10 +269,13 @@ under the License.
                     startAngle: 75
                 },
                 tooltip: {},
+                legend: {left: 10, top: 'middle'},
                 series: {
+                    name: 'A',
                     type: 'bar',
                     data: [2, 1.2, 2.4, 3.6],
                     coordinateSystem: 'polar',
+                    itemStyle: {opacity: 0.7},
                     label: {
                         show: true,
                         position: 'middle',
@@ -214,12 +290,10 @@ under the License.
                     `The starting value of polar bars should be ${startValue0}`,
                 ],
                 option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
         });
         </script>
+
     </body>
 </html>
 

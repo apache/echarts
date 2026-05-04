@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/canteen.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+
+        <div id="main0"></div>
+        <div id="record"></div>
+
+        <script>
+
+        var recordContainer = document.getElementById('record');
+        var chart;
+
+        testHelper.controlFrame({
+            pauseAt: 1,
+            onFrame: function (frameNumber) {
+                testHelper.printCanvasLayerDrawOperationsOnFrame(chart, frameNumber, recordContainer);
+            }
+        });
+
+        require([
+            'echarts',
+            './data/nutrients.json'
+        ], function (echarts, rawData) {
+
+            colorTool = echarts.color;
+
+            const _ctx = {
+                rawDataCount: {
+                    text: 'rawDataCount:',
+                    value: undefined,
+                    values: [undefined, 10, 100, 1e3, 5e3],
+                    // value: 10,
+                    // values: [10, 100, 1e3, 5e3],
+                },
+                br0: {},
+                hoverLayerThreshold: {
+                    text: 'hoverLayerThreshold:',
+                    value: undefined,
+                    values: [undefined, 300, 1000, 0],
+                },
+                large: {
+                    text: 'large:',
+                    value: true,
+                    values: [true, false],
+                },
+                largeThreshold: {
+                    text: 'largeThreshold:',
+                    value: undefined,
+                    values: [undefined, 1, 1000],
+                },
+                progressive: {
+                    text: 'progressive:',
+                    value: 100,
+                    values: [1e4, 100, 300, undefined, 0, 1, 1000, 1e4],
+                },
+                progressiveThreshold: {
+                    text: 'progressiveThreshold:',
+                    value: undefined,
+                    values: [undefined, 1, 1000],
+                },
+            };
+
+            function createOption() {
+
+                var groupCategories = [];
+                var groupColors = [];
+
+                var largeSettingsSeries = {};
+                if (_ctx.large.value != null) {
+                    largeSettingsSeries.large = _ctx.large.value;
+                }
+                if (_ctx.largeThreshold.value != null) {
+                    largeSettingsSeries.largeThreshold = _ctx.largeThreshold.value;
+                }
+                if (_ctx.progressive.value != null) {
+                    largeSettingsSeries.progressive = _ctx.progressive.value;
+                }
+                if (_ctx.progressiveThreshold.value != null) {
+                    largeSettingsSeries.progressiveThreshold = _ctx.progressiveThreshold.value;
+                }
+
+                var largeSettingsGlobal = {};
+                if (_ctx.hoverLayerThreshold.value != null) {
+                    largeSettingsSeries.hoverLayerThreshold = _ctx.hoverLayerThreshold.value;
+                }
+
+                var indices = {
+                    name: 0,
+                    group: 1,
+                    id: 16
+                };
+
+                normalizeData(rawData);
+
+                var schema = [
+                    {name: 'name', index: 0},
+                    {name: 'group', index: 1},
+                    {name: 'protein', index: 2},
+                    {name: 'calcium', index: 3},
+                    {name: 'sodium', index: 4},
+                    {name: 'fiber', index: 5},
+                    {name: 'vitaminc', index: 6},
+                    {name: 'potassium', index: 7},
+                    {name: 'carbohydrate', index: 8},
+                    {name: 'sugars', index: 9},
+                    {name: 'fat', index: 10},
+                    {name: 'water', index: 11},
+                    {name: 'calories', index: 12},
+                    {name: 'saturated', index: 13},
+                    {name: 'monounsat', index: 14},
+                    {name: 'polyunsat', index: 15},
+                    {name: 'id', index: 16}
+                ];
+
+                function normalizeData(originData) {
+                    var groupMap = {};
+                    originData.forEach(row => {
+                        var groupName = row[indices.group];
+                        if (!groupMap.hasOwnProperty(groupName)) {
+                            groupMap[groupName] = 1;
+                        }
+                    });
+
+                    originData.forEach(row => {
+                        row.forEach((item, index) => {
+                            if (index !== indices.name
+                                && index !== indices.group
+                                && index !== indices.id
+                            ) {
+                                // Convert null to zero, as all of them under unit "g".
+                                row[index] = parseFloat(item) || 0;
+                            }
+                        });
+                    });
+
+                    for (var groupName in groupMap) {
+                        if (groupMap.hasOwnProperty(groupName)) {
+                            groupCategories.push(groupName);
+                        }
+                    }
+                    var hStep = Math.round(300 / (groupCategories.length - 1));
+                    for (var i = 0; i < groupCategories.length; i++) {
+                        groupColors.push(colorTool.modifyHSL('#5A94DF', hStep * i));
+                    }
+                }
+
+                var lineStyle = {
+                    normal: {
+                        width: 0.5,
+                        opacity: 0.05
+                        // shadowBlur: 10,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 0,
+                        // shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                };
+
+                console.log('rawDataCount: ' + rawData.length);
+                var currentData = rawData;
+                if (_ctx.rawDataCount.value != null) {
+                    currentData = rawData.slice(0, _ctx.rawDataCount.value);
+                }
+                console.log('current displayed data count: ' + currentData.length);
+
+                var option = {
+
+                    ...largeSettingsGlobal,
+                    animation: false,
+
+                    backgroundColor: '#333',
+                    // tooltip: {
+                    //     padding: 10,
+                    //     backgroundColor: '#222',
+                    //     borderColor: '#777',
+                    //     borderWidth: 1
+                    // },
+                    title: [
+                        {
+                            text: 'Groups',
+                            top: 0,
+                            left: 0,
+                            textStyle: {
+                                color: '#fff'
+                            }
+                        }
+                    ],
+                    visualMap: {
+                        show: true,
+                        type: 'piecewise',
+                        categories: groupCategories,
+                        dimension: indices.group,
+                        inRange: {
+                            color: groupColors //['#d94e5d','#eac736','#50a3ba']
+                        },
+                        outOfRange: {
+                            color: ['#ccc'] //['#d94e5d','#eac736','#50a3ba']
+                        },
+                        top: 20,
+                        textStyle: {
+                            color: '#fff'
+                        },
+                        realtime: false
+                    },
+                    parallelAxis: [
+                        {dim: 16, name: schema[16].name, scale: true, nameLocation: 'end'},
+                        {dim: 2, name: schema[2].name, nameLocation: 'end'},
+                        {dim: 4, name: schema[4].name, nameLocation: 'end'},
+                        {dim: 3, name: schema[3].name, nameLocation: 'end'},
+                        {dim: 5, name: schema[5].name, nameLocation: 'end'},
+                        {dim: 6, name: schema[6].name, nameLocation: 'end'},
+                        {dim: 7, name: schema[7].name, nameLocation: 'end'},
+                        {dim: 8, name: schema[8].name, nameLocation: 'end'},
+                        {dim: 9, name: schema[9].name, nameLocation: 'end'},
+                        {dim: 10, name: schema[10].name, nameLocation: 'end'},
+                        {dim: 11, name: schema[11].name, nameLocation: 'end'},
+                        {dim: 12, name: schema[12].name, nameLocation: 'end'},
+                        {dim: 13, name: schema[13].name, nameLocation: 'end'},
+                        {dim: 14, name: schema[14].name, nameLocation: 'end'},
+                        {dim: 15, name: schema[15].name, nameLocation: 'end'}
+                    ],
+                    parallel: {
+                        left: 280,
+                        top: 20,
+                        // top: 150,
+                        // height: 300,
+                        width: 400,
+                        layout: 'vertical',
+                        parallelAxisDefault: {
+                            type: 'value',
+                            name: 'nutrients',
+                            nameLocation: 'end',
+                            nameGap: 20,
+                            nameTextStyle: {
+                                color: '#fff',
+                                fontSize: 14
+                            },
+                            axisLine: {
+                                lineStyle: {
+                                    color: '#aaa'
+                                }
+                            },
+                            axisTick: {
+                                lineStyle: {
+                                    color: '#777'
+                                }
+                            },
+                            splitLine: {
+                                show: false
+                            },
+                            axisLabel: {
+                                textStyle: {
+                                    color: '#fff'
+                                }
+                            },
+                            realtime: false
+                        }
+                    },
+
+                    series: [{
+
+                        ...largeSettingsSeries,
+
+                        name: 'nutrients',
+                        type: 'parallel',
+                        lineStyle: lineStyle,
+                        // inactiveOpacity: 0,
+                        // activeOpacity: 0.01,
+                        smooth: true,
+                        data: currentData
+                    }]
+                };
+
+
+                return option;
+            }
+
+            function updateChart() {
+                chart.setOption(createOption(), {notMerge: true});
+            }
+
+            chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Click **Resume**',
+                    'parallels',
+                ],
+                option: createOption(),
+                height: 350,
+                // recordCanvas: true
+                inputsStyle: 'compact',
+                inputs: testHelper.createInputsSimply(_ctx, updateChart),
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+

@@ -63,10 +63,11 @@ under the License.
             var xValueMax = rawDataChunkSize * chunkCount;
             var yValueMin = Infinity;
             var yValueMax = -Infinity;
-
+            var xData = [];
             var rawData = [];
+
             for (var i = 0; i < chunkCount; i++) {
-                rawData.push(generateOHLC(rawDataChunkSize));
+                generateOHLC(rawDataChunkSize, rawData);
             }
             yValueMax = Math.ceil(yValueMax);
             yValueMin = Math.floor(yValueMin);
@@ -75,7 +76,6 @@ under the License.
 
                 frameInsight.init(echarts, 'duration');
 
-                // var data = generateOHLC(rawDataChunkSize);
                 var chart = window.chart = init();
 
                 var loadedChunkIndex = 0;
@@ -99,7 +99,7 @@ under the License.
             }
 
             function generateOHLC(count) {
-                var data = [];
+                var seriesData = [];
 
                 var tmpVals = new Array(4);
                 var dayRange = 12;
@@ -125,10 +125,12 @@ under the License.
                         closeIdx++;
                     }
 
+                    var xValIdx = xData.length;
+                    xData.push(echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', xValue += minute));
                     // ['open', 'close', 'lowest', 'highest']
                     // [1, 4, 3, 2]
-                    data.push([
-                        echarts.format.formatTime('yyyy-MM-dd hh:mm:ss', xValue += minute),
+                    seriesData.push([
+                        xValIdx,
                         +tmpVals[openIdx].toFixed(2), // open
                         +tmpVals[3].toFixed(2), // highest
                         +tmpVals[0].toFixed(2), // lowest
@@ -136,7 +138,7 @@ under the License.
                     ]);
                 }
 
-                return data;
+                rawData.push(seriesData);
             }
 
             function calculateMA(dayCount, data) {
@@ -208,8 +210,9 @@ under the License.
                             axisLine: {onZero: false},
                             splitLine: {show: false},
                             splitNumber: 20,
-                            min: xValueMin,
-                            max: xValueMax
+                            // min: xValueMin,
+                            // max: xValueMax,
+                            data: xData,
                         },
                         // {
                         //     type: 'category',

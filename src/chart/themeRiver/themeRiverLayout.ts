@@ -21,18 +21,21 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as numberUtil from '../../util/number';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import ThemeRiverSeriesModel, { ThemeRiverSeriesOption } from './ThemeRiverSeries';
+import ThemeRiverSeriesModel, { SERIES_TYPE_THEME_RIVER, ThemeRiverSeriesOption } from './ThemeRiverSeries';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import SeriesData from '../../data/SeriesData';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
 export interface ThemeRiverLayoutInfo {
     rect: RectLike
     boundaryGap: ThemeRiverSeriesOption['boundaryGap']
 }
 
-export default function themeRiverLayout(ecModel: GlobalModel, api: ExtensionAPI) {
+export const themeRiverLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_THEME_RIVER, themeRiverLayout);
 
-    ecModel.eachSeriesByType('themeRiver', function (seriesModel: ThemeRiverSeriesModel) {
+function themeRiverLayout(ecModel: GlobalModel, api: ExtensionAPI) {
+
+    ecModel.eachSeriesByType(SERIES_TYPE_THEME_RIVER, function (seriesModel: ThemeRiverSeriesModel) {
 
         const data = seriesModel.getData();
 

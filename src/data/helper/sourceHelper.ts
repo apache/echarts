@@ -450,7 +450,8 @@ function doGuessOrdinal(
         const beStr = isString(val);
         // Consider usage convenience, '1', '2' will be treated as "number".
         // `Number('')` (or any whitespace) is `0`.
-        if (val != null && Number.isFinite(Number(val)) && val !== '') {
+        // `Number(val)` prevents error for BigInt.
+        if (val != null && isFinite(Number(val)) && val !== '') {
             return beStr ? BE_ORDINAL.Might : BE_ORDINAL.Not;
         }
         else if (beStr && val !== '-') {

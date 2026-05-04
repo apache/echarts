@@ -19,12 +19,18 @@
 
 import {createHashMap, each} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import DataZoomModel, { DataZoomExtendedAxisBaseModel } from './DataZoomModel';
-import { getAxisMainType, DataZoomAxisDimension } from './helper';
+import DataZoomModel from './DataZoomModel';
+import {
+    getAxisMainType, DataZoomAxisDimension, getAlignTo, getAxisProxyFromModel, setAxisProxyToModel
+} from './helper';
 import AxisProxy from './AxisProxy';
 import { StageHandler } from '../../util/types';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
+
 
 const dataZoomProcessor: StageHandler = {
+
+    dirtyOnOverallProgress: true,
 
     // `dataZoomProcessor` will only be performed in needed series. Consider if
     // there is a line series and a pie series, it is better not to update the
@@ -35,31 +41,27 @@ const dataZoomProcessor: StageHandler = {
             cb: (
                 axisDim: DataZoomAxisDimension,
                 axisIndex: number,
-                axisModel: DataZoomExtendedAxisBaseModel,
+                axisModel: AxisBaseModel,
                 dataZoomModel: DataZoomModel
             ) => void
         ) {
             ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
                 dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
                     const axisModel = ecModel.getComponent(getAxisMainType(axisDim), axisIndex);
-                    cb(axisDim, axisIndex, axisModel as DataZoomExtendedAxisBaseModel, dataZoomModel);
+                    cb(axisDim, axisIndex, axisModel as AxisBaseModel, dataZoomModel);
                 });
             });
         }
         // FIXME: it brings side-effect to `getTargetSeries`.
-        // Prepare axis proxies.
-        eachAxisModel(function (axisDim, axisIndex, axisModel, dataZoomModel) {
-            // dispose all last axis proxy, in case that some axis are deleted.
-            axisModel.__dzAxisProxy = null;
-        });
         const proxyList: AxisProxy[] = [];
         eachAxisModel(function (axisDim, axisIndex, axisModel, dataZoomModel) {
-            // Different dataZooms may constrol the same axis. In that case,
+            // Different dataZooms may control the same axis. In that case,
             // an axisProxy serves both of them.
-            if (!axisModel.__dzAxisProxy) {
+            if (!getAxisProxyFromModel(axisModel)) {
                 // Use the first dataZoomModel as the main model of axisProxy.
-                axisModel.__dzAxisProxy = new AxisProxy(axisDim, axisIndex, dataZoomModel, ecModel);
-                proxyList.push(axisModel.__dzAxisProxy);
+                const axisProxy = new AxisProxy(axisDim, axisIndex, dataZoomModel, ecModel);
+                proxyList.push(axisProxy);
+                setAxisProxyToModel(axisModel, axisProxy);
             }
         });
 
@@ -82,8 +84,19 @@ const dataZoomProcessor: StageHandler = {
             // We calculate window and reset axis here but not in model
             // init stage and not after action dispatch handler, because
             // reset should be called after seriesData.restoreData.
+            const axisProxyNeedAlign: [AxisProxy, AxisProxy][] = [];
             dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
-                dataZoomModel.getAxisProxy(axisDim, axisIndex).reset(dataZoomModel);
+                const axisProxy = dataZoomModel.getAxisProxy(axisDim, axisIndex);
+                const alignToAxisProxy = getAlignTo(dataZoomModel, axisProxy);
+                if (alignToAxisProxy) {
+                    axisProxyNeedAlign.push([axisProxy, alignToAxisProxy]);
+                }
+                else {
+                    axisProxy.reset(dataZoomModel, null);
+                }
+            });
+            each(axisProxyNeedAlign, function (item) {
+                item[0].reset(dataZoomModel, item[1].getWindow().percentInverted);
             });
 
             // Caution: data zoom filtering is order sensitive when using
@@ -110,14 +123,13 @@ const dataZoomProcessor: StageHandler = {
             // is able to get them from chart.getOption().
             const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
             if (axisProxy) {
-                const percentRange = axisProxy.getDataPercentWindow();
-                const valueRange = axisProxy.getDataValueWindow();
+                const {percent, value} = axisProxy.getWindow();
 
                 dataZoomModel.setCalculatedRange({
-                    start: percentRange[0],
-                    end: percentRange[1],
-                    startValue: valueRange[0],
-                    endValue: valueRange[1]
+                    start: percent[0],
+                    end: percent[1],
+                    startValue: value[0],
+                    endValue: value[1]
                 });
             }
         });

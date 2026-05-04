@@ -26,6 +26,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import { extend } from 'zrender/src/core/util';
 import { injectCoordSysByOption } from '../../core/CoordinateSystem';
+import { createViewCoordSysSimply } from '../../component/helper/roamHelper';
 
 function getViewRect(seriesModel: GraphSeriesModel, api: ExtensionAPI, aspect: number) {
     const layoutRef = createBoxLayoutReference(seriesModel, api);
@@ -71,7 +72,7 @@ export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionA
             const aspect = (max[0] - min[0]) / (max[1] - min[1]);
             // FIXME If get view rect after data processed?
             const viewRect = getViewRect(seriesModel, api, aspect);
-            // Position may be NaN, use view rect instead
+            // Position may be NaN (e.g., in force layout), use view rect instead
             if (isNaN(aspect)) {
                 min = [viewRect.x, viewRect.y];
                 max = [viewRect.x + viewRect.width, viewRect.y + viewRect.height];
@@ -80,19 +81,12 @@ export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionA
             const bbWidth = max[0] - min[0];
             const bbHeight = max[1] - min[1];
 
-            const viewCoordSys = new View(null, {api, ecModel});
-            viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
-
-            viewCoordSys.setBoundingRect(
-                min[0], min[1], bbWidth, bbHeight
+            const viewCoordSys = createViewCoordSysSimply(
+                seriesModel,
+                api,
+                min[0], min[1], bbWidth, bbHeight,
+                viewRect
             );
-            viewCoordSys.setViewRect(
-                viewRect.x, viewRect.y, viewRect.width, viewRect.height
-            );
-
-            // Update roam info
-            viewCoordSys.setCenter(seriesModel.get('center'));
-            viewCoordSys.setZoom(seriesModel.get('zoom'));
 
             viewList.push(viewCoordSys);
 

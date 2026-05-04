@@ -186,9 +186,12 @@ under the License.
                         splitLine: { show: true },
                         axisTick: { show: false },
                         axisLabel: {
-                            inside: true,
-                            formatter: '{value}\n'
-                        }
+                            // inside: true,
+                            formatter: '{value}\n',
+                            textBorderWidth: 2,
+                            textBorderColor: '#fff',
+                        },
+                        // z: 100,
                     }, {
                         scale: true,
                         gridIndex: 1,

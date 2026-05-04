@@ -83,6 +83,7 @@
      * @param {boolean} [opt.saveInputsInitialState] Optional.
      *  Required by `chart.__testHelper.restoreInputsToInitialState`
      * @param {InputDefine[]|InputDefine|()=>InputDefine[]} [opt.inputs] Optional.
+     *  See also `testHelper.createInputsSimply()`
      *  definitions of button/range/select/br/hr.
      *  They are the same: `opt.buttons` `opt.button`, `opt.inputs`, `opt.input`.
      *  It can be a function that return inputs definitions, like:
@@ -269,7 +270,8 @@
      *
      * @param {Object} [opt.info] Optional. info object to display.
      *        @api info can be updated by `chart.__testHelper.updateInfo(someInfoObj, 'some_info_key');`
-     * @param {string} [opt.infoKey='option'] Optional.
+     * @param {string} [opt.infoStyle] Optional. Can be 'overlay'.
+     * @param {string} [opt.infoKey] Optional.
      * @param {Object|Array} [opt.dataTable] Optional.
      * @param {Array.<Object|Array>} [opt.dataTables] Optional. Multiple dataTables.
      * @param {number} [opt.dataTableLimit=DEFAULT_DATA_TABLE_LIMIT] Optional.
@@ -295,6 +297,10 @@
         var boundingRectsContainer = document.createElement('div');
 
         titleContainer.setAttribute('title', dom.getAttribute('id'));
+        titleContainer.addEventListener('click', function () {
+            // Convenient for locating test case code.
+            console.log('[TEST CASE DOM ID]: ' + dom.getAttribute('id'));
+        });
 
         titleContainer.className = 'test-title';
         dom.className = 'test-chart-block';
@@ -309,8 +315,13 @@
         recordVideoContainer.className = 'record-video';
 
         if (opt.info) {
-            dom.className += ' test-chart-block-has-right';
-            infoContainer.className += ' test-chart-block-right';
+            if (opt.infoStyle === 'overlay') {
+                infoContainer.className += ' test-info-overlay';
+            }
+            else {
+                dom.className += ' test-chart-block-has-right';
+                infoContainer.className += ' test-chart-block-right';
+            }
         }
 
         left.appendChild(recordCanvasContainer);
@@ -327,11 +338,11 @@
         initTestTitle(opt, titleContainer);
 
         var chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts, errMsgPrefix);
-        chart.__testHelper = {};
 
         initDataTables(opt, dataTableContainer);
 
         if (chart) {
+            chart.__testHelper = {};
             initInputs(chart, opt, inputsContainer, errMsgPrefix);
             initUpdateInfo(opt, chart, infoContainer);
             initRecordCanvas(opt, chart, recordCanvasContainer);
@@ -339,6 +350,10 @@
                 testHelper.createRecordVideo(chart, recordVideoContainer);
             }
             initShowBoundingRects(chart, echarts, opt, boundingRectsContainer);
+
+            if (opt.info) {
+                infoContainer.style.maxHeight = Math.round(chart.getHeight() * 0.9) + 'px';
+            }
         }
 
         return chart;
@@ -366,7 +381,7 @@
         }
 
         function updateInfo(info, infoKey) {
-            infoContainer.innerHTML = createObjectHTML(info, infoKey || 'option');
+            infoContainer.innerHTML = createObjectHTML(info, infoKey || 'info');
         }
 
         chart.__testHelper.updateInfo = updateInfo;
@@ -1594,7 +1609,11 @@
         });
 
         function eachCtx(cb) {
-            var layers = chart.getZr().painter.getLayers();
+            var painter = chart.getZr().painter;
+            if (painter.type !== 'canvas') {
+                return;
+            }
+            var layers = painter.getLayers();
             for (var zlevel in layers) {
                 if (layers.hasOwnProperty(zlevel)) {
                     var layer = layers[zlevel];
@@ -1765,6 +1784,120 @@
         }
     }
 
+    /**
+     * Simply create inputs - all of them are 'select' or 'br'.
+     * This is the most commonly used case.
+     *
+     * Usage:
+     *  ```js
+     *  const _ctx = {
+     *      xAxis_axisTick_interval: {
+     *          text: 'xAxis.axisTick.interval:',  // Any text
+     *          value: 'NOT_SET',                  // Initial value of the "select" input.
+     *          values: ['NOT_SET', 2, 0, 1]       // Options of the "select" input.
+     *          __extra: 123                       // Pass to updateChart directly.
+     *      },
+     *      xAxis_axisLabel_interval: {
+     *          text: 'xAxis.axisLabel.interval:',
+     *          value: 'NOT_SET',
+     *          values: ['NOT_SET', 2, 0, 1]
+     *      },
+     *      br0: {},                               // Can create a 'br' input.
+     *                                             // 'br'/'BR' is reserved keys.
+     *      dataZoomOrMinMax: {
+     *          text: 'use:',                      // Can omit.
+     *          value: 'use_xAxis_min_max',
+     *          values: ['use_xAxis_min_max', 'use_dataZoom'],
+     *      },
+     *      br1: {},                               // Create another 'br' input.
+     *      hr1: {                                 // Create a 'hr' input.
+     *          text: 'some label on hr'
+     *      },
+     *  };
+     *  function createOption() {
+     *      return {...};
+     *  }
+     *  function updateChart(currentInputOption) {
+     *      chart.setOption(createOption(), {notMerge: true});
+     *      console.log(currentInputOption.__extra); // 123 or null/undefined.
+     *  }
+     *  var chart = testHelper.create(echarts, 'chart4', {
+     *      option: createOption(),
+     *      inputsStyle: 'compact',
+     *      inputs: testHelper.createInputsSimply(_ctx, updateChart)
+     *  };
+     *  ```
+     */
+    testHelper.createInputsSimply = function (_ctx, updateChart) {
+        var inputs = [];
+        for (var key in _ctx) {
+            if (_ctx.hasOwnProperty(key)) {
+                inputs.push(createInput(key));
+            }
+        }
+        function createInput(key) {
+            if (/^br[0-9]*$/i.test(key)) {
+                // Can be typically `{br: {}, br0: {}, br1: {}, BR: {}, BR1: {}}`.
+                return {
+                    type: 'br'
+                };
+            }
+            else if (/^hr[0-9]*$/i.test(key)) {
+                // Can be typically `{br: {}, br0: {}, br1: {}, BR: {}, BR1: {}}`.
+                return {
+                    type: 'hr',
+                    text: _ctx[key].text
+                };
+            }
+            else {
+                var input = {
+                    type: 'select',
+                    text: _ctx[key].text || (key + ':'),
+                    onchange: function () {
+                        var newValue = this.value;
+                        if (_ctx[key].hasOwnProperty('valueIndex')) {
+                            _ctx[key].valueIndex = findValueIndex();
+                        }
+                        else if (_ctx[key].hasOwnProperty('optionIndex')) {
+                            _ctx[key].optionIndex = findValueIndex();
+                        }
+                        else {
+                            _ctx[key].value = newValue;
+                        }
+
+                        function findValueIndex() {
+                            if (_ctx[key].values) {
+                                return arrayIndexOf(_ctx[key].values, newValue);
+                            }
+                            else if (_ctx[key].options) {
+                                for (var i = 0; i < _ctx[key].options.length; i++) {
+                                    if (_ctx[key].options[i].value === newValue) {
+                                        return i;
+                                    }
+                                }
+                                return -1;
+                            }
+                        }
+
+                        updateChart(_ctx[key]);
+                    }
+                };
+                function assignIfExisting(prop) {
+                    if (_ctx[key].hasOwnProperty(prop)) {
+                        input[prop] = _ctx[key][prop];
+                    }
+                }
+                assignIfExisting('value');
+                assignIfExisting('valueIndex');
+                assignIfExisting('optionIndex');
+                assignIfExisting('values');
+                assignIfExisting('options');
+                return input;
+            }
+        }
+        return inputs;
+    };
+
     testHelper.createRecordVideo = function (chart, recordVideoContainer) {
         var button = document.createElement('button');
         button.innerHTML = 'Start Recording';
@@ -1819,7 +1952,7 @@
             if (theme == null && window.__ECHARTS__DEFAULT__THEME__) {
                 theme = window.__ECHARTS__DEFAULT__THEME__;
             }
-            if (theme) {
+            if (typeof theme === 'string') {
                 require(['theme/' + theme]);
             }
 
@@ -1885,9 +2018,9 @@
             hostDOMEl = chartOrDomId.getDom();
         }
         var failErr;
-        function assert(cond) {
+        function assert(cond, msg) {
             if (!cond) {
-                throw new Error();
+                throw new Error(msg || 'printAssert error');
             }
         }
         try {
@@ -1948,9 +2081,10 @@
         var _pendingCbList = [];
         var _frameNumber = 0;
         var _mounted = false;
+        var _mask = null;
 
         function getRunBtnText() {
-            return _running ? 'pause' : 'run';
+            return _running ? 'Pause' : 'Resume';
         }
 
         var buttons = [{
@@ -1960,7 +2094,7 @@
                 _running ? pause() : run();
             }
         }, {
-            text: 'next frame',
+            text: 'Next Frame',
             onclick: nextFrame
         }];
 
@@ -1992,19 +2126,29 @@
         };
 
         function run() {
-            _running = true;
+            setRunning(true);
             nextFrame();
         }
 
         function pause() {
-            _running = false;
+            setRunning(false);
+        }
+
+        function setRunning(nextRunning) {
+            if (!_running && nextRunning) {
+                addOrRemoveMask(false);
+            }
+            else if (_running && !nextRunning) {
+                addOrRemoveMask(true);
+            }
+            _running = nextRunning;
         }
 
         function nextFrame() {
             opt.onFrame && opt.onFrame(_frameNumber);
 
             if (pauseAt != null && _frameNumber === pauseAt) {
-                _running = false;
+                setRunning(false);
                 pauseAt = null;
             }
             infoEl.innerHTML = 'Frame: ' + _frameNumber + ' ( ' + (_running ? 'Running' : 'Paused') + ' )';
@@ -2018,7 +2162,159 @@
             }
             _frameNumber++;
         }
-    }
+
+        function addOrRemoveMask(addOrRemove) {
+            if (addOrRemove && !_mask) {
+                _mask = document.createElement('div');
+                _mask.className = 'control-frame-mask';
+                document.body.appendChild(_mask);
+            }
+            else if (!addOrRemove && _mask) {
+                document.body.removeChild(_mask);
+                _mask = null;
+            }
+        }
+    }; // End of `controlFrame`
+
+    /**
+     * Print zrender canvas layer draw operations on frame.
+     *
+     * @usage
+     *  ```js
+     *  var recordContainer = document.getElementById('record');
+     *  testHelper.controlFrame({
+     *      pauseAt: 30,
+     *      onFrame: function (frameNumber) {
+     *          testHelper.printCanvasLayerDrawOperationsOnFrame(chart, frameNumber, recordContainer);
+     *      }
+     *  });
+     *  ```
+     */
+    testHelper.printCanvasLayerDrawOperationsOnFrame = function (
+        chart, // Mandatory.
+        frameNumber, // Mandatory.
+        recordContainer, // Mandatory.
+        cellMax // Optional; max cell count to display
+    ) {
+        if (!chart) {
+            return;
+        }
+
+        var _drawOpCtx = chart.__printCanvasLayerDrawOperationsOnFrame_ctx
+            || (chart.__printCanvasLayerDrawOperationsOnFrame_ctx = initPrintDrawOpCtx(recordContainer));
+        // key: layer key; value: ops array.
+        var _lastOps = {};
+
+        doPrint();
+
+        function initPrintDrawOpCtx(recordContainer) {
+            if (window.Canteen) {
+                window.Canteen.globals.STACK_SIZE = 100000000;
+            }
+            else {
+                console.error && console.error('canteen.js is required but not imported');
+            }
+
+            recordContainer.innerHTML = [
+                '<div class="print-canvas-layer-draw-operations-on-frame-record-title">',
+                    'NOTE: In "incremental layers" (layer zr_N.1), ',
+                    'canvas instruction count per frame (<span class="print-canvas-layer-draw-operations-on-frame-cmd-count">red number</span>) should be the same per frame;',
+                    '<br>In "normal layers" (layer zr_N.0 or zr_N.2), should be no incremental canvas instructions per frame.',
+                '</div>'
+            ].join('');
+            recordContainer.className = 'print-canvas-layer-draw-operations-on-frame-record';
+
+            return {
+                layersInfoMap: {},
+                recordContainer: recordContainer,
+                CELL_MAX: cellMax || 90,
+            };
+        }
+
+        function doPrint() {
+            _drawOpCtx.lastOps = {};
+            var painter = chart.getZr().painter;
+            if (painter.type !== 'canvas') {
+                return;
+            }
+            var layers = painter.getLayers();
+            for (var layerId in layers) {
+                if (layers.hasOwnProperty(layerId)) {
+                    printSingleCanvasLayer(layerId, layers[layerId], frameNumber);
+                }
+            }
+        }
+
+        function printSingleCanvasLayer(layerId, layer, frameNumber) {
+            var layerInfo = _drawOpCtx.layersInfoMap[layerId];
+            if (!layerInfo) {
+                layerInfo = _drawOpCtx.layersInfoMap[layerId] = {
+                    recordLineCellCount: 0,
+                    recordLineTitle: document.createElement('span'),
+                    recordLineAvg: document.createElement('span'),
+                    recordLineContainer: document.createElement('div')
+                };
+                layerInfo.stackLengthRecord = [];
+                layerInfo.stackLengthSumInWindow = 0;
+                layerInfo.stackLengthMax = 0;
+                layerInfo.recordLineTitle.innerHTML = 'layer ' + layerId + ': ';
+                layerInfo.recordLineTitle.className = 'print-canvas-layer-draw-operations-on-frame-record-line-title';
+                layerInfo.recordLineAvg.className = 'print-canvas-layer-draw-operations-on-frame-record-line-title';
+                layerInfo.recordLineContainer.className = 'print-canvas-layer-draw-operations-on-frame-record-line';
+                var titleLineDom = document.createElement('div');
+                titleLineDom.appendChild(layerInfo.recordLineTitle);
+                titleLineDom.appendChild(layerInfo.recordLineAvg);
+                _drawOpCtx.recordContainer.appendChild(titleLineDom);
+                _drawOpCtx.recordContainer.appendChild(layerInfo.recordLineContainer);
+            }
+
+            var canvas = layer.dom;
+            var ctx = canvas.getContext('2d');
+            var stackLength = getStackLength(ctx);
+            var thisStackLength = stackLength;
+
+            if (thisStackLength > layerInfo.stackLengthMax) {
+                layerInfo.stackLengthMax = thisStackLength;
+            }
+
+            layerInfo.stackLengthRecord.push(thisStackLength);
+            layerInfo.stackLengthSumInWindow += thisStackLength;
+            if (layerInfo.stackLengthRecord.length > _drawOpCtx.CELL_MAX) {
+                layerInfo.stackLengthSumInWindow -= layerInfo.stackLengthRecord[0];
+                layerInfo.stackLengthRecord.shift();
+            }
+            var avgStackLength = (layerInfo.stackLengthSumInWindow / layerInfo.stackLengthRecord.length).toFixed(2);
+            layerInfo.recordLineAvg.innerHTML =
+                '&nbsp;&nbsp;(avg: ' + avgStackLength
+                + ' = ' + layerInfo.stackLengthSumInWindow + ' / ' + layerInfo.stackLengthRecord.length
+                + '&nbsp;&nbsp;&nbsp;&nbsp;max: ' + layerInfo.stackLengthMax + ')';
+
+            var cell;
+            if (layerInfo.recordLineCellCount > _drawOpCtx.CELL_MAX) {
+                cell = layerInfo.recordLineContainer.firstChild;
+            }
+            else {
+                cell = document.createElement('span');
+                layerInfo.recordLineCellCount++;
+            }
+            cell.innerHTML = frameNumber + ':<span class="print-canvas-layer-draw-operations-on-frame-cmd-count">' + thisStackLength + '</span> ';
+            layerInfo.recordLineContainer.appendChild(cell);
+
+            if (ctx.stack) {
+                _lastOps[layerId] = ctx.stack().slice();
+            }
+            if (ctx.clear) {
+                ctx.clear();
+            }
+        }
+
+        function getStackLength(ctx) {
+            return ctx.stack ? ctx.stack().length : 0;
+        }
+
+        return _lastOps;
+
+    }; // End of `printCanvasLayerDrawOperationsOnFrame`
 
     testHelper.resizable = function (chart, opt) {
         opt = opt || {};
@@ -2203,6 +2499,7 @@
      * @param {string} [opt.marginLeft=0] Spaces number for margin left of the entire text.
      * @param {string} [opt.lineBreak='\n']
      * @param {string} [opt.quotationMark="'"] "'" or '"'.
+     * @return {string}
      */
     var printObject = testHelper.printObject = function (obj, opt) {
         opt = typeof opt === 'string'
@@ -3062,6 +3359,144 @@
             }
         }
     }
+
+    /**
+     * Print layer info to chart internal zrender. (For visual testing).
+     */
+    // testHelper.printZRCanvasPainterLayersInfoForTest = function (echarts, chart) {
+    //     var zr = chart.getZr();
+
+    //     start();
+
+    //     function retrieveLayerInfo() {
+    //         // CAVEAT: Accessing internal data structure, may change.
+    //         // See `CanvasPainterInternal`
+    //         var painter = zr.painter;
+    //         var painterInternal = painter._i;
+
+    //         var layerStackInfo = echarts.util.clone(painterInternal.layerStack);
+
+    //         // Respect to the original content of `painterInternal.layers`.
+    //         var layersMapInfo = {};
+    //         for (var ii in painterInternal.layers) {
+    //             if (painterInternal.layers.hasOwnProperty(ii)) {
+    //                 layersMapInfo[ii] = {};
+    //                 var layersPerZLevel2 = painterInternal.layers[ii];
+    //                 for (var jj in layersPerZLevel2) {
+    //                     if (layersPerZLevel2.hasOwnProperty(jj)) {
+    //                         var layer = layersPerZLevel2[jj];
+    //                         // CAVEAT: Accessing internal data structure, may change.
+    //                         var cursorStack = layer.__cursorStack;
+    //                         var cursors = layer.__cursors;
+    //                         var cursorsInfo = {};
+    //                         cursors.each(function (cursor, key) {
+    //                             cursorsInfo[key] = echarts.util.clone(cursor);
+    //                         });
+    //                         layersMapInfo[ii][jj] = {
+    //                             layerId: layer.id,
+    //                             cursorStack: echarts.util.clone(cursorStack),
+    //                             cursors: cursorsInfo
+    //                         };
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         var hoverLayerInfo = painterInternal.hoverLayer
+    //             ? {layerId: painterInternal.hoverLayer.id}
+    //             : null;
+
+    //         return {
+    //             painterInternal: painterInternal,
+    //             layersMapInfo: layersMapInfo,
+    //             hoverLayerInfo: hoverLayerInfo,
+    //             layerStackInfo: layerStackInfo,
+    //         };
+    //     }
+
+    //     function ensureResultDOM() {
+    //         var hostDOMEl = chart.getDom();
+    //         var resultDom = chart.__zrLayerInfo;
+    //         if (!resultDom) {
+    //             resultDom = chart.__zrLayerInfo = document.createElement('pre');
+    //             hostDOMEl.appendChild(resultDom);
+    //             resultDom.style.cssText = [
+    //                 'position: absolute;',
+    //                 'top: 10px;',
+    //                 'left: 5px;',
+    //                 'pointer-events: none;',
+    //                 'font-size: 9px;',
+    //                 'z-index: 9999;',
+    //                 'color: #000;',
+    //                 'width: 220px;',
+    //                 'line-height: 1;',
+    //                 'font-family: Arial;',
+    //                 'background-color: rgba(255,255,255,0.5);',
+    //                 'border: 1px solid #000;',
+    //                 'padding: 2px;'
+    //             ].join('');
+    //         }
+
+    //         return resultDom;
+    //     }
+
+    //     function print1(allInfo, resultDom) {
+    //         console.log(allInfo.painterInternal); // For debug
+    //     }
+
+    //     function print2(allInfo, resultDom) {
+    //         var htmlArr = [
+    //             'chart.on("finished") <br>',
+    //             'layerStack: ' + testHelper.printObject(allInfo.layerStackInfo) + '<br>',
+    //             'layersMap: ' + testHelper.printObject(allInfo.layersMapInfo)
+    //         ];
+    //         // console.log(allInfo.layersMapInfo);
+    //         resultDom.innerHTML = htmlArr.join('');
+    //     }
+
+    //     function start() {
+    //         var resultDom = ensureResultDOM();
+    //         var lastRendered = [];
+
+    //         console.log('You can visit window.__info');
+
+    //         chart.on('rendered', function () {
+    //             var allInfo = retrieveLayerInfo();
+    //             // print1(allInfo, resultDom);
+    //             lastRendered.push({
+    //                 layerStackInfo: allInfo.layerStackInfo,
+    //                 hoverLayerInfo: allInfo.hoverLayerInfo,
+    //                 layersMapInfo: allInfo.layersMapInfo
+    //             });
+    //             // console.log('rendered');
+    //         });
+    //         chart.on('finished', function () {
+    //             // console.log('chart.on("finished")');
+    //             var allInfo = retrieveLayerInfo();
+    //             print2(allInfo, resultDom);
+
+    //             // console.log(lastRendered);
+    //             // console.log(allInfo.painterInternal);
+    //             window.__info = lastRendered.slice();
+
+    //             lastRendered.length = 0;
+    //         });
+    //     }
+    // };
+
+    testHelper.getCanvasLayerDom = function (chart, zlevel, zlevel2) {
+        var zr = chart.getZr();
+        var painter = zr.painter;
+        if (painter.type !== 'canvas') {
+            return;
+        }
+        // CAVEAT: Accessing internal data structure, may change.
+        // See `CanvasPainterInternal`
+        var painterInternal = painter._i;
+        var layersPerZLevel = painterInternal.layers[zlevel];
+        var layer = layersPerZLevel && layersPerZLevel[zlevel2];
+        return layer ? layer.dom : null;
+    };
 
     context.testHelper = testHelper;
 

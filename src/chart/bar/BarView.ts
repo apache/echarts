@@ -69,6 +69,8 @@ import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRota
 import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
+import { getIncrementalId } from '../../util/model';
+import { SERIES_TYPE_BAR } from '../../layout/barCommon';
 
 const mathMax = Math.max;
 const mathMin = Math.min;
@@ -92,32 +94,10 @@ type RealtimeSortConfig = {
 // Return a number, based on which the ordinal sorted.
 type OrderMapping = (dataIndex: number) => number;
 
-function getClipArea(coord: CoordSysOfBar, data: SeriesData, strictClip?: boolean) {
-    const coordSysClipArea = coord.getArea && coord.getArea();
-    if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
-        const baseAxis = coord.getBaseAxis();
-        // When boundaryGap is false or using time axis. bar may exceed the grid.
-        // We should not clip this part.
-        // See test/bar2.html
-        if (!strictClip && (baseAxis.type !== 'category' || !baseAxis.onBand)) {
-            const expandWidth = data.getLayout('bandWidth');
-            if (baseAxis.isHorizontal()) {
-                (coordSysClipArea as CartesianCoordArea).x -= expandWidth;
-                (coordSysClipArea as CartesianCoordArea).width += expandWidth * 2;
-            }
-            else {
-                (coordSysClipArea as CartesianCoordArea).y -= expandWidth;
-                (coordSysClipArea as CartesianCoordArea).height += expandWidth * 2;
-            }
-        }
-    }
-
-    return coordSysClipArea as PolarCoordArea | CartesianCoordArea;
-}
 
 class BarView extends ChartView {
-    static type = 'bar' as const;
-    type = BarView.type;
+    static readonly type = SERIES_TYPE_BAR;
+    readonly type = SERIES_TYPE_BAR;
 
     private _data: SeriesData;
 
@@ -172,7 +152,7 @@ class BarView extends ChartView {
     }
 
     incrementalRender(params: StageHandlerProgressParams, seriesModel: BarSeriesModel): void {
-        // Reset
+        // Reset for eachRendered
         this._progressiveEls = [];
         // Do not support progressive in normal mode.
         this._incrementalRenderLarge(params, seriesModel);
@@ -220,12 +200,13 @@ class BarView extends ChartView {
         }
 
         const needsClip = seriesModel.get('clip', true) || realtimeSortCfg;
-        const strictClip = seriesModel.get('clip', true);
-        const coordSysClipArea = getClipArea(coord, data, strictClip);
+        // Both `cartesian2d` and `polar` has `getArea()`.
+        const coordSysClipArea = coord.getArea();
         // If there is clipPath created in large mode. Remove it.
         group.removeClipPath();
         // We don't use clipPath in normal mode because we needs a perfect animation
         // And don't want the label are clipped.
+        // Instead, `Clipper` is used in normal mode.
 
         const roundCap = seriesModel.get('roundCap', true);
 
@@ -695,12 +676,12 @@ class BarView extends ChartView {
 }
 
 interface Clipper {
-    (coordSysBoundingRect: PolarCoordArea | CartesianCoordArea, layout: RectLayout | SectorLayout): boolean
+    (coordSysClipArea: PolarCoordArea | CartesianCoordArea, layout: RectLayout | SectorLayout): boolean
 }
 const clip: {
     [key in 'cartesian2d' | 'polar']: Clipper
 } = {
-    cartesian2d(coordSysBoundingRect: CartesianCoordArea, layout: Rect['shape']) {
+    cartesian2d(coordSysClipArea: CartesianCoordArea, layout: Rect['shape']) {
         const signWidth = layout.width < 0 ? -1 : 1;
         const signHeight = layout.height < 0 ? -1 : 1;
         // Needs positive width and height
@@ -713,11 +694,11 @@ const clip: {
             layout.height = -layout.height;
         }
 
-        const coordSysX2 = coordSysBoundingRect.x + coordSysBoundingRect.width;
-        const coordSysY2 = coordSysBoundingRect.y + coordSysBoundingRect.height;
-        const x = mathMax(layout.x, coordSysBoundingRect.x);
+        const coordSysX2 = coordSysClipArea.x + coordSysClipArea.width;
+        const coordSysY2 = coordSysClipArea.y + coordSysClipArea.height;
+        const x = mathMax(layout.x, coordSysClipArea.x);
         const x2 = mathMin(layout.x + layout.width, coordSysX2);
-        const y = mathMax(layout.y, coordSysBoundingRect.y);
+        const y = mathMax(layout.y, coordSysClipArea.y);
         const y2 = mathMin(layout.y + layout.height, coordSysY2);
 
         const xClipped = x2 < x;
@@ -1168,13 +1149,14 @@ function createLarge(
 
     const backgroundModel = seriesModel.getModel('backgroundStyle');
     const bgPoints = data.getLayout('largeBackgroundPoints');
+    const incrementalId = incremental ? getIncrementalId(seriesModel) : 0;
 
     if (bgPoints) {
         const bgEl = new LargePath({
             shape: {
                 points: bgPoints
             },
-            incremental: !!incremental,
+            incremental: incrementalId,
             silent: true,
             z2: 0
         });
@@ -1189,7 +1171,7 @@ function createLarge(
 
     const el = new LargePath({
         shape: {points: data.getLayout('largePoints')},
-        incremental: !!incremental,
+        incremental: incrementalId,
         ignoreCoarsePointer: true,
         z2: 1
     });
@@ -1198,7 +1180,7 @@ function createLarge(
     el.barWidth = barWidth;
     group.add(el);
     el.useStyle(data.getVisual('style'));
-    // Stroke is rendered first to avoid overlapping with fill
+    // Stroke is rendered first to avoid overlapping with fill. See #20465
     el.style.stroke = null;
     // Enable tooltip and user mouse/touch event handlers.
     getECData(el).seriesIndex = seriesModel.seriesIndex;
