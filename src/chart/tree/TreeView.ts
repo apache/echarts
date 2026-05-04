@@ -31,6 +31,7 @@ import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
 import Path, { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../../model/Global';
+import Model from '../../model/Model';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import SeriesData from '../../data/SeriesData';
@@ -66,6 +67,7 @@ interface TreeNodeLayout {
     y: number
     rawX: number
     rawY: number
+    side?: 'left' | 'right' | 'center'
 }
 
 class TreePath extends Path<TreeEdgePathProps> {
@@ -87,40 +89,66 @@ class TreePath extends Path<TreeEdgePathProps> {
 
     buildPath(ctx: CanvasRenderingContext2D, shape: TreeEdgeShape) {
         const childPoints = shape.childPoints;
-        const childLen = childPoints.length;
-        const parentPoint = shape.parentPoint;
-        const firstChildPos = childPoints[0];
-        const lastChildPos = childPoints[childLen - 1];
+        const orient = shape.orient;
 
-        if (childLen === 1) {
-            ctx.moveTo(parentPoint[0], parentPoint[1]);
-            ctx.lineTo(firstChildPos[0], firstChildPos[1]);
+        if (orient === 'center') {
+            const leftPoints: number[][] = [];
+            const rightPoints: number[][] = [];
+            for (let i = 0; i < childPoints.length; i++) {
+                const point = childPoints[i];
+                (point[0] < shape.parentPoint[0] ? leftPoints : rightPoints).push(point);
+            }
+            drawOrthogonalPath(ctx, shape, leftPoints);
+            drawOrthogonalPath(ctx, shape, rightPoints);
             return;
         }
 
-        const orient = shape.orient;
-        const forkDim = (orient === 'TB' || orient === 'BT') ? 0 : 1;
-        const otherDim = 1 - forkDim;
-        const forkPosition = parsePercent(shape.forkPosition, 1);
-        const tmpPoint = [];
-        tmpPoint[forkDim] = parentPoint[forkDim];
-        tmpPoint[otherDim] = parentPoint[otherDim] + (lastChildPos[otherDim] - parentPoint[otherDim]) * forkPosition;
+        drawOrthogonalPath(ctx, shape, childPoints);
+    }
+}
 
+function drawOrthogonalPath(ctx: CanvasRenderingContext2D, shape: TreeEdgeShape, childPoints: number[][]) {
+    const childLen = childPoints.length;
+    const parentPoint = shape.parentPoint;
+
+    if (!childLen) {
+        return;
+    }
+
+    const orient = shape.orient;
+    const forkDim = (orient === 'TB' || orient === 'BT') ? 0 : 1;
+    const orderedChildPoints = childPoints.slice().sort(function (pointA, pointB) {
+        return pointA[forkDim] - pointB[forkDim];
+    });
+    const firstChildPos = orderedChildPoints[0];
+    const lastChildPos = orderedChildPoints[childLen - 1];
+
+    if (childLen === 1) {
         ctx.moveTo(parentPoint[0], parentPoint[1]);
-        ctx.lineTo(tmpPoint[0], tmpPoint[1]);
-        ctx.moveTo(firstChildPos[0], firstChildPos[1]);
-        tmpPoint[forkDim] = firstChildPos[forkDim];
-        ctx.lineTo(tmpPoint[0], tmpPoint[1]);
-        tmpPoint[forkDim] = lastChildPos[forkDim];
-        ctx.lineTo(tmpPoint[0], tmpPoint[1]);
-        ctx.lineTo(lastChildPos[0], lastChildPos[1]);
+        ctx.lineTo(firstChildPos[0], firstChildPos[1]);
+        return;
+    }
 
-        for (let i = 1; i < childLen - 1; i++) {
-            const point = childPoints[i];
-            ctx.moveTo(point[0], point[1]);
-            tmpPoint[forkDim] = point[forkDim];
-            ctx.lineTo(tmpPoint[0], tmpPoint[1]);
-        }
+    const otherDim = 1 - forkDim;
+    const forkPosition = parsePercent(shape.forkPosition, 1);
+    const tmpPoint = [];
+    tmpPoint[forkDim] = parentPoint[forkDim];
+    tmpPoint[otherDim] = parentPoint[otherDim] + (lastChildPos[otherDim] - parentPoint[otherDim]) * forkPosition;
+
+    ctx.moveTo(parentPoint[0], parentPoint[1]);
+    ctx.lineTo(tmpPoint[0], tmpPoint[1]);
+    ctx.moveTo(firstChildPos[0], firstChildPos[1]);
+    tmpPoint[forkDim] = firstChildPos[forkDim];
+    ctx.lineTo(tmpPoint[0], tmpPoint[1]);
+    tmpPoint[forkDim] = lastChildPos[forkDim];
+    ctx.lineTo(tmpPoint[0], tmpPoint[1]);
+    ctx.lineTo(lastChildPos[0], lastChildPos[1]);
+
+    for (let i = 1; i < childLen - 1; i++) {
+        const point = orderedChildPoints[i];
+        ctx.moveTo(point[0], point[1]);
+        tmpPoint[forkDim] = point[forkDim];
+        ctx.lineTo(tmpPoint[0], tmpPoint[1]);
     }
 }
 
@@ -458,6 +486,9 @@ function updateNode(
         }
 
     }
+    else if (seriesModel.getOrient() === 'center') {
+        adjustCenterLabel(symbolPath, itemModel, targetLayout);
+    }
 
     // Handle status
     const focus = itemModel.get(['emphasis', 'focus']);
@@ -549,7 +580,9 @@ function drawEdge(
                 graphic.updateProps(edge as Path, {
                     shape: {
                         parentPoint: [targetLayout.x, targetLayout.y],
-                        childPoints: childPoints
+                        childPoints: childPoints,
+                        orient: orient,
+                        forkPosition: edgeForkPosition
                     }
                 }, seriesModel);
             }
@@ -571,6 +604,29 @@ function drawEdge(
         setDefaultStateProxy(edge);
 
         group.add(edge);
+    }
+}
+
+function adjustCenterLabel(
+    symbolPath: ReturnType<TreeSymbol['getSymbolPath']>,
+    itemModel: Model<TreeSeriesNodeItemOption>,
+    targetLayout: TreeNodeLayout
+) {
+    if (targetLayout.side !== 'left' && targetLayout.side !== 'right') {
+        return;
+    }
+
+    const normalLabelModel = itemModel.getModel('label');
+    if (normalLabelModel.getShallow('position') != null) {
+        return;
+    }
+
+    const textContent = symbolPath.getTextContent();
+    if (textContent) {
+        symbolPath.setTextConfig({
+            position: targetLayout.side
+        });
+        textContent.setStyle('verticalAlign', 'middle');
     }
 }
 
@@ -742,7 +798,7 @@ function getEdgeShape(
         x2 = targetLayout.x;
         y2 = targetLayout.y;
 
-        if (orient === 'LR' || orient === 'RL') {
+        if (orient === 'LR' || orient === 'RL' || orient === 'center') {
             cpx1 = x1 + (x2 - x1) * curvature;
             cpy1 = y1;
             cpx2 = x2 + (x1 - x2) * curvature;
