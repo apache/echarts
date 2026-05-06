@@ -18,7 +18,6 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
 import * as graphic from '../../util/graphic';

@@ -50,7 +50,6 @@ import {
 } from '../../coord/axisCommonTypes';
 import type Element from 'zrender/src/Element';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
-import OrdinalScale from '../../scale/Ordinal';
 import {
     hideOverlap,
     LabelLayoutWithGeometry,
