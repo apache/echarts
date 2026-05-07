@@ -17,7 +17,7 @@
 * under the License.
 */
 
-/* global BMap, document */
+/* global document */
 
 import {
     util as zrUtil,
@@ -95,7 +95,7 @@ interface BMapECExtendedOverlayCtor {
 type ECCoordinateSystemCreator = Parameters<typeof registerCoordinateSystem>[1];
 type ECCoordinateSystemMaster = ReturnType<ECCoordinateSystemCreator['create']>[number];
 export type ECExtensionAPI = Parameters<ECCoordinateSystemCreator['create']>[1];
-export type ECGlobalModel = Parameters<ECCoordinateSystemCreator['create']>[0]
+export type ECGlobalModel = Parameters<ECCoordinateSystemCreator['create']>[0];
 
 
 const COORD_SYS_BMAP = COMPONENT_MAIN_TYPE_BMAP;

@@ -23,9 +23,8 @@
 
 import * as echarts from 'echarts';
 import './BMapCoordSys';
-import './BMapModel';
-import './BMapView';
 import { BMapModel, COMPONENT_MAIN_TYPE_BMAP } from './BMapModel';
+import './BMapView';
 
 // Action
 echarts.registerAction({

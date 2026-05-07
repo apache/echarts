@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { assert, clone, each, find, isString, map, trim } from 'zrender/src/core/util';
+import { assert, clone, each, filter, find, isString, map, trim } from 'zrender/src/core/util';
 import {
     NullUndefined, ParsedAxisBreak, ParsedAxisBreakList, AxisBreakOption,
     AxisBreakOptionIdentifierInAxis, ScaleTick, VisualAxisBreak,
@@ -614,7 +614,7 @@ function parseAxisBreakOption(
     });
 
     return {
-        breaks: parsedBreaks.filter(brk => !!brk),
+        breaks: filter(parsedBreaks, brk => !!brk),
     };
 }
 
