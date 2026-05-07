@@ -17,18 +17,15 @@
 * under the License.
 */
 
-// @ts-nocheck
 /**
  * BMap component extension
  */
 
 import * as echarts from 'echarts';
-import BMapCoordSys from './BMapCoordSys';
-
+import './BMapCoordSys';
 import './BMapModel';
 import './BMapView';
-
-echarts.registerCoordinateSystem('bmap', BMapCoordSys);
+import { BMapModel, COMPONENT_MAIN_TYPE_BMAP } from './BMapModel';
 
 // Action
 echarts.registerAction({
@@ -36,7 +33,7 @@ echarts.registerAction({
     event: 'bmapRoam',
     update: 'updateLayout'
 }, function (payload, ecModel) {
-    ecModel.eachComponent('bmap', function (bMapModel) {
+    ecModel.eachComponent(COMPONENT_MAIN_TYPE_BMAP, function (bMapModel: BMapModel) {
         const bmap = bMapModel.getBMap();
         const center = bmap.getCenter();
         bMapModel.setCenterAndZoom([center.lng, center.lat], bmap.getZoom());

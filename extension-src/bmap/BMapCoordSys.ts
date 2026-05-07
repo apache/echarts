@@ -17,114 +17,221 @@
 * under the License.
 */
 
-// @ts-nocheck
-/* global BMap */
+/* global BMap, document */
 
 import {
     util as zrUtil,
     graphic,
-    matrix
+    matrix,
+    registerCoordinateSystem,
 } from 'echarts';
+import {
+    COMPONENT_MAIN_TYPE_BMAP,
+    BMapModel,
+} from './BMapModel';
 
-function BMapCoordSys(bmap, api) {
-    this._bmap = bmap;
-    this.dimensions = ['lng', 'lat'];
-    this._mapOffset = [0, 0];
 
-    this._api = api;
+// ------ START: Mock of bmap lib types ------
+export declare namespace bmapLib {
+    interface Map { // This is `BMap.Map`
+        pointToOverlayPixel(point: Point): Pixel;
+        overlayPixelToPoint(px: Pixel): Point;
+        getPanes(): MapPanes;
+        getCenter(): Point;
+        getZoom(): number;
+        addOverlay(overlay: Overlay): void;
+        centerAndZoom(pt: Point, zoom: number): void;
+        addEventListener(event: string, handler: Callback): void;
+        removeEventListener(event: string, handler: Callback): void;
+        enableDragging(): void;
+        disableDragging(): void;
+        enableScrollWheelZoom(): void;
+        disableScrollWheelZoom(): void;
+        enableDoubleClickZoom(): void;
+        disableDoubleClickZoom(): void;
+        enablePinchToZoom(): void;
+        disablePinchToZoom(): void;
+        setMapStyle(mapStyle: MapStyle): void;
+        setMapStyleV2(mapStyle: MapStyleV2): void;
+    }
+    interface MercatorProjection {
+        lngLatToPoint(point: Point): number[];
+    }
+    interface Point {lng: number; lat: number;}
+    interface Pixel {x: number; y: number;}
+    interface Overlay {
+        initialize(map: Map): HTMLElement;
+        draw(): void;
+    }
+    interface MapPanes {
+        labelPane: HTMLElement;
+    }
+    type MapOptions = {
+        mainType: unknown;
+    } & {
+        [key in string]: unknown
+    };
+    type MapStyle = object;
+    type MapStyleV2 = object;
+    type Callback = (...args: any[]) => void;
+}
+declare const BMap: {
+    MercatorProjection: new () => bmapLib.MercatorProjection;
+    Point: new (x: number, y: number) => bmapLib.Point;
+    Overlay: new () => bmapLib.Overlay;
+    Map: new (root: HTMLElement, mapOptions: bmapLib.MapOptions) => bmapLib.Map;
+};
+// ------ END: Mock of BMap types ------
 
-    this._projection = new BMap.MercatorProjection();
+
+interface BMapECExtendedOverlay extends bmapLib.Overlay {
+    _root: HTMLElement;
+}
+interface BMapECExtendedOverlayCtor {
+    (root: HTMLElement): BMapECExtendedOverlay;
+    new (root: HTMLElement): BMapECExtendedOverlay;
 }
 
-BMapCoordSys.prototype.type = 'bmap';
+type ECCoordinateSystemCreator = Parameters<typeof registerCoordinateSystem>[1];
+type ECCoordinateSystemMaster = ReturnType<ECCoordinateSystemCreator['create']>[number];
+export type ECExtensionAPI = Parameters<ECCoordinateSystemCreator['create']>[1];
+export type ECGlobalModel = Parameters<ECCoordinateSystemCreator['create']>[0]
 
-BMapCoordSys.prototype.dimensions = ['lng', 'lat'];
 
-BMapCoordSys.prototype.setZoom = function (zoom) {
-    this._zoom = zoom;
-};
+const COORD_SYS_BMAP = COMPONENT_MAIN_TYPE_BMAP;
+function makeDimensions(): ['lng', 'lat'] {
+    return ['lng', 'lat'];
+}
 
-BMapCoordSys.prototype.setCenter = function (center) {
-    this._center = this._projection.lngLatToPoint(new BMap.Point(center[0], center[1]));
-};
+export class BMapCoordSys implements ECCoordinateSystemMaster {
 
-BMapCoordSys.prototype.setMapOffset = function (mapOffset) {
-    this._mapOffset = mapOffset;
-};
+    dimensions: ['lng', 'lat'] = makeDimensions();
+    // For deciding which dimensions to use when creating list data
+    static dimensions: ['lng', 'lat'] = makeDimensions();
 
-BMapCoordSys.prototype.getBMap = function () {
-    return this._bmap;
-};
+    type = COORD_SYS_BMAP;
 
-BMapCoordSys.prototype.dataToPoint = function (data) {
-    const point = new BMap.Point(data[0], data[1]);
-    // TODO mercator projection is toooooooo slow
-    // let mercatorPoint = this._projection.lngLatToPoint(point);
+    private _bmap: bmapLib.Map;
+    private _mapOffset: number[] = [0, 0];
+    private _api: ECExtensionAPI;
+    private _projection: bmapLib.MercatorProjection = new BMap.MercatorProjection();
+    private _zoom: number;
+    private _center: number[];
 
-    // let width = this._api.getZr().getWidth();
-    // let height = this._api.getZr().getHeight();
-    // let divider = Math.pow(2, 18 - 10);
-    // return [
-    //     Math.round((mercatorPoint.x - this._center.x) / divider + width / 2),
-    //     Math.round((this._center.y - mercatorPoint.y) / divider + height / 2)
-    // ];
-    const px = this._bmap.pointToOverlayPixel(point);
-    const mapOffset = this._mapOffset;
-    return [px.x - mapOffset[0], px.y - mapOffset[1]];
-};
+    constructor(bmap: bmapLib.Map, api: ECExtensionAPI) {
+        this._bmap = bmap;
+        this._api = api;
+    }
 
-BMapCoordSys.prototype.pointToData = function (pt) {
-    const mapOffset = this._mapOffset;
-    pt = this._bmap.overlayPixelToPoint({
-        x: pt[0] + mapOffset[0],
-        y: pt[1] + mapOffset[1]
-    });
-    return [pt.lng, pt.lat];
-};
+    setZoom(zoom: number): void {
+        this._zoom = zoom;
+    }
 
-BMapCoordSys.prototype.getViewRect = function () {
-    const api = this._api;
-    return new graphic.BoundingRect(0, 0, api.getWidth(), api.getHeight());
-};
+    setCenter(center: number[]): void {
+        this._center = this._projection.lngLatToPoint(new BMap.Point(center[0], center[1]));
+    }
 
-BMapCoordSys.prototype.getRoamTransform = function () {
-    return matrix.create();
-};
+    setMapOffset(mapOffset: number[]): void {
+        this._mapOffset = mapOffset;
+    }
 
-BMapCoordSys.prototype.prepareCustoms = function () {
-    const rect = this.getViewRect();
-    return {
+    getBMap(): bmapLib.Map {
+        return this._bmap;
+    }
+
+    dataToPoint(data: number[]): number[] {
+        const point = new BMap.Point(data[0], data[1]);
+        // TODO mercator projection is toooooooo slow
+        // let mercatorPoint = this._projection.lngLatToPoint(point);
+
+        // let width = this._api.getZr().getWidth();
+        // let height = this._api.getZr().getHeight();
+        // let divider = Math.pow(2, 18 - 10);
+        // return [
+        //     Math.round((mercatorPoint.x - this._center.x) / divider + width / 2),
+        //     Math.round((this._center.y - mercatorPoint.y) / divider + height / 2)
+        // ];
+        const px = this._bmap.pointToOverlayPixel(point);
+        const mapOffset = this._mapOffset;
+        return [px.x - mapOffset[0], px.y - mapOffset[1]];
+    }
+
+    pointToData(point: number[]): number[] {
+        const mapOffset = this._mapOffset;
+        const pt = this._bmap.overlayPixelToPoint({
+            x: point[0] + mapOffset[0],
+            y: point[1] + mapOffset[1]
+        });
+        return [pt.lng, pt.lat];
+    }
+
+    containPoint(point: number[]): boolean {
+        // Currently, bmap takes the entire canvas.
+        return true;
+    }
+
+    getViewRect(): graphic.BoundingRect {
+        const api = this._api;
+        return new graphic.BoundingRect(0, 0, api.getWidth(), api.getHeight());
+    }
+
+    getRoamTransform(): matrix.MatrixArray {
+        return matrix.create();
+    }
+
+    prepareCustoms(this: BMapCoordSys): {
         coordSys: {
-            // The name exposed to user is always 'cartesian2d' but not 'grid'.
-            type: 'bmap',
-            x: rect.x,
-            y: rect.y,
-            width: rect.width,
-            height: rect.height
-        },
+            type: typeof COORD_SYS_BMAP;
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+        };
         api: {
-            coord: zrUtil.bind(this.dataToPoint, this),
-            size: zrUtil.bind(dataToCoordSize, this)
-        }
-    };
-};
+            coord: (p: number[]) => number[];
+            size: (dataSize: number[], dataItem: number[]) => number[];
+        };
+    } {
+        const rect = this.getViewRect();
+        return {
+            coordSys: {
+                // The name exposed to user is always 'cartesian2d' but not 'grid'.
+                type: COORD_SYS_BMAP,
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height
+            },
+            api: {
+                coord: zrUtil.bind(this.dataToPoint, this),
+                size: zrUtil.bind(dataToCoordSize, this)
+            }
+        };
+    }
 
-BMapCoordSys.prototype.convertToPixel = function (ecModel, finder, value) {
-    // here we ignore finder as only one bmap component is allowed
-    return this.dataToPoint(value);
-};
+    convertToPixel(ecModel: unknown, finder: unknown, value: number[]): number[] {
+        // here we ignore finder as only one bmap component is allowed
+        return this.dataToPoint(value);
+    }
 
-BMapCoordSys.prototype.convertFromPixel = function (ecModel, finder, value) {
-    return this.pointToData(value);
-};
+    convertFromPixel(ecModel: unknown, finder: unknown, value: number[]): number[] {
+        return this.pointToData(value);
+    }
 
-function dataToCoordSize(dataSize, dataItem) {
+    static create: ECCoordinateSystemCreator['create'];
+
+}
+
+BMapCoordSys.prototype.dimensions = makeDimensions(); // For backward compatibility.
+
+
+function dataToCoordSize(this: BMapCoordSys, dataSize: number[], dataItem: number[]): number[] {
     dataItem = dataItem || [0, 0];
     return zrUtil.map([0, 1], function (dimIdx) {
         const val = dataItem[dimIdx];
         const halfSize = dataSize[dimIdx] / 2;
-        const p1 = [];
-        const p2 = [];
+        const p1: number[] = [];
+        const p2: number[] = [];
         p1[dimIdx] = val - halfSize;
         p2[dimIdx] = val + halfSize;
         p1[1 - dimIdx] = p2[1 - dimIdx] = dataItem[1 - dimIdx];
@@ -132,24 +239,19 @@ function dataToCoordSize(dataSize, dataItem) {
     }, this);
 }
 
-let Overlay;
+let Overlay: BMapECExtendedOverlayCtor;
 
-// For deciding which dimensions to use when creating list data
-BMapCoordSys.dimensions = BMapCoordSys.prototype.dimensions;
-
-function createOverlayCtor() {
-    function Overlay(root) {
+function createOverlayCtor(): BMapECExtendedOverlayCtor {
+    function Overlay(this: BMapECExtendedOverlay, root: HTMLElement) {
         this._root = root;
     }
 
     Overlay.prototype = new BMap.Overlay();
+
     /**
-     * 初始化
-     *
-     * @param {BMap.Map} map
      * @override
      */
-    Overlay.prototype.initialize = function (map) {
+    Overlay.prototype.initialize = function (this: BMapECExtendedOverlay, map: bmapLib.Map): HTMLElement {
         map.getPanes().labelPane.appendChild(this._root);
         return this._root;
     };
@@ -158,15 +260,15 @@ function createOverlayCtor() {
      */
     Overlay.prototype.draw = function () {};
 
-    return Overlay;
+    return Overlay as BMapECExtendedOverlayCtor;
 }
 
 BMapCoordSys.create = function (ecModel, api) {
-    let bmapCoordSys;
+    let bmapCoordSys: BMapCoordSys;
     const root = api.getDom();
 
     // TODO Dispose
-    ecModel.eachComponent('bmap', function (bmapModel) {
+    ecModel.eachComponent(COMPONENT_MAIN_TYPE_BMAP, function (bmapModel: BMapModel) {
         const painter = api.getZr().painter;
         const viewportRoot = painter.getViewportRoot();
         if (typeof BMap === 'undefined') {
@@ -179,7 +281,7 @@ BMapCoordSys.create = function (ecModel, api) {
         let bmap;
         if (!bmapModel.__bmap) {
             // Not support IE8
-            let bmapRoot = root.querySelector('.ec-extension-bmap');
+            let bmapRoot: HTMLElement = root.querySelector('.ec-extension-bmap');
             if (bmapRoot) {
                 // Reset viewport left and top, which will be changed
                 // in moving handler in BMapView
@@ -236,7 +338,7 @@ BMapCoordSys.create = function (ecModel, api) {
     });
 
     ecModel.eachSeries(function (seriesModel) {
-        if (seriesModel.get('coordinateSystem') === 'bmap') {
+        if (seriesModel.get('coordinateSystem') === COORD_SYS_BMAP) {
             seriesModel.coordinateSystem = bmapCoordSys;
         }
     });
@@ -245,4 +347,4 @@ BMapCoordSys.create = function (ecModel, api) {
     return bmapCoordSys && [bmapCoordSys];
 };
 
-export default BMapCoordSys;
+registerCoordinateSystem('bmap', BMapCoordSys);

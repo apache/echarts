@@ -18,12 +18,12 @@
 
         "pretty": true,
 
-        "outDir": "lib"
+        "baseUrl": ".",
+        "paths": {
+            "echarts": ["../.."]
+        }
     },
     "include": [
-        "src/**/*.ts",
-        "extension-src/dataTool/**/*.ts",
-        "ssr/client/**/*.ts",
-        "test/lib/myTransform/src/**/*.ts"
+        "./**/*.ts"
     ]
 }
