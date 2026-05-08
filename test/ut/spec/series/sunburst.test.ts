@@ -23,13 +23,17 @@ import { TreeNode } from '@/src/data/Tree';
 import { createChart, getECModel } from '../../core/utHelper';
 
 function findNodeByName(seriesModel: SunburstSeriesModel, name: string): TreeNode {
-    let targetNode: TreeNode;
+    let targetNode: TreeNode | undefined;
 
     seriesModel.getData().tree.root.eachNode(node => {
         if (node.name === name) {
             targetNode = node;
         }
     });
+
+    if (!targetNode) {
+        throw new Error(`Node "${name}" not found.`);
+    }
 
     return targetNode;
 }
@@ -97,6 +101,44 @@ describe('series/sunburst', function () {
         expect(label.x).toBeCloseTo(layout.cx);
         expect(label.y).toBeCloseTo(layout.cy);
         expect(label.rotation).toBeCloseTo(0);
+    });
+
+    it('keeps non-view-root annular full-circle labels in their ring', function () {
+        chart.setOption({
+            animation: false,
+            series: {
+                type: 'sunburst',
+                radius: [0, '80%'],
+                label: {
+                    show: true,
+                    align: 'center'
+                },
+                data: [
+                    {
+                        name: 'root-sector',
+                        children: [
+                            {
+                                name: 'annular-child',
+                                value: 1
+                            }
+                        ]
+                    }
+                ]
+            }
+        });
+
+        const seriesModel = getECModel(chart).getSeriesByType('sunburst')[0] as SunburstSeriesModel;
+        const childNode = findNodeByName(seriesModel, 'annular-child');
+        const layout = childNode.getLayout();
+        const label = seriesModel.getData().getItemGraphicEl(childNode.dataIndex).getTextContent();
+        const labelDistance = Math.sqrt(
+            Math.pow(label.x - layout.cx, 2) + Math.pow(label.y - layout.cy, 2)
+        );
+
+        expect(childNode).not.toBe(seriesModel.getViewRoot());
+        expect(layout.r0).toBeGreaterThan(0);
+        expect(Math.abs(layout.endAngle - layout.startAngle)).toBeCloseTo(Math.PI * 2);
+        expect(labelDistance).toBeCloseTo((layout.r + layout.r0) / 2);
     });
 
 });

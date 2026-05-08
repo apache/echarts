@@ -168,6 +168,7 @@ class SunburstPiece extends graphic.Sector {
 
         const layout = this.node.getLayout();
         const angle = layout.endAngle - layout.startAngle;
+        const isViewRoot = this.node === seriesModel.getViewRoot();
 
         const midAngle = (layout.startAngle + layout.endAngle) / 2;
         const dx = Math.cos(midAngle);
@@ -235,8 +236,8 @@ class SunburstPiece extends graphic.Sector {
             }
             else {
                 if (!textAlign || textAlign === 'center') {
-                    // Put label in the center if it's a full circle.
-                    if (isFullCircle) {
+                    // Put root/view-root labels in the center if it's a full circle.
+                    if (isFullCircle && (layout.r0 === 0 || isViewRoot)) {
                         r = 0;
                         isLabelAtCenter = true;
                     }
