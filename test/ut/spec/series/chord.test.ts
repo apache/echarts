@@ -21,6 +21,28 @@ import { EChartsType } from '@/src/echarts';
 import ChordSeriesModel from '@/src/chart/chord/ChordSeries';
 import { createChart, getECModel } from '../../core/utHelper';
 
+const PI2 = Math.PI * 2;
+const LABEL_FLIP_START_ANGLE = Math.PI * 0.5;
+const LABEL_FLIP_END_ANGLE = Math.PI * 1.5;
+const RADIAN_EPSILON = 1e-4;
+
+function normalizeRadian(radian: number): number {
+    return (radian % PI2 + PI2) % PI2;
+}
+
+function isRadianAroundZero(radian: number): boolean {
+    return radian > -RADIAN_EPSILON && radian < RADIAN_EPSILON;
+}
+
+function getExpectedRadialLabelRotation(layout: {startAngle: number, endAngle: number}): number {
+    const midAngle = (layout.startAngle + layout.endAngle) / 2;
+    const midAngleNormal = normalizeRadian(midAngle);
+    const needsFlip = midAngleNormal > LABEL_FLIP_START_ANGLE
+        && !isRadianAroundZero(midAngleNormal - LABEL_FLIP_START_ANGLE)
+        && midAngleNormal < LABEL_FLIP_END_ANGLE;
+    return normalizeRadian(-midAngle + (needsFlip ? Math.PI : 0));
+}
+
 describe('series/chord', function () {
 
     let chart: EChartsType;
@@ -59,10 +81,39 @@ describe('series/chord', function () {
         const data = seriesModel.getData();
         const textContent = data.getItemGraphicEl(0).getTextContent();
         const layout = data.getItemLayout(0);
-        const midAngle = (layout.startAngle + layout.endAngle) / 2;
-        const expectedRotation = Math.cos(midAngle) < 0 ? -midAngle + Math.PI : -midAngle;
 
-        expect(textContent.rotation).toBeCloseTo(expectedRotation);
+        expect(textContent.rotation).toBeCloseTo(getExpectedRadialLabelRotation(layout));
+    });
+
+    it('handles radial label rotation on startAngle boundary', function () {
+        chart.setOption({
+            series: {
+                type: 'chord',
+                startAngle: 180,
+                padAngle: 0,
+                label: {
+                    show: true,
+                    rotate: 'radial'
+                },
+                data: [
+                    {name: 'a'},
+                    {name: 'b'}
+                ],
+                edges: [{
+                    source: 'a',
+                    target: 'b',
+                    value: 1
+                }]
+            }
+        });
+
+        const seriesModel = getECModel(chart).getSeriesByType('chord')[0] as ChordSeriesModel;
+        const data = seriesModel.getData();
+        const textContent = data.getItemGraphicEl(0).getTextContent();
+        const layout = data.getItemLayout(0);
+
+        expect((layout.startAngle + layout.endAngle) / 2).toBeCloseTo(Math.PI * 1.5);
+        expect(textContent.rotation).toBeCloseTo(Math.PI * 0.5);
     });
 
     it('converts numeric label rotation from degrees to radians', function () {
@@ -132,11 +183,9 @@ describe('series/chord', function () {
         const data = seriesModel.getData();
         const textContent = data.getItemGraphicEl(0).getTextContent();
         const layout = data.getItemLayout(0);
-        const midAngle = (layout.startAngle + layout.endAngle) / 2;
-        const expectedRotation = Math.cos(midAngle) < 0 ? -midAngle + Math.PI : -midAngle;
 
         expect(textContent.rotation).toBeCloseTo(0);
-        expect(textContent.states.emphasis.rotation).toBeCloseTo(expectedRotation);
+        expect(textContent.states.emphasis.rotation).toBeCloseTo(getExpectedRadialLabelRotation(layout));
         expect(textContent.states.blur.rotation).toBeCloseTo(Math.PI / 6);
         expect(textContent.states.select.rotation).toBeCloseTo(Math.PI / 4);
     });

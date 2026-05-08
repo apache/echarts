@@ -28,12 +28,20 @@ import { getLabelStatesModels, setLabelStyle } from '../../label/labelStyle';
 import type { BuiltinTextPosition } from 'zrender/src/core/types';
 import { setStatesStylesFromModel, SPECIAL_STATES, toggleHoverEmphasis } from '../../util/states';
 import { getECData } from '../../util/innerStore';
+import { normalizeRadian } from 'zrender/src/contain/util';
+import { isRadianAroundZero } from '../../util/number';
 
 const RADIAN = Math.PI / 180;
+const LABEL_FLIP_START_ANGLE = Math.PI * 0.5;
+const LABEL_FLIP_END_ANGLE = Math.PI * 1.5;
 
-function getLabelRotation(rotate: number | 'radial', midAngle: number, dx: number): number {
+function getLabelRotation(rotate: number | 'radial', midAngle: number): number {
     if (rotate === 'radial') {
-        return dx < 0 ? -midAngle + Math.PI : -midAngle;
+        const midAngleNormal = normalizeRadian(midAngle);
+        const needsFlip = midAngleNormal > LABEL_FLIP_START_ANGLE
+            && !isRadianAroundZero(midAngleNormal - LABEL_FLIP_START_ANGLE)
+            && midAngleNormal < LABEL_FLIP_END_ANGLE;
+        return normalizeRadian(-midAngle + (needsFlip ? Math.PI : 0));
     }
     return isNumber(rotate) ? rotate * RADIAN : 0;
 }
@@ -183,14 +191,14 @@ export default class ChordPiece extends graphic.Sector {
             ? normalLabelModel.get('verticalAlign') || 'middle'
             : (dy > 0 ? 'top' : 'bottom');
 
-        const labelRotate = getLabelRotation(normalLabelModel.get('rotate'), midAngle, dx);
+        const labelRotate = getLabelRotation(normalLabelModel.get('rotate'), midAngle);
 
         for (let i = 0; i < SPECIAL_STATES.length; i++) {
             const stateName = SPECIAL_STATES[i];
             const stateRotate = labelStateModels[stateName].getShallow('rotate');
             const state = label.ensureState(stateName);
             state.rotation = stateRotate != null
-                ? getLabelRotation(stateRotate, midAngle, dx)
+                ? getLabelRotation(stateRotate, midAngle)
                 : null;
         }
 
