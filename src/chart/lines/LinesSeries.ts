@@ -337,19 +337,22 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         dataType: string
     ) {
         const data = this.getData();
+        const value = this.getRawValue(dataIndex);
         const itemModel = data.getItemModel<LinesDataItemOption>(dataIndex);
-        const name = itemModel.get('name');
-        if (name) {
-            return name;
+        let itemName = itemModel.get('name');
+        if (!itemName) {
+            const fromName = itemModel.get('fromName');
+            const toName = itemModel.get('toName');
+            const nameArr = [];
+            fromName != null && nameArr.push(fromName);
+            toName != null && nameArr.push(toName);
+            itemName = nameArr.join(' > ');
         }
-        const fromName = itemModel.get('fromName');
-        const toName = itemModel.get('toName');
-        const nameArr = [];
-        fromName != null && nameArr.push(fromName);
-        toName != null && nameArr.push(toName);
 
         return createTooltipMarkup('nameValue', {
-            name: nameArr.join(' > ')
+            name: itemName,
+            value,
+            noValue: value == null || isNaN(value as number)
         });
     }
 
