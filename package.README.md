@@ -118,5 +118,4 @@ See `MIN_VERSION` in `echarts/build/testDts.js` for the minimal supported TS ver
 ## Library dependency records
 
 + @rollup/plugin-terser:
-    + Temporarily deliberately use v0.4.4, since v1.0.0+ require newer versions of Node.js (may v19+) and may break users existing pipeline, and v0.4.4 has no security issue yet and produces the same size of min file. It can be upgraded to v1.0.0+ in future if concrete requirements arise.
-
+    + Currently @rollup/plugin-terser@0.4.2 is used, since @rollup/plugin-terser@^1.0.0 requires Node.js v20+, which may break users existing pipeline; @rollup/plugin-terser@^0.4.3 depends smob@1.0.0, which requires Node.js v20+; @rollup/plugin-terser@0.4.2 does not affect the produced min file size. It can be upgraded to v1.0.0+ in future if concrete requirements arise.
