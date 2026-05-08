@@ -28,4 +28,4 @@
 # ```
 # Note that it should be "workingDirectories" rather than "WorkingDirectories".
 
-extends: '../.eslintrc-common-production.yaml'
+extends: '../../.eslintrc-common-production.yaml'
