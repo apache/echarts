@@ -296,12 +296,6 @@
         var recordVideoContainer = document.createElement('div');
         var boundingRectsContainer = document.createElement('div');
 
-        titleContainer.setAttribute('title', dom.getAttribute('id'));
-        titleContainer.addEventListener('click', function () {
-            // Convenient for locating test case code.
-            console.log('[TEST CASE DOM ID]: ' + dom.getAttribute('id'));
-        });
-
         titleContainer.className = 'test-title';
         dom.className = 'test-chart-block';
         left.className = 'test-chart-block-left';
@@ -335,7 +329,7 @@
         dom.appendChild(left);
         dom.parentNode.insertBefore(titleContainer, dom);
 
-        initTestTitle(opt, titleContainer);
+        initTestTitle(opt, titleContainer, dom);
 
         var chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts, errMsgPrefix);
 
@@ -359,7 +353,7 @@
         return chart;
     };
 
-    function initTestTitle(opt, titleContainer) {
+    function initTestTitle(opt, titleContainer, dom) {
         var optTitle = opt.title;
         if (optTitle) {
             if (optTitle instanceof Array) {
@@ -371,6 +365,30 @@
                     .replace(/\n/g, '<br>')
                 + '</div>';
         }
+
+        titleContainer.setAttribute('title', dom.getAttribute('id'));
+        titleContainer.addEventListener('click', function () {
+            // Convenient for locating test case code.
+            console.log('[TEST CASE DOM ID]: ' + dom.getAttribute('id'));
+        });
+
+        var hovering = false;
+        titleContainer.addEventListener('mouseover', function () {
+            if (!hovering) {
+                hovering = true;
+                if (_controlFrameSingleton) {
+                    cssAddClass(_controlFrameSingleton.btnPanel, 'control-frame-btn-panel-avoid-occlusion');
+                }
+            }
+        });
+        titleContainer.addEventListener('mouseout', function (event) {
+            if (hovering) {
+                hovering = false;
+                if (_controlFrameSingleton) {
+                    cssRemoveClass(_controlFrameSingleton.btnPanel, 'control-frame-btn-panel-avoid-occlusion');
+                }
+            }
+        });
     }
 
     function initUpdateInfo(opt, chart, infoContainer) {
@@ -2060,6 +2078,7 @@
 
 
     var _dummyRequestAnimationFrameMounted = false;
+    var _controlFrameSingleton = null;
 
     /**
      * Usage:
@@ -2073,6 +2092,11 @@
      * @param {Function} [opt.onFrame]
      */
     testHelper.controlFrame = function (opt) {
+        if (_controlFrameSingleton) {
+            throw new Error('`testHelper.controlFrame` can only be called once.');
+        }
+        _controlFrameSingleton = {};
+
         opt = opt || {};
         var pauseAt = opt.pauseAt;
         pauseAt == null && (pauseAt = 0);
@@ -2111,6 +2135,7 @@
             btnEl.addEventListener('click', button.onclick);
             btnPanel.appendChild(btnEl);
         }
+        _controlFrameSingleton.btnPanel = btnPanel;
 
         if (_dummyRequestAnimationFrameMounted) {
             throw new Error('Do not support `controlFrame` twice');
@@ -2474,6 +2499,40 @@
             ? 'object'
             : null;
     };
+
+    function containsDOMElement(parent, child, includeSelf) {
+        if (!includeSelf && child) {
+            child = child.parentNode;
+        }
+        while (child) {
+            if (child === parent) {
+                return true;
+            }
+            child = child.parentNode;
+        }
+        return false;
+    }
+
+    function cssHasClass(el, className) {
+        return cssNormalizeClass(el.className).indexOf(className) >= 0;
+    }
+
+    function cssAddClass(el, className) {
+        if (!cssHasClass(el, className)) {
+            el.className = cssNormalizeClass(el.className + ' ' + className);
+        }
+    }
+
+    function cssRemoveClass(el, className) {
+        var classes = (' ' + el.className + ' ').replace(' ' + className + ' ', function () {
+            return ' '; // Use a cb to String.prototype.replace to avoid `$` issue.
+        });
+        el.className = cssNormalizeClass(classes);
+    }
+
+    function cssNormalizeClass(classes) {
+        return classes.replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ');
+    }
 
     /**
      * JSON.stringify(obj, null, 2) will vertically layout array, which takes too much space.

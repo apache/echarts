@@ -384,6 +384,9 @@ td.test-data-table-key {
     padding: 5px;
     z-index: 99999;
 }
+.control-frame-btn-panel-avoid-occlusion {
+    opacity: 0.2;
+}
 .control-frame-btn-panel .control-frame-info {
     display: block;
     color: #fff;

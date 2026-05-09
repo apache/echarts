@@ -484,8 +484,11 @@ export function requireAxisStatistics(
 
     callOnlyOnce(registers, function () {
         registers.registerProcessor(registers.PRIORITY.PROCESSOR.AXIS_STATISTICS, {
-            // Theoretically, `appendData` requires to re-calculate them.
-            dirtyOnOverallProgress: true,
+            // NOTE: Theoretically, `appendData` requires `dirtyOnOverallProgress: true` here to re-calculate them.
+            // But this OVERALL_STAGE_TASK is applied to all series (no `getTargetSeries` specified),
+            // `dirtyOnOverallProgress: true` can cause irrelevant series (e.g., series on geo)
+            // to be re-rendered when `appendData` is called, which cause `appendData` meaningless,
+            // thereby not setting `dirtyOnOverallProgress: true`.
             overallReset: performAxisStatisticsOnOverallReset
         });
     });

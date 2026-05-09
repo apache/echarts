@@ -352,6 +352,15 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         return createTooltipMarkup('nameValue', {
             name: itemName,
             value,
+            // NOTE: here `value` may be `coords` (an 2D-array) if ec option is like
+            //  series: {
+            //      type: 'lines',
+            //      data: [
+            //          [[2.122232, 100.1133], [5.122232, 104.1133]],
+            //          [[22.122232, 0.1133], [25.122232, 4.1133]],
+            //      ]
+            //  }
+            // Do not display `value` in that case.
             noValue: value == null || isNaN(value as number)
         });
     }
