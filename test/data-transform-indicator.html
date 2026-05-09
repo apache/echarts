@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style></style>
+
+        <div id="main_indicator_sma_ema"></div>
+        <div id="main_indicator_bollinger"></div>
+        <div id="main_indicator_macd"></div>
+
+        <script>
+            var STOCK_DATA = [
+                ['Date', 'Open', 'Close', 'Lowest', 'Highest'],
+                ['2017-10-24', 20, 30, 10, 35],
+                ['2017-10-25', 40, 35, 30, 55],
+                ['2017-10-26', 33, 38, 33, 40],
+                ['2017-10-27', 40, 40, 32, 42],
+                ['2017-10-28', 40, 45, 39, 46],
+                ['2017-10-29', 46, 50, 45, 52],
+                ['2017-10-30', 52, 49, 48, 55],
+                ['2017-10-31', 48, 45, 42, 50],
+                ['2017-11-01', 44, 42, 40, 48],
+                ['2017-11-02', 41, 44, 40, 46],
+                ['2017-11-03', 44, 48, 42, 50],
+                ['2017-11-04', 48, 52, 45, 55],
+                ['2017-11-05', 52, 58, 50, 60],
+                ['2017-11-06', 58, 55, 52, 60],
+                ['2017-11-07', 54, 50, 48, 56]
+            ];
+
+        </script>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                dataset: [{
+                    id: 'raw',
+                    source: STOCK_DATA
+                }, {
+                    id: 'sma5',
+                    fromDatasetId: 'raw',
+                    transform: {
+                        type: 'echarts:indicator',
+                        config: { indicator: 'sma', period: 5, sourceDimension: 'Close' }
+                    }
+                }, {
+                    id: 'ema5',
+                    fromDatasetId: 'raw',
+                    transform: {
+                        type: 'echarts:indicator',
+                        config: { indicator: 'ema', period: 5, sourceDimension: 'Close' }
+                    }
+                }],
+                tooltip: { trigger: 'axis' },
+                legend: {},
+                xAxis: { type: 'category' },
+                yAxis: { scale: true },
+                series: [{
+                    type: 'candlestick',
+                    name: 'K-Line',
+                    datasetId: 'raw',
+                    encode: {
+                        x: 'Date',
+                        y: ['Open', 'Close', 'Lowest', 'Highest']
+                    }
+                }, {
+                    type: 'line',
+                    name: 'SMA5',
+                    datasetId: 'sma5',
+                    encode: { x: 'Date', y: 'SMA' },
+                    smooth: true
+                }, {
+                    type: 'line',
+                    name: 'EMA5',
+                    datasetId: 'ema5',
+                    encode: { x: 'Date', y: 'EMA' },
+                    smooth: true
+                }]
+            };
+
+            testHelper.create(echarts, 'main_indicator_sma_ema', {
+                title: 'Test SMA and EMA transform on K-Line data',
+                height: 400,
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                dataset: [{
+                    id: 'raw',
+                    source: STOCK_DATA
+                }, {
+                    id: 'bollinger',
+                    fromDatasetId: 'raw',
+                    transform: {
+                        type: 'echarts:indicator',
+                        config: { indicator: 'bollinger', period: 5, sourceDimension: 'Close' }
+                    }
+                }],
+                tooltip: { trigger: 'axis' },
+                legend: {},
+                xAxis: { type: 'category' },
+                yAxis: { scale: true },
+                series: [{
+                    type: 'candlestick',
+                    name: 'K-Line',
+                    datasetId: 'raw',
+                    encode: {
+                        x: 'Date',
+                        y: ['Open', 'Close', 'Lowest', 'Highest']
+                    }
+                }, {
+                    type: 'line',
+                    name: 'Upper Band',
+                    datasetId: 'bollinger',
+                    encode: { x: 'Date', y: 'Upper' },
+                    lineStyle: { type: 'dashed' },
+                    itemStyle: { color: 'green' }
+                }, {
+                    type: 'line',
+                    name: 'Lower Band',
+                    datasetId: 'bollinger',
+                    encode: { x: 'Date', y: 'Lower' },
+                    lineStyle: { type: 'dashed' },
+                    itemStyle: { color: 'green' }
+                }]
+            };
+
+            testHelper.create(echarts, 'main_indicator_bollinger', {
+                title: 'Test Bollinger Bands transform',
+                height: 400,
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                dataset: [{
+                    id: 'raw',
+                    source: STOCK_DATA
+                }, {
+                    id: 'macd',
+                    fromDatasetId: 'raw',
+                    transform: {
+                        type: 'echarts:indicator',
+                        config: { 
+                            indicator: 'macd', 
+                            shortPeriod: 3, 
+                            longPeriod: 6, 
+                            signalPeriod: 3, 
+                            sourceDimension: 'Close' 
+                        }
+                    }
+                }],
+                tooltip: { trigger: 'axis' },
+                legend: {},
+                xAxis: { type: 'category' },
+                yAxis: { scale: true },
+                series: [{
+                    type: 'line',
+                    name: 'MACD',
+                    datasetId: 'macd',
+                    encode: { x: 'Date', y: 'MACD' }
+                }, {
+                    type: 'line',
+                    name: 'Signal',
+                    datasetId: 'macd',
+                    encode: { x: 'Date', y: 'Signal' },
+                    lineStyle: { type: 'dashed' }
+                }, {
+                    type: 'bar',
+                    name: 'Histogram',
+                    datasetId: 'macd',
+                    encode: { x: 'Date', y: 'Histogram' }
+                }]
+            };
+
+            testHelper.create(echarts, 'main_indicator_macd', {
+                title: 'Test MACD transform',
+                height: 400,
+                option: option
+            });
+        });
+        </script>
+    </body>
+</html>
