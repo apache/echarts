@@ -38,8 +38,6 @@ import { Dictionary, DimensionName, ScaleDataValue } from '../../util/types';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelAxisModel, { ParallelActiveState } from './AxisModel';
 import SeriesData from '../../data/SeriesData';
-import { AxisBaseModel } from '../AxisBaseModel';
-import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { scaleCalcNice } from '../axisNiceTicks';
 import {
     AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoCreate

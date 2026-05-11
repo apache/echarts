@@ -18,7 +18,6 @@
 */
 
 import type Calendar from './Calendar';
-import { OptionDataValueDate } from '../../util/types';
 
 export default function calendarPrepareCustom(coordSys: Calendar) {
     const rect = coordSys.getRect();

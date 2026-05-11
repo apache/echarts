@@ -37,8 +37,6 @@ import { PolarAxisModel, AngleAxisModel, RadiusAxisModel } from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
 import { SINGLE_REFERRING } from '../../util/model';
-import { AxisBaseModel } from '../AxisBaseModel';
-import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { createBoxLayoutReference } from '../../util/layout';
 import { scaleCalcNice } from '../axisNiceTicks';
 import {

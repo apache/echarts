@@ -67,7 +67,10 @@ export interface ToolboxFeatureModel<Opts extends ToolboxFeatureOption = Toolbox
     setIconStatus(iconName: string, status: DisplayState): void
 }
 
-interface ToolboxFeature<Opts extends ToolboxFeatureOption = ToolboxFeatureOption> {
+interface ToolboxFeature<
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    Opts extends ToolboxFeatureOption = ToolboxFeatureOption
+> {
     getIcons?(): Dictionary<string>
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI, type: string, event: ZRElementEvent): void
