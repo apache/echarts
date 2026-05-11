@@ -69,7 +69,8 @@ async function run() {
         .option(
             '--type <type name>', [
             'Can be "simple" or "common" or "all" (default). Or can be simple,common,all to build multiple. For example,',
-            descIndent + '`--type ""` or `--type "common"`.'
+            descIndent + '`--type ""` or `--type "common"`.',
+            'NOTE: "all" is an individual build type, which means including all source code.'
         ].join('\n'))
         .option(
             '--format <format>',

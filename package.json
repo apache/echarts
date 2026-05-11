@@ -45,7 +45,7 @@
     "build:esm": "node build/build.js --type all --min --format esm",
     "build:i18n": "node build/build-i18n.js",
     "build:lib": "node build/build-lib.js",
-    "build:extension": "node build/build.js --type extension",
+    "build:extension": "node build/build.js --type extension --min",
     "build:ssr": "node build/build.js --type ssr",
     "dev:fast": "node build/build-i18n.js && node build/dev-fast.js",
     "dev": "npx -y concurrently -n build,server \"npm run dev:fast\" \"npx -y http-server -c-1 -s -o test\"",
@@ -69,7 +69,7 @@
     "lint": "npx eslint --cache --cache-location node_modules/.cache/eslint \"src/**/*.ts\" \"ssr/client/src/**/*.ts\" \"extension-src/**/*.ts\"",
     "lint:nocache": "npx eslint \"src/**/*.ts\" \"ssr/client/src/**/*.ts\" \"extension-src/**/*.ts\"",
     "lint:nocache:list": "npm run lint:nocache -- --debug 2>&1 | grep \"filePath\"",
-    "lint:fix": "npx eslint --fix src/**/*.ts extension-src/**/*.ts",
+    "lint:fix": "npx eslint --fix \"src/**/*.ts\" \"ssr/client/src/**/*.ts\" \"extension-src/**/*.ts\"",
     "lint:dist": "echo 'It might take a while. Please wait ...' && npx jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
