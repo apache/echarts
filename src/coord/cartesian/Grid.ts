@@ -34,8 +34,6 @@ import {
     determineAxisType,
     isOnAxisZeroDiscouraged,
     SCALE_VALUE_POSITION_KIND_OUTSIDE,
-    SCALE_VALUE_POSITION_KIND_EDGE,
-    SCALE_VALUE_POSITION_KIND_INSIDE,
     getTickValueOutermost,
     isAxisOnBand,
 } from '../../coord/axisHelper';

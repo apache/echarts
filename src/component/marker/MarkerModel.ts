@@ -262,6 +262,7 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface MarkerModel<Opts extends MarkerOption = MarkerOption> extends DataFormatMixin {}
 zrUtil.mixin(MarkerModel, DataFormatMixin.prototype);
 

@@ -96,6 +96,7 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
         if (isESClass(superClass)) {
             ExtendedClass = class extends superClass {
                 constructor() {
+                    // eslint-disable-next-line no-restricted-syntax
                     super(...arguments as any);
                 }
             };

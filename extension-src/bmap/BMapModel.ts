@@ -17,27 +17,57 @@
 * under the License.
 */
 
-// @ts-nocheck
-import * as echarts from 'echarts';
+import {
+    ComponentModel,
+    extendComponentModel,
+} from 'echarts';
+import type {
+    BMapCoordSys,
+    bmapLib,
+} from './BMapCoordSys';
 
-function v2Equal(a, b) {
+
+export interface BMapOption {
+    type?: string;
+    center?: number[];
+    zoom?: number;
+    roam?: boolean | 'scale' | 'move';
+    mapOptions?: bmapLib.MapOptions;
+    mapStyle?: bmapLib.MapStyle;
+    mapStyleV2?: bmapLib.MapStyleV2;
+}
+type BMapComponentExtended = ComponentModel<BMapOption>;
+export type BMapModel = (typeof proto) & BMapComponentExtended;
+
+
+function v2Equal(a: number[], b: number[]): boolean {
     return a && b && a[0] === b[0] && a[1] === b[1];
 }
 
-export default echarts.extendComponentModel({
-    type: 'bmap',
+export const COMPONENT_MAIN_TYPE_BMAP = 'bmap';
+
+
+const proto = {
+
+    type: COMPONENT_MAIN_TYPE_BMAP,
+
+    __bmap: undefined as bmapLib.Map,
+    __mapOffset: undefined as number[],
+    __mapStyle: undefined as object,
+    __mapStyle2: undefined as object,
+    coordinateSystem: undefined as BMapCoordSys,
 
     getBMap: function () {
         // __bmap is injected when creating BMapCoordSys
         return this.__bmap;
     },
 
-    setCenterAndZoom: function (center, zoom) {
+    setCenterAndZoom: function (this: BMapComponentExtended, center: number[], zoom: number): void {
         this.option.center = center;
         this.option.zoom = zoom;
     },
 
-    centerOrZoomChanged: function (center, zoom) {
+    centerOrZoomChanged: function (this: BMapComponentExtended, center: number[], zoom: number): boolean {
         const option = this.option;
         return !(v2Equal(center, option.center) && zoom === option.zoom);
     },
@@ -59,4 +89,6 @@ export default echarts.extendComponentModel({
 
         roam: false
     }
-});
+};
+
+extendComponentModel(proto);

@@ -675,7 +675,7 @@ function removeNode(
     });
 
     // remove edge as parent node
-    node.children.forEach(childNode => {
+    zrUtil.each(node.children, function (childNode) {
         removeNodeEdge(childNode, data, group, seriesModel, removeAnimationOpt);
     });
     // remove edge as child node

@@ -21,7 +21,7 @@ import createSeriesDataSimply from './createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
-import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient, NullUndefined } from '../../util/types';
+import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient } from '../../util/types';
 import type GlobalModel from '../../model/Global';
 import type SeriesModel from '../../model/Series';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';

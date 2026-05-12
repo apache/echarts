@@ -24,81 +24,131 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.bmap = {}, global.echarts));
 }(this, (function (exports, echarts) { 'use strict';
 
-  function BMapCoordSys(bmap, api) {
-    this._bmap = bmap;
-    this.dimensions = ['lng', 'lat'];
-    this._mapOffset = [0, 0];
-    this._api = api;
-    this._projection = new BMap.MercatorProjection();
+  function v2Equal(a, b) {
+    return a && b && a[0] === b[0] && a[1] === b[1];
   }
-  BMapCoordSys.prototype.type = 'bmap';
-  BMapCoordSys.prototype.dimensions = ['lng', 'lat'];
-  BMapCoordSys.prototype.setZoom = function (zoom) {
-    this._zoom = zoom;
+  var COMPONENT_MAIN_TYPE_BMAP = 'bmap';
+  var proto = {
+    type: COMPONENT_MAIN_TYPE_BMAP,
+    __bmap: undefined,
+    __mapOffset: undefined,
+    __mapStyle: undefined,
+    __mapStyle2: undefined,
+    coordinateSystem: undefined,
+    getBMap: function () {
+      // __bmap is injected when creating BMapCoordSys
+      return this.__bmap;
+    },
+    setCenterAndZoom: function (center, zoom) {
+      this.option.center = center;
+      this.option.zoom = zoom;
+    },
+    centerOrZoomChanged: function (center, zoom) {
+      var option = this.option;
+      return !(v2Equal(center, option.center) && zoom === option.zoom);
+    },
+    defaultOption: {
+      center: [104.114129, 37.550339],
+      zoom: 5,
+      // 2.0 https://lbsyun.baidu.com/custom/index.htm
+      mapStyle: {},
+      // 3.0 https://lbsyun.baidu.com/index.php?title=open/custom
+      mapStyleV2: {},
+      // See https://lbsyun.baidu.com/cms/jsapi/reference/jsapi_reference.html#a0b1
+      mapOptions: {},
+      roam: false
+    }
   };
-  BMapCoordSys.prototype.setCenter = function (center) {
-    this._center = this._projection.lngLatToPoint(new BMap.Point(center[0], center[1]));
-  };
-  BMapCoordSys.prototype.setMapOffset = function (mapOffset) {
-    this._mapOffset = mapOffset;
-  };
-  BMapCoordSys.prototype.getBMap = function () {
-    return this._bmap;
-  };
-  BMapCoordSys.prototype.dataToPoint = function (data) {
-    var point = new BMap.Point(data[0], data[1]);
-    // TODO mercator projection is toooooooo slow
-    // let mercatorPoint = this._projection.lngLatToPoint(point);
-    // let width = this._api.getZr().getWidth();
-    // let height = this._api.getZr().getHeight();
-    // let divider = Math.pow(2, 18 - 10);
-    // return [
-    //     Math.round((mercatorPoint.x - this._center.x) / divider + width / 2),
-    //     Math.round((this._center.y - mercatorPoint.y) / divider + height / 2)
-    // ];
-    var px = this._bmap.pointToOverlayPixel(point);
-    var mapOffset = this._mapOffset;
-    return [px.x - mapOffset[0], px.y - mapOffset[1]];
-  };
-  BMapCoordSys.prototype.pointToData = function (pt) {
-    var mapOffset = this._mapOffset;
-    pt = this._bmap.overlayPixelToPoint({
-      x: pt[0] + mapOffset[0],
-      y: pt[1] + mapOffset[1]
-    });
-    return [pt.lng, pt.lat];
-  };
-  BMapCoordSys.prototype.getViewRect = function () {
-    var api = this._api;
-    return new echarts.graphic.BoundingRect(0, 0, api.getWidth(), api.getHeight());
-  };
-  BMapCoordSys.prototype.getRoamTransform = function () {
-    return echarts.matrix.create();
-  };
-  BMapCoordSys.prototype.prepareCustoms = function () {
-    var rect = this.getViewRect();
-    return {
-      coordSys: {
-        // The name exposed to user is always 'cartesian2d' but not 'grid'.
-        type: 'bmap',
-        x: rect.x,
-        y: rect.y,
-        width: rect.width,
-        height: rect.height
-      },
-      api: {
-        coord: echarts.util.bind(this.dataToPoint, this),
-        size: echarts.util.bind(dataToCoordSize, this)
-      }
+  echarts.extendComponentModel(proto);
+
+  var COORD_SYS_BMAP = COMPONENT_MAIN_TYPE_BMAP;
+  function makeDimensions() {
+    return ['lng', 'lat'];
+  }
+  var BMapCoordSys = /** @class */function () {
+    function BMapCoordSys(bmap, api) {
+      this.dimensions = makeDimensions();
+      this.type = COORD_SYS_BMAP;
+      this._mapOffset = [0, 0];
+      this._projection = new BMap.MercatorProjection();
+      this._bmap = bmap;
+      this._api = api;
+    }
+    BMapCoordSys.prototype.setZoom = function (zoom) {
+      this._zoom = zoom;
     };
-  };
-  BMapCoordSys.prototype.convertToPixel = function (ecModel, finder, value) {
-    // here we ignore finder as only one bmap component is allowed
-    return this.dataToPoint(value);
-  };
-  BMapCoordSys.prototype.convertFromPixel = function (ecModel, finder, value) {
-    return this.pointToData(value);
-  };
+    BMapCoordSys.prototype.setCenter = function (center) {
+      this._center = this._projection.lngLatToPoint(new BMap.Point(center[0], center[1]));
+    };
+    BMapCoordSys.prototype.setMapOffset = function (mapOffset) {
+      this._mapOffset = mapOffset;
+    };
+    BMapCoordSys.prototype.getBMap = function () {
+      return this._bmap;
+    };
+    BMapCoordSys.prototype.dataToPoint = function (data) {
+      var point = new BMap.Point(data[0], data[1]);
+      // TODO mercator projection is toooooooo slow
+      // let mercatorPoint = this._projection.lngLatToPoint(point);
+      // let width = this._api.getZr().getWidth();
+      // let height = this._api.getZr().getHeight();
+      // let divider = Math.pow(2, 18 - 10);
+      // return [
+      //     Math.round((mercatorPoint.x - this._center.x) / divider + width / 2),
+      //     Math.round((this._center.y - mercatorPoint.y) / divider + height / 2)
+      // ];
+      var px = this._bmap.pointToOverlayPixel(point);
+      var mapOffset = this._mapOffset;
+      return [px.x - mapOffset[0], px.y - mapOffset[1]];
+    };
+    BMapCoordSys.prototype.pointToData = function (point) {
+      var mapOffset = this._mapOffset;
+      var pt = this._bmap.overlayPixelToPoint({
+        x: point[0] + mapOffset[0],
+        y: point[1] + mapOffset[1]
+      });
+      return [pt.lng, pt.lat];
+    };
+    BMapCoordSys.prototype.containPoint = function (point) {
+      // Currently, bmap takes the entire canvas.
+      return true;
+    };
+    BMapCoordSys.prototype.getViewRect = function () {
+      var api = this._api;
+      return new echarts.graphic.BoundingRect(0, 0, api.getWidth(), api.getHeight());
+    };
+    BMapCoordSys.prototype.getRoamTransform = function () {
+      return echarts.matrix.create();
+    };
+    BMapCoordSys.prototype.prepareCustoms = function () {
+      var rect = this.getViewRect();
+      return {
+        coordSys: {
+          // The name exposed to user is always 'cartesian2d' but not 'grid'.
+          type: COORD_SYS_BMAP,
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height
+        },
+        api: {
+          coord: echarts.util.bind(this.dataToPoint, this),
+          size: echarts.util.bind(dataToCoordSize, this)
+        }
+      };
+    };
+    BMapCoordSys.prototype.convertToPixel = function (ecModel, finder, value) {
+      // here we ignore finder as only one bmap component is allowed
+      return this.dataToPoint(value);
+    };
+    BMapCoordSys.prototype.convertFromPixel = function (ecModel, finder, value) {
+      return this.pointToData(value);
+    };
+    // For deciding which dimensions to use when creating list data
+    BMapCoordSys.dimensions = makeDimensions();
+    return BMapCoordSys;
+  }();
+  BMapCoordSys.prototype.dimensions = makeDimensions(); // For backward compatibility.
   function dataToCoordSize(dataSize, dataItem) {
     dataItem = dataItem || [0, 0];
     return echarts.util.map([0, 1], function (dimIdx) {
@@ -113,17 +163,12 @@
     }, this);
   }
   var Overlay;
-  // For deciding which dimensions to use when creating list data
-  BMapCoordSys.dimensions = BMapCoordSys.prototype.dimensions;
   function createOverlayCtor() {
     function Overlay(root) {
       this._root = root;
     }
     Overlay.prototype = new BMap.Overlay();
     /**
-     * 初始化
-     *
-     * @param {BMap.Map} map
      * @override
      */
     Overlay.prototype.initialize = function (map) {
@@ -140,7 +185,7 @@
     var bmapCoordSys;
     var root = api.getDom();
     // TODO Dispose
-    ecModel.eachComponent('bmap', function (bmapModel) {
+    ecModel.eachComponent(COMPONENT_MAIN_TYPE_BMAP, function (bmapModel) {
       var painter = api.getZr().painter;
       var viewportRoot = painter.getViewportRoot();
       if (typeof BMap === 'undefined') {
@@ -205,43 +250,14 @@
       bmapModel.coordinateSystem = bmapCoordSys;
     });
     ecModel.eachSeries(function (seriesModel) {
-      if (seriesModel.get('coordinateSystem') === 'bmap') {
+      if (seriesModel.get('coordinateSystem') === COORD_SYS_BMAP) {
         seriesModel.coordinateSystem = bmapCoordSys;
       }
     });
     // return created coordinate systems
     return bmapCoordSys && [bmapCoordSys];
   };
-
-  function v2Equal(a, b) {
-    return a && b && a[0] === b[0] && a[1] === b[1];
-  }
-  echarts.extendComponentModel({
-    type: 'bmap',
-    getBMap: function () {
-      // __bmap is injected when creating BMapCoordSys
-      return this.__bmap;
-    },
-    setCenterAndZoom: function (center, zoom) {
-      this.option.center = center;
-      this.option.zoom = zoom;
-    },
-    centerOrZoomChanged: function (center, zoom) {
-      var option = this.option;
-      return !(v2Equal(center, option.center) && zoom === option.zoom);
-    },
-    defaultOption: {
-      center: [104.114129, 37.550339],
-      zoom: 5,
-      // 2.0 https://lbsyun.baidu.com/custom/index.htm
-      mapStyle: {},
-      // 3.0 https://lbsyun.baidu.com/index.php?title=open/custom
-      mapStyleV2: {},
-      // See https://lbsyun.baidu.com/cms/jsapi/reference/jsapi_reference.html#a0b1
-      mapOptions: {},
-      roam: false
-    }
-  });
+  echarts.registerCoordinateSystem('bmap', BMapCoordSys);
 
   function isEmptyObject(obj) {
     for (var key in obj) {
@@ -251,14 +267,16 @@
     }
     return true;
   }
-  echarts.extendComponentView({
-    type: 'bmap',
+  var proto$1 = {
+    type: COMPONENT_MAIN_TYPE_BMAP,
+    _oldMoveHandler: undefined,
+    _oldZoomEndHandler: undefined,
     render: function (bMapModel, ecModel, api) {
       var rendering = true;
       var bmap = bMapModel.getBMap();
       var viewportRoot = api.getZr().painter.getViewportRoot();
       var coordSys = bMapModel.coordinateSystem;
-      var moveHandler = function (type, target) {
+      var moveHandler = function () {
         if (rendering) {
           return;
         }
@@ -343,16 +361,16 @@
       }
       rendering = false;
     }
-  });
+  };
+  echarts.extendComponentView(proto$1);
 
-  echarts.registerCoordinateSystem('bmap', BMapCoordSys);
   // Action
   echarts.registerAction({
     type: 'bmapRoam',
     event: 'bmapRoam',
     update: 'updateLayout'
   }, function (payload, ecModel) {
-    ecModel.eachComponent('bmap', function (bMapModel) {
+    ecModel.eachComponent(COMPONENT_MAIN_TYPE_BMAP, function (bMapModel) {
       var bmap = bMapModel.getBMap();
       var center = bmap.getCenter();
       bMapModel.setCenterAndZoom([center.lng, center.lat], bmap.getZoom());

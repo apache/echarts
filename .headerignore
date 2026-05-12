@@ -29,6 +29,7 @@ map/js
 map/json
 benchmark/dep/*
 test/ut/lib
+test/runTest/tmp
 test/data$
 test/lib/esl\.js
 test/lib/perlin\.js

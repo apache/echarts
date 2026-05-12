@@ -149,11 +149,11 @@ function computeNodeBreadths(
 
             for (let edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
                 const edge = node.outEdges[edgeIdx];
-                const indexEdge = edges.indexOf(edge);
+                const indexEdge = zrUtil.indexOf(edges, edge);
                 remainEdges[indexEdge] = 0;
                 const targetNode = edge.node2;
-                const nodeIndex = nodes.indexOf(targetNode);
-                if (--indegreeArr[nodeIndex] === 0 && nextTargetNode.indexOf(targetNode) < 0) {
+                const nodeIndex = zrUtil.indexOf(nodes, targetNode);
+                if (--indegreeArr[nodeIndex] === 0 && zrUtil.indexOf(nextTargetNode, targetNode) < 0) {
                     nextTargetNode.push(targetNode);
                 }
             }
@@ -201,7 +201,7 @@ function adjustNodeWithNodeAlign(
                 node.setLayout({skNodeHeight: nodeHeight}, true);
                 for (let j = 0; j < node.inEdges.length; j++) {
                     const edge = node.inEdges[j];
-                    if (nextSourceNode.indexOf(edge.node1) < 0) {
+                    if (zrUtil.indexOf(nextSourceNode, edge.node1) < 0) {
                         nextSourceNode.push(edge.node1);
                     }
                 }

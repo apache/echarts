@@ -29,7 +29,6 @@ import Polar from '../../coord/polar/Polar';
 import AngleAxis from '../../coord/polar/AngleAxis';
 import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types';
 import { getECData } from '../../util/innerStore';
-import OrdinalScale from '../../scale/Ordinal';
 import { AxisLabelBaseOptionNuance } from '../../coord/axisCommonTypes';
 import { getTickValueOutermost } from '../../coord/axisHelper';
 

@@ -1,0 +1,17 @@
+{
+    "name": "@echarts-x/eslint-plugin-ec",
+    "version": "1.0.0",
+    "main": "index.cjs",
+    "homepage": "https://github.com/apache/echarts/blob/master/build/eslint/eslint-plugin-ec",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/apache/echarts.git"
+    },
+    "dependencies": {
+        "typescript": "4.4.3",
+        "@typescript-eslint/utils": "^5.62.0"
+    },
+    "peerDependencies": {
+        "eslint": "^7.15.0"
+    }
+}

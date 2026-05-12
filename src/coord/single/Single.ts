@@ -31,8 +31,6 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import SingleAxisModel, { COORD_SYS_TYPE_SINGLE } from './AxisModel';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
-import { AxisBaseModel } from '../AxisBaseModel';
-import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { scaleCalcNice } from '../axisNiceTicks';
 import {
     AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoCreate
