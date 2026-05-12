@@ -103,6 +103,14 @@ const addFns = {
         return headStr + fileStr;
     },
 
+    cjs: function (headStr, fileStr) {
+        return headStr + fileStr;
+    },
+
+    mjs: function (headStr, fileStr) {
+        return headStr + fileStr;
+    },
+
     css: function (headStr, fileStr) {
         return headStr + fileStr;
     },
@@ -157,6 +165,8 @@ function xmlAddFn(headStr, fileStr) {
 const preambleMap = {
     ts: cStyleComment,
     js: cStyleComment,
+    cjs: cStyleComment,
+    mjs: cStyleComment,
     css: cStyleComment,
     java: cStyleComment,
     yml: hashComment,
@@ -195,6 +205,8 @@ const mlCommentReg = /<\!\-\-[\S\s]*?\-\->/;
 const commentReg = {
     ts: cStyleCommentReg,
     js: cStyleCommentReg,
+    cjs: cStyleCommentReg,
+    mjs: cStyleCommentReg,
     css: cStyleCommentReg,
     java: cStyleCommentReg,
     yml: hashCommentReg,
