@@ -87,7 +87,10 @@ jobs:
             index.d.ts
             src/
             extension-src/
+            dist/package.json
             ssr/client/src/
+            ssr/client/dist/package.json
+            i18n/package.json
             licenses/
             theme/
             build/
