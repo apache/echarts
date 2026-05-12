@@ -147,10 +147,10 @@ declare let global: any;
 
 type ModelFinder = modelUtil.ModelFinder;
 
-export const version = '6.0.0';
+export const version = '6.1.0';
 
 export const dependencies = {
-    zrender: '6.0.0'
+    zrender: '6.1.0'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
