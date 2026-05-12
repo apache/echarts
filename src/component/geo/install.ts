@@ -19,11 +19,11 @@
 
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import GeoModel from '../../coord/geo/GeoModel';
-import geoCreator, { mapSeriesNeedsDrawMap } from '../../coord/geo/geoCreator';
+import geoCreator from '../../coord/geo/geoCreator';
 import { ActionInfo, COMPONENT_MAIN_TYPE_SERIES, RoamHostModel, RoamPayload } from '../../util/types';
 import { each } from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import MapSeries from '../../chart/map/MapSeries';
+import MapSeries, { mapSeriesNeedsDrawMap } from '../../chart/map/MapSeries';
 import GeoView from './GeoView';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import type ExtensionAPI from '../../core/ExtensionAPI';

@@ -19,10 +19,9 @@
 
 
 import GlobalModel from '../../model/Global';
-import { SERIES_TYPE_MAP } from './MapSeries';
+import { buildAllMapSeriesGroups, getMainMapSeries, mapSeriesGroupHasOwnGeo, SERIES_TYPE_MAP } from './MapSeries';
 import { Dictionary } from '../../util/types';
 import { createSimpleOverallStageHandler } from '../../util/model';
-import { buildAllMapSeriesGroups, getMainMapSeries, mapSeriesGroupHasOwnGeo } from '../../coord/geo/geoCreator';
 import { each } from 'zrender/src/core/util';
 
 

@@ -21,13 +21,12 @@
 import * as graphic from '../../util/graphic';
 import MapDraw from '../../component/helper/MapDraw';
 import ChartView from '../../view/Chart';
-import MapSeries, { MapDataItemOption, SERIES_TYPE_MAP } from './MapSeries';
+import MapSeries, { getMainMapSeries, MapDataItemOption, mapSeriesNeedsDrawMap, SERIES_TYPE_MAP } from './MapSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, DisplayState, ECElement, RoamPayload } from '../../util/types';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { setStatesFlag, Z2_EMPHASIS_LIFT } from '../../util/states';
-import { getMainMapSeries, mapSeriesNeedsDrawMap } from '../../coord/geo/geoCreator';
 
 
 class MapView extends ChartView {

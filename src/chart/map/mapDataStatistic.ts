@@ -20,10 +20,9 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import SeriesData from '../../data/SeriesData';
-import { MapValueCalculationType, SERIES_TYPE_MAP } from './MapSeries';
+import { buildAllMapSeriesGroups, getMainMapSeries, MapValueCalculationType, SERIES_TYPE_MAP } from './MapSeries';
 import GlobalModel from '../../model/Global';
 import { createSimpleOverallStageHandler } from '../../util/model';
-import { buildAllMapSeriesGroups, getMainMapSeries } from '../../coord/geo/geoCreator';
 
 // FIXME 公用？
 function dataStatistics(datas: SeriesData[], statisticType: MapValueCalculationType): SeriesData {

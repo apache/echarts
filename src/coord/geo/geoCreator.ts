@@ -23,11 +23,12 @@ import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
 import geoSourceManager from './geoSourceManager';
 import GeoModel, { GeoCommonOptionMixin, GeoOption, RegionOption } from './GeoModel';
-import MapSeries, { MapSeriesOption, SERIES_TYPE_MAP } from '../../chart/map/MapSeries';
+import MapSeries, {
+    buildAllMapSeriesGroups, mapSeriesGroupHasOwnGeo, MapSeriesOption, SERIES_TYPE_MAP
+} from '../../chart/map/MapSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { CoordinateSystemCreator } from '../CoordinateSystem';
 import { NameMap } from './geoTypes';
-import { Dictionary, NullUndefined } from 'zrender/src/core/types';
 import type Model from '../../model/Model';
 import type GlobalModel from '../../model/Global';
 import type ComponentModel from '../../model/Component';
@@ -42,17 +43,6 @@ import {
 
 export type resizeGeoType = typeof resizeGeo;
 export type MapOrGeoModel = (GeoModel | MapSeries) & ComponentModel<GeoOption | MapSeriesOption>;
-
-// See MAP_SERIES_GROUP
-export type MapSeriesGroup = {
-    // Raw (a group of series before series filtering)
-    // Never be empty.
-    r: MapSeries[];
-    // Filtered (a group of series after series filtering)
-    // If `getMainMapSeries(seriesGroup)` is falsy, `f` is an empty array.
-    f: MapSeries[];
-};
-type AllMapSeriesGroups = Dictionary<MapSeriesGroup>;
 
 /**
  * Resize method bound to the geo
@@ -319,50 +309,6 @@ class GeoCreator implements CoordinateSystemCreator {
     }
 }
 
-
 const geoCreator = new GeoCreator();
-
-/**
- * @tutorial [MAP_SERIES_GROUP]
- *  - For map series that reference external geo components (typically via `geoIndex` or `geoId` in ec option),
- *    a map series group is all map series that reference to the same geo component.
- *  - For other map series,
- *    a map series group is all map series that use the same `map` in ec option.
- *  NOTICE: series filtering (typically by legend) matters:
- *   If this method is executed before series filtering, all series are included,
- *   otherwise, series filtered out are excluded.
- *   When legend disables the original first series, the original second series takes the responsibility
- *   to render map (via its `MapDraw`).
- */
-export function buildAllMapSeriesGroups(ecModel: GlobalModel, beforeSeriesFiltering?: boolean): AllMapSeriesGroups {
-    const allMapSeriesGroups: AllMapSeriesGroups = {};
-    ecModel.eachRawSeriesByType(SERIES_TYPE_MAP, function (seriesModel: MapSeries) {
-        const hostGeoModel = seriesModel.getHostGeoModel();
-        const key = hostGeoModel ? 'o' + hostGeoModel.id : 'i' + seriesModel.getMapType();
-        const group = allMapSeriesGroups[key] = allMapSeriesGroups[key] || {f: [], r: []};
-        if (!ecModel.isSeriesFiltered(seriesModel) && !beforeSeriesFiltering) {
-            group.f.push(seriesModel);
-        }
-        group.r.push(seriesModel);
-    });
-    return allMapSeriesGroups;
-}
-
-/**
- * Has exclusive geo, rahter than depends on a separate geo componet.
- */
-export function mapSeriesGroupHasOwnGeo(groupKey: string): boolean {
-    return groupKey.indexOf('i') === 0;
-}
-
-export function mapSeriesNeedsDrawMap(mapSeries: MapSeries): boolean {
-    // Within a MAP_SERIES_GROUP, only `mainSeries` has `needsDrawMap: true`.
-    return getMainMapSeries(mapSeries.seriesGroup) === mapSeries && !mapSeries.getHostGeoModel();
-}
-
-export function getMainMapSeries(mapSeriesGroup: MapSeriesGroup): MapSeries | NullUndefined {
-    // The first series after filtering in a MAP_SERIES_GROUP.
-    return mapSeriesGroup.f[0];
-}
 
 export default geoCreator;
