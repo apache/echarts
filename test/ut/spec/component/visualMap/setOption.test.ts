@@ -287,4 +287,30 @@ describe('vsiaulMap_setOption', function () {
         done();
     });
 
+    // See https://github.com/apache/echarts/issues/18066
+    it('piecewiseWithNullBoundOnLineSeries', function (done) {
+        // Setting `lte: null` (or omitting both bounds) makes the piece
+        // interval [-Infinity, Infinity], which previously crashed
+        // line series rendering with
+        // "Cannot read properties of undefined (reading 'coord')".
+        expect(function () {
+            chart.setOption({
+                xAxis: {type: 'category', data: ['A', 'B', 'C', 'D']},
+                yAxis: {type: 'value'},
+                visualMap: {
+                    type: 'piecewise',
+                    pieces: [
+                        // lte set to null should be treated as no upper bound.
+                        {lte: null, color: 'red'}
+                    ]
+                },
+                series: [{
+                    type: 'line',
+                    data: [10, 20, 30, 40]
+                }]
+            });
+        }).not.toThrow();
+        done();
+    });
+
 });
