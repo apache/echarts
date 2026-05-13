@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+    <title>Decal Background Color Test - Canvas vs SVG</title>
+    <style>
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+        .renderer-comparison {
+            display: flex;
+            gap: 20px;
+        }
+        .renderer-test {
+            flex: 1;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        h3 {
+            color: #666;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Decal Background Color Test - Canvas vs SVG Renderer Comparison</h1>
+    
+    <div class="test-section">
+        <h2>Bar Chart Decal Test</h2>
+        <p><strong>Expected:</strong> Both Canvas and SVG should render identical decal backgrounds. Series 1 should have white background with blue pattern, Series 2 should have yellow background with purple pattern.</p>
+        
+        <div class="renderer-comparison">
+            <div class="renderer-test">
+                <h3>Canvas Renderer</h3>
+                <div id="bar-canvas" style="width: 500px; height: 300px;"></div>
+            </div>
+            <div class="renderer-test">
+                <h3>SVG Renderer</h3>
+                <div id="bar-svg" style="width: 500px; height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Pie Chart Decal Test</h2>
+        <p><strong>Expected:</strong> Both Canvas and SVG should render identical decal backgrounds with red background color.</p>
+        
+        <div class="renderer-comparison">
+            <div class="renderer-test">
+                <h3>Canvas Renderer</h3>
+                <div id="pie-canvas" style="width: 400px; height: 300px;"></div>
+            </div>
+            <div class="renderer-test">
+                <h3>SVG Renderer</h3>
+                <div id="pie-svg" style="width: 400px; height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Complex Decal Pattern Test</h2>
+        <p><strong>Expected:</strong> Both renderers should show consistent decal patterns with various background colors.</p>
+        
+        <div class="renderer-comparison">
+            <div class="renderer-test">
+                <h3>Canvas Renderer</h3>
+                <div id="complex-canvas" style="width: 500px; height: 300px;"></div>
+            </div>
+            <div class="renderer-test">
+                <h3>SVG Renderer</h3>
+                <div id="complex-svg" style="width: 500px; height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        require(['echarts'], function (echarts) {
+            // Bar Chart Test
+            const barOption = {
+                title: {
+                    text: 'Bar Chart Decal Background Test'
+                },
+                xAxis: { 
+                    type: "category", 
+                    data: ["Mon", "Tue", "Wed"] 
+                },
+                yAxis: { 
+                    type: "value" 
+                },
+                series: [
+                    {
+                        name: "Series 1",
+                        type: "bar",
+                        data: [120, 200, 150],
+                        itemStyle: {
+                            color: "#5470c6",
+                            decal: {
+                                color: "#5470c6",
+                                backgroundColor: "#fff",
+                                dashArrayX: [1, 0],
+                                dashArrayY: [1, 4]
+                            }
+                        }
+                    },
+                    {
+                        name: "Series 2", 
+                        type: "bar",
+                        data: [100, 60, 50],
+                        itemStyle: {
+                            color: "transparent",
+                            decal: {
+                                color: "#A91B94",
+                                backgroundColor: "#ffff00",
+                                dashArrayX: [1, 4],
+                                dashArrayY: [1, 0]
+                            }
+                        }
+                    }
+                ],
+                aria: { 
+                    enabled: true, 
+                    decal: { show: true } 
+                }
+            };
+
+            // Create bar charts
+            const barCanvas = echarts.init(document.getElementById('bar-canvas'), null, { renderer: 'canvas' });
+            const barSvg = echarts.init(document.getElementById('bar-svg'), null, { renderer: 'svg' });
+            
+            barCanvas.setOption(barOption);
+            barSvg.setOption(barOption);
+
+            // Pie Chart Test
+            const pieOption = {
+                title: {
+                    text: 'Pie Chart Decal Background Test'
+                },
+                aria: {
+                    enabled: true,
+                    decal: {
+                        show: true
+                    }
+                },
+                series: [{
+                    type: 'pie',
+                    data: [
+                        { value: 335, name: 'A' },
+                        { value: 310, name: 'B' },
+                        { value: 234, name: 'C' }
+                    ],
+                    itemStyle: {
+                        decal: {
+                            symbol: 'rect',
+                            backgroundColor: '#ff0000'
+                        }
+                    }
+                }]
+            };
+
+            // Create pie charts
+            const pieCanvas = echarts.init(document.getElementById('pie-canvas'), null, { renderer: 'canvas' });
+            const pieSvg = echarts.init(document.getElementById('pie-svg'), null, { renderer: 'svg' });
+            
+            pieCanvas.setOption(pieOption);
+            pieSvg.setOption(pieOption);
+
+            // Complex Pattern Test
+            const complexOption = {
+                title: {
+                    text: 'Complex Decal Pattern Test'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['A', 'B', 'C', 'D']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: 'Pattern 1',
+                        type: 'bar',
+                        data: [120, 200, 150, 80],
+                        itemStyle: {
+                            decal: {
+                                symbol: 'circle',
+                                backgroundColor: '#e6f3ff',
+                                color: '#1890ff',
+                                dashArrayX: [8, 8],
+                                dashArrayY: [6, 0],
+                                symbolSize: 0.8
+                            }
+                        }
+                    },
+                    {
+                        name: 'Pattern 2',
+                        type: 'bar',
+                        data: [100, 160, 120, 90],
+                        itemStyle: {
+                            decal: {
+                                symbol: 'rect',
+                                backgroundColor: '#fff2e6',
+                                color: '#fa8c16',
+                                dashArrayX: [1, 0],
+                                dashArrayY: [2, 5],
+                                rotation: Math.PI / 6
+                            }
+                        }
+                    },
+                    {
+                        name: 'Pattern 3',
+                        type: 'bar',
+                        data: [90, 140, 100, 70],
+                        itemStyle: {
+                            decal: {
+                                symbol: 'triangle',
+                                backgroundColor: '#f6ffed',
+                                color: '#52c41a',
+                                dashArrayX: [4, 4],
+                                dashArrayY: [4, 4],
+                                symbolSize: 0.6
+                            }
+                        }
+                    }
+                ],
+                aria: {
+                    enabled: true,
+                    decal: {
+                        show: true
+                    }
+                }
+            };
+
+            // Create complex pattern charts
+            const complexCanvas = echarts.init(document.getElementById('complex-canvas'), null, { renderer: 'canvas' });
+            const complexSvg = echarts.init(document.getElementById('complex-svg'), null, { renderer: 'svg' });
+            
+            complexCanvas.setOption(complexOption);
+            complexSvg.setOption(complexOption);
+
+            // Log renderer types for verification
+            console.log('Bar Canvas renderer:', barCanvas.getZr().painter.type);
+            console.log('Bar SVG renderer:', barSvg.getZr().painter.type);
+            console.log('Pie Canvas renderer:', pieCanvas.getZr().painter.type);
+            console.log('Pie SVG renderer:', pieSvg.getZr().painter.type);
+            console.log('Complex Canvas renderer:', complexCanvas.getZr().painter.type);
+            console.log('Complex SVG renderer:', complexSvg.getZr().painter.type);
+        });
+    </script>
+</body>
+</html>

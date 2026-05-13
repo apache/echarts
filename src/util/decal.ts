@@ -214,6 +214,21 @@ export function createOrUpdatePatternFromDecal(
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
             }
+            // Add SVG background color support
+            else if (isSVG && decalOpt.backgroundColor) {
+                const bgRect: SVGVNode = {
+                    tag: 'rect',
+                    attrs: {
+                        x: 0,
+                        y: 0,
+                        width: pSize.width,
+                        height: pSize.height,
+                        fill: decalOpt.backgroundColor
+                    },
+                    key: 'bg'
+                };
+                svgRoot.children.push(bgRect);
+            }
 
             let ySum = 0;
             for (let i = 0; i < dashArrayY.length; ++i) {
