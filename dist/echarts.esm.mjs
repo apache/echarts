@@ -54459,6 +54459,393 @@ function isGeoModel(mapOrGeoModel) {
 }
 // @ts-ignore FIXME:TS fix the "compatible with each other"?
 
+var SERIES_TYPE_MAP = 'map';
+var MapSeries = /** @class */function (_super) {
+  __extends(MapSeries, _super);
+  function MapSeries() {
+    var _this = _super !== null && _super.apply(this, arguments) || this;
+    _this.type = MapSeries.type;
+    _this.getTooltipPosition = function (dataIndex) {
+      if (dataIndex != null) {
+        var name_1 = this.getData().getName(dataIndex);
+        var geo = this.coordinateSystem;
+        var region = geo.getRegion(name_1);
+        return region && geo.dataToPoint(region.getCenter());
+      }
+    };
+    return _this;
+  }
+  MapSeries.prototype.getInitialData = function (option) {
+    var data = createSeriesDataSimply(this, {
+      coordDimensions: ['value'],
+      encodeDefaulter: curry(makeSeriesEncodeForNameBased, this)
+    });
+    var dataNameIndexMap = createHashMap();
+    var toAppendItems = [];
+    for (var i = 0, len = data.count(); i < len; i++) {
+      var name_2 = data.getName(i);
+      dataNameIndexMap.set(name_2, i);
+    }
+    var geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap, this.option.nameProperty);
+    each(geoSource.regions, function (region) {
+      var name = region.name;
+      var dataNameIdx = dataNameIndexMap.get(name);
+      // apply specified echarts style in GeoJSON data
+      var specifiedGeoJSONRegionStyle = region.properties && region.properties.echartsStyle;
+      var dataItem;
+      if (dataNameIdx == null) {
+        dataItem = {
+          name: name
+        };
+        toAppendItems.push(dataItem);
+      } else {
+        dataItem = data.getRawDataItem(dataNameIdx);
+      }
+      specifiedGeoJSONRegionStyle && merge(dataItem, specifiedGeoJSONRegionStyle);
+    });
+    // Complete data with missing regions. The consequent processes (like visual
+    // map and render) can not be performed without a "full data". For example,
+    // find `dataIndex` by name.
+    data.appendData(toAppendItems);
+    return data;
+  };
+  /**
+   * If no host geo model, return null, which means using a
+   * inner exclusive geo model.
+   */
+  MapSeries.prototype.getHostGeoModel = function () {
+    if (decideCoordSysUsageKind(this).kind === COORD_SYS_USAGE_KIND_BOX) {
+      // Always use an internal geo if specify as `COORD_SYS_USAGE_KIND_BOX`.
+      // Notice that currently we do not support laying out a geo based on
+      // another geo, but preserve the possibility.
+      return;
+    }
+    return this.getReferringComponents('geo', {
+      useDefault: false,
+      enableAll: false,
+      enableNone: false
+    }).models[0];
+  };
+  MapSeries.prototype.getMapType = function () {
+    return (this.getHostGeoModel() || this).option.map;
+  };
+  // _fillOption(option, mapName) {
+  // Shallow clone
+  // option = zrUtil.extend({}, option);
+  // option.data = geoCreator.getFilledRegions(option.data, mapName, option.nameMap);
+  // return option;
+  // }
+  MapSeries.prototype.getRawValue = function (dataIndex) {
+    // Use value stored in data instead because it is calculated from multiple series
+    // FIXME Provide all value of multiple series ?
+    var data = this.getData();
+    return data.get(data.mapDimension('value'), dataIndex);
+  };
+  /**
+   * Get model of region
+   */
+  MapSeries.prototype.getRegionModel = function (regionName) {
+    var data = this.getData();
+    return data.getItemModel(data.indexOfName(regionName));
+  };
+  /**
+   * Map tooltip formatter
+   */
+  MapSeries.prototype.formatTooltip = function (dataIndex, multipleSeries, dataType) {
+    // FIXME originalData and data is a bit confusing
+    var data = this.getData();
+    var value = this.getRawValue(dataIndex);
+    var name = data.getName(dataIndex);
+    var seriesNames = [];
+    each(this.seriesGroup.f, function (mapSeries) {
+      var otherIndex = mapSeries.originalData.indexOfName(name);
+      var valueDim = data.mapDimension('value');
+      if (!isNaN(mapSeries.originalData.get(valueDim, otherIndex))) {
+        seriesNames.push(mapSeries.name);
+      }
+    });
+    return createTooltipMarkup('section', {
+      header: seriesNames.join(', '),
+      noHeader: !seriesNames.length,
+      blocks: [createTooltipMarkup('nameValue', {
+        name: name,
+        value: value
+      })]
+    });
+  };
+  MapSeries.prototype.getLegendIcon = function (opt) {
+    var iconType = opt.icon || 'roundRect';
+    var icon = createSymbol(iconType, 0, 0, opt.itemWidth, opt.itemHeight, opt.itemStyle.fill);
+    icon.setStyle(opt.itemStyle);
+    // Map do not use itemStyle.borderWidth as border width
+    icon.style.stroke = 'none';
+    // No rotation because no series visual symbol for map
+    if (iconType.indexOf('empty') > -1) {
+      icon.style.stroke = icon.style.fill;
+      icon.style.fill = tokens.color.neutral00;
+      icon.style.lineWidth = 2;
+    }
+    return icon;
+  };
+  MapSeries.prototype.__ownRoamView = function () {
+    return mapSeriesNeedsDrawMap(this) ? this.coordinateSystem.view : null;
+  };
+  MapSeries.type = 'series.' + SERIES_TYPE_MAP;
+  MapSeries.dependencies = ['geo'];
+  MapSeries.layoutMode = 'box';
+  MapSeries.defaultOption = {
+    // 一级层叠
+    // zlevel: 0,
+    // 二级层叠
+    z: 2,
+    coordinateSystem: 'geo',
+    // map should be explicitly specified since ec3.
+    map: '',
+    // If `geoIndex` is not specified, a exclusive geo will be
+    // created. Otherwise use the specified geo component, and
+    // `map` and `mapType` are ignored.
+    // geoIndex: 0,
+    // 'center' | 'left' | 'right' | 'x%' | {number}
+    left: 'center',
+    // 'center' | 'top' | 'bottom' | 'x%' | {number}
+    top: 'center',
+    // right
+    // bottom
+    // width:
+    // height
+    // Aspect is width / height. Inited to be geoJson bbox aspect
+    // This parameter is used for scale this aspect
+    // Default value:
+    // for geoSVG source: 1,
+    // for geoJSON source: 0.75.
+    aspectScale: null,
+    // Layout with center and size
+    // If you want to put map in a fixed size box with right aspect ratio
+    // This two properties may be more convenient.
+    // layoutCenter: [50%, 50%]
+    // layoutSize: 100
+    showLegendSymbol: true,
+    // Define left-top, right-bottom coords to control view
+    // For example, [ [180, 90], [-180, -90] ],
+    // higher priority than center and zoom
+    boundingCoords: null,
+    // Default on center of map
+    center: null,
+    zoom: 1,
+    scaleLimit: null,
+    selectedMode: true,
+    label: {
+      show: false,
+      color: tokens.color.tertiary
+    },
+    // scaleLimit: null,
+    itemStyle: {
+      borderWidth: 0.5,
+      borderColor: tokens.color.border,
+      areaColor: tokens.color.background
+    },
+    emphasis: {
+      label: {
+        show: true,
+        color: tokens.color.primary
+      },
+      itemStyle: {
+        areaColor: tokens.color.highlight
+      }
+    },
+    select: {
+      label: {
+        show: true,
+        color: tokens.color.primary
+      },
+      itemStyle: {
+        color: tokens.color.highlight
+      }
+    },
+    nameProperty: 'name'
+  };
+  return MapSeries;
+}(SeriesModel);
+/**
+ * Has exclusive geo, rahter than depends on a separate geo componet.
+ */
+function mapSeriesGroupHasOwnGeo(groupKey) {
+  return groupKey.indexOf('i') === 0;
+}
+function mapSeriesNeedsDrawMap(mapSeries) {
+  // Within a MAP_SERIES_GROUP, only `mainSeries` has `needsDrawMap: true`.
+  return getMainMapSeries(mapSeries.seriesGroup) === mapSeries && !mapSeries.getHostGeoModel();
+}
+function getMainMapSeries(mapSeriesGroup) {
+  // The first series after filtering in a MAP_SERIES_GROUP.
+  return mapSeriesGroup.f[0];
+}
+/**
+ * @tutorial [MAP_SERIES_GROUP]
+ *  - For map series that reference external geo components (typically via `geoIndex` or `geoId` in ec option),
+ *    a map series group is all map series that reference to the same geo component.
+ *  - For other map series,
+ *    a map series group is all map series that use the same `map` in ec option.
+ *  NOTICE: series filtering (typically by legend) matters:
+ *   If this method is executed before series filtering, all series are included,
+ *   otherwise, series filtered out are excluded.
+ *   When legend disables the original first series, the original second series takes the responsibility
+ *   to render map (via its `MapDraw`).
+ */
+function buildAllMapSeriesGroups(ecModel, beforeSeriesFiltering) {
+  var allMapSeriesGroups = {};
+  ecModel.eachRawSeriesByType(SERIES_TYPE_MAP, function (seriesModel) {
+    var hostGeoModel = seriesModel.getHostGeoModel();
+    var key = hostGeoModel ? 'o' + hostGeoModel.id : 'i' + seriesModel.getMapType();
+    var group = allMapSeriesGroups[key] = allMapSeriesGroups[key] || {
+      f: [],
+      r: []
+    };
+    if (!ecModel.isSeriesFiltered(seriesModel) && !beforeSeriesFiltering) {
+      group.f.push(seriesModel);
+    }
+    group.r.push(seriesModel);
+  });
+  return allMapSeriesGroups;
+}
+
+var MapView = /** @class */function (_super) {
+  __extends(MapView, _super);
+  function MapView() {
+    var _this = _super !== null && _super.apply(this, arguments) || this;
+    _this.type = SERIES_TYPE_MAP;
+    return _this;
+  }
+  MapView.prototype.render = function (mapModel, ecModel, api, payload) {
+    // Not render if it is an toggleSelect action from self
+    if (payload && payload.type === 'mapToggleSelect' && payload.from === this.uid) {
+      return;
+    }
+    var group = this.group;
+    group.removeAll();
+    if (mapModel.getHostGeoModel()) {
+      return;
+    }
+    var mapDraw = this._mapDraw;
+    if (mapDraw && payload && payload.type === 'geoRoam') {
+      mapDraw.resetForLabelLayout();
+    }
+    // Not update map if it is an roam action from self
+    if (!(payload && payload.type === 'geoRoam' && payload.componentType === 'series' && payload.seriesId === mapModel.id)) {
+      if (mapSeriesNeedsDrawMap(mapModel)) {
+        mapDraw = mapDraw || (this._mapDraw = new MapDraw(api));
+        group.add(mapDraw.group);
+        mapDraw.draw(mapModel, ecModel, api, this, payload);
+      } else {
+        this._clearMapDraw();
+      }
+    } else {
+      mapDraw && group.add(mapDraw.group);
+    }
+    mapModel.get('showLegendSymbol') && ecModel.getComponent('legend') && this._renderSymbols(mapModel);
+  };
+  /**
+   * @implements RoamHostView['__updateOnOwnRoam']
+   */
+  MapView.prototype.__updateOnOwnRoam = function (payload, model, api) {
+    var mapDraw = this._mapDraw;
+    if (mapSeriesNeedsDrawMap(model) && mapDraw) {
+      mapDraw.__updateOnOwnRoam(model);
+    }
+  };
+  MapView.prototype.remove = function () {
+    this._clearMapDraw();
+    this.group.removeAll();
+  };
+  MapView.prototype.dispose = function () {
+    this._clearMapDraw();
+  };
+  MapView.prototype._clearMapDraw = function () {
+    this._mapDraw && this._mapDraw.remove();
+    this._mapDraw = null;
+  };
+  MapView.prototype._renderSymbols = function (mapModel) {
+    var originalData = mapModel.originalData;
+    var group = this.group;
+    originalData.each(originalData.mapDimension('value'), function (value, originalDataIndex) {
+      if (isNaN(value)) {
+        return;
+      }
+      var layout = originalData.getItemLayout(originalDataIndex);
+      if (!layout || !layout.point) {
+        // Not exists in map
+        return;
+      }
+      var point = layout.point;
+      var offset = layout.offset;
+      var circle = new Circle({
+        style: {
+          // Because the special of map draw.
+          // Which needs statistic of multiple series and draw on one map.
+          // And each series also need a symbol with legend color
+          //
+          // Layout and visual are put one the different data
+          // TODO
+          fill: mapModel.getData().getVisual('style').fill
+        },
+        shape: {
+          cx: point[0] + offset * 9,
+          cy: point[1],
+          r: 3
+        },
+        silent: true,
+        // Do not overlap the first series, on which labels are displayed.
+        z2: 8 + (!offset ? Z2_EMPHASIS_LIFT + 1 : 0)
+      });
+      // Only the series that has the first value on the same region is in charge of rendering the label.
+      // But consider the case:
+      // series: [
+      //     {id: 'X', type: 'map', map: 'm', {data: [{name: 'A', value: 11}, {name: 'B', {value: 22}]},
+      //     {id: 'Y', type: 'map', map: 'm', {data: [{name: 'A', value: 21}, {name: 'C', {value: 33}]}
+      // ]
+      // The offset `0` of item `A` is at series `X`, but of item `C` is at series `Y`.
+      // For backward compatibility, we follow the rule that render label `A` by the
+      // settings on series `X` but render label `C` by the settings on series `Y`.
+      if (!offset) {
+        // `mapModel.seriesGroup.f` must not be empty here.
+        var fullData = getMainMapSeries(mapModel.seriesGroup).getData();
+        var name_1 = originalData.getName(originalDataIndex);
+        var fullIndex_1 = fullData.indexOfName(name_1);
+        var itemModel = originalData.getItemModel(originalDataIndex);
+        var labelModel = itemModel.getModel('label');
+        var regionGroup = fullData.getItemGraphicEl(fullIndex_1);
+        // `getFormattedLabel` needs to use `getData` inside. Here
+        // `mapModel.getData()` is shallow cloned from `mainSeries.getData()`.
+        // FIXME
+        // If this is not the `mainSeries`, the item model (like label formatter)
+        // set on original data item will never get. But it has been working
+        // like that from the beginning, and this scenario is rarely encountered.
+        // So it won't be fixed until we have to.
+        setLabelStyle(circle, getLabelStatesModels(itemModel), {
+          labelFetcher: {
+            getFormattedLabel: function (idx, state) {
+              return mapModel.getFormattedLabel(fullIndex_1, state);
+            }
+          },
+          defaultText: name_1
+        });
+        circle.disableLabelAnimation = true;
+        if (!labelModel.get('position')) {
+          circle.setTextConfig({
+            position: 'bottom'
+          });
+        }
+        regionGroup.onHoverStateChange = function (toState) {
+          setStatesFlag(circle, toState);
+        };
+      }
+      group.add(circle);
+    });
+  };
+  MapView.type = SERIES_TYPE_MAP;
+  return MapView;
+}(ChartView);
+
 var GEO_DEFAULT_PARAMS = {
   'geoJSON': {
     aspectScale: 0.75,
@@ -54829,393 +55216,6 @@ var GeoCreator = /** @class */function () {
   return GeoCreator;
 }();
 var geoCreator = new GeoCreator();
-/**
- * @tutorial [MAP_SERIES_GROUP]
- *  - For map series that reference external geo components (typically via `geoIndex` or `geoId` in ec option),
- *    a map series group is all map series that reference to the same geo component.
- *  - For other map series,
- *    a map series group is all map series that use the same `map` in ec option.
- *  NOTICE: series filtering (typically by legend) matters:
- *   If this method is executed before series filtering, all series are included,
- *   otherwise, series filtered out are excluded.
- *   When legend disables the original first series, the original second series takes the responsibility
- *   to render map (via its `MapDraw`).
- */
-function buildAllMapSeriesGroups(ecModel, beforeSeriesFiltering) {
-  var allMapSeriesGroups = {};
-  ecModel.eachRawSeriesByType(SERIES_TYPE_MAP, function (seriesModel) {
-    var hostGeoModel = seriesModel.getHostGeoModel();
-    var key = hostGeoModel ? 'o' + hostGeoModel.id : 'i' + seriesModel.getMapType();
-    var group = allMapSeriesGroups[key] = allMapSeriesGroups[key] || {
-      f: [],
-      r: []
-    };
-    if (!ecModel.isSeriesFiltered(seriesModel) && !beforeSeriesFiltering) {
-      group.f.push(seriesModel);
-    }
-    group.r.push(seriesModel);
-  });
-  return allMapSeriesGroups;
-}
-/**
- * Has exclusive geo, rahter than depends on a separate geo componet.
- */
-function mapSeriesGroupHasOwnGeo(groupKey) {
-  return groupKey.indexOf('i') === 0;
-}
-function mapSeriesNeedsDrawMap(mapSeries) {
-  // Within a MAP_SERIES_GROUP, only `mainSeries` has `needsDrawMap: true`.
-  return getMainMapSeries(mapSeries.seriesGroup) === mapSeries && !mapSeries.getHostGeoModel();
-}
-function getMainMapSeries(mapSeriesGroup) {
-  // The first series after filtering in a MAP_SERIES_GROUP.
-  return mapSeriesGroup.f[0];
-}
-
-var SERIES_TYPE_MAP = 'map';
-var MapSeries = /** @class */function (_super) {
-  __extends(MapSeries, _super);
-  function MapSeries() {
-    var _this = _super !== null && _super.apply(this, arguments) || this;
-    _this.type = MapSeries.type;
-    _this.getTooltipPosition = function (dataIndex) {
-      if (dataIndex != null) {
-        var name_1 = this.getData().getName(dataIndex);
-        var geo = this.coordinateSystem;
-        var region = geo.getRegion(name_1);
-        return region && geo.dataToPoint(region.getCenter());
-      }
-    };
-    return _this;
-  }
-  MapSeries.prototype.getInitialData = function (option) {
-    var data = createSeriesDataSimply(this, {
-      coordDimensions: ['value'],
-      encodeDefaulter: curry(makeSeriesEncodeForNameBased, this)
-    });
-    var dataNameIndexMap = createHashMap();
-    var toAppendItems = [];
-    for (var i = 0, len = data.count(); i < len; i++) {
-      var name_2 = data.getName(i);
-      dataNameIndexMap.set(name_2, i);
-    }
-    var geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap, this.option.nameProperty);
-    each(geoSource.regions, function (region) {
-      var name = region.name;
-      var dataNameIdx = dataNameIndexMap.get(name);
-      // apply specified echarts style in GeoJSON data
-      var specifiedGeoJSONRegionStyle = region.properties && region.properties.echartsStyle;
-      var dataItem;
-      if (dataNameIdx == null) {
-        dataItem = {
-          name: name
-        };
-        toAppendItems.push(dataItem);
-      } else {
-        dataItem = data.getRawDataItem(dataNameIdx);
-      }
-      specifiedGeoJSONRegionStyle && merge(dataItem, specifiedGeoJSONRegionStyle);
-    });
-    // Complete data with missing regions. The consequent processes (like visual
-    // map and render) can not be performed without a "full data". For example,
-    // find `dataIndex` by name.
-    data.appendData(toAppendItems);
-    return data;
-  };
-  /**
-   * If no host geo model, return null, which means using a
-   * inner exclusive geo model.
-   */
-  MapSeries.prototype.getHostGeoModel = function () {
-    if (decideCoordSysUsageKind(this).kind === COORD_SYS_USAGE_KIND_BOX) {
-      // Always use an internal geo if specify as `COORD_SYS_USAGE_KIND_BOX`.
-      // Notice that currently we do not support laying out a geo based on
-      // another geo, but preserve the possibility.
-      return;
-    }
-    return this.getReferringComponents('geo', {
-      useDefault: false,
-      enableAll: false,
-      enableNone: false
-    }).models[0];
-  };
-  MapSeries.prototype.getMapType = function () {
-    return (this.getHostGeoModel() || this).option.map;
-  };
-  // _fillOption(option, mapName) {
-  // Shallow clone
-  // option = zrUtil.extend({}, option);
-  // option.data = geoCreator.getFilledRegions(option.data, mapName, option.nameMap);
-  // return option;
-  // }
-  MapSeries.prototype.getRawValue = function (dataIndex) {
-    // Use value stored in data instead because it is calculated from multiple series
-    // FIXME Provide all value of multiple series ?
-    var data = this.getData();
-    return data.get(data.mapDimension('value'), dataIndex);
-  };
-  /**
-   * Get model of region
-   */
-  MapSeries.prototype.getRegionModel = function (regionName) {
-    var data = this.getData();
-    return data.getItemModel(data.indexOfName(regionName));
-  };
-  /**
-   * Map tooltip formatter
-   */
-  MapSeries.prototype.formatTooltip = function (dataIndex, multipleSeries, dataType) {
-    // FIXME originalData and data is a bit confusing
-    var data = this.getData();
-    var value = this.getRawValue(dataIndex);
-    var name = data.getName(dataIndex);
-    var seriesNames = [];
-    each(this.seriesGroup.f, function (mapSeries) {
-      var otherIndex = mapSeries.originalData.indexOfName(name);
-      var valueDim = data.mapDimension('value');
-      if (!isNaN(mapSeries.originalData.get(valueDim, otherIndex))) {
-        seriesNames.push(mapSeries.name);
-      }
-    });
-    return createTooltipMarkup('section', {
-      header: seriesNames.join(', '),
-      noHeader: !seriesNames.length,
-      blocks: [createTooltipMarkup('nameValue', {
-        name: name,
-        value: value
-      })]
-    });
-  };
-  MapSeries.prototype.getLegendIcon = function (opt) {
-    var iconType = opt.icon || 'roundRect';
-    var icon = createSymbol(iconType, 0, 0, opt.itemWidth, opt.itemHeight, opt.itemStyle.fill);
-    icon.setStyle(opt.itemStyle);
-    // Map do not use itemStyle.borderWidth as border width
-    icon.style.stroke = 'none';
-    // No rotation because no series visual symbol for map
-    if (iconType.indexOf('empty') > -1) {
-      icon.style.stroke = icon.style.fill;
-      icon.style.fill = tokens.color.neutral00;
-      icon.style.lineWidth = 2;
-    }
-    return icon;
-  };
-  MapSeries.prototype.__ownRoamView = function () {
-    return mapSeriesNeedsDrawMap(this) ? this.coordinateSystem.view : null;
-  };
-  MapSeries.type = 'series.' + SERIES_TYPE_MAP;
-  MapSeries.dependencies = ['geo'];
-  MapSeries.layoutMode = 'box';
-  MapSeries.defaultOption = {
-    // 一级层叠
-    // zlevel: 0,
-    // 二级层叠
-    z: 2,
-    coordinateSystem: 'geo',
-    // map should be explicitly specified since ec3.
-    map: '',
-    // If `geoIndex` is not specified, a exclusive geo will be
-    // created. Otherwise use the specified geo component, and
-    // `map` and `mapType` are ignored.
-    // geoIndex: 0,
-    // 'center' | 'left' | 'right' | 'x%' | {number}
-    left: 'center',
-    // 'center' | 'top' | 'bottom' | 'x%' | {number}
-    top: 'center',
-    // right
-    // bottom
-    // width:
-    // height
-    // Aspect is width / height. Inited to be geoJson bbox aspect
-    // This parameter is used for scale this aspect
-    // Default value:
-    // for geoSVG source: 1,
-    // for geoJSON source: 0.75.
-    aspectScale: null,
-    // Layout with center and size
-    // If you want to put map in a fixed size box with right aspect ratio
-    // This two properties may be more convenient.
-    // layoutCenter: [50%, 50%]
-    // layoutSize: 100
-    showLegendSymbol: true,
-    // Define left-top, right-bottom coords to control view
-    // For example, [ [180, 90], [-180, -90] ],
-    // higher priority than center and zoom
-    boundingCoords: null,
-    // Default on center of map
-    center: null,
-    zoom: 1,
-    scaleLimit: null,
-    selectedMode: true,
-    label: {
-      show: false,
-      color: tokens.color.tertiary
-    },
-    // scaleLimit: null,
-    itemStyle: {
-      borderWidth: 0.5,
-      borderColor: tokens.color.border,
-      areaColor: tokens.color.background
-    },
-    emphasis: {
-      label: {
-        show: true,
-        color: tokens.color.primary
-      },
-      itemStyle: {
-        areaColor: tokens.color.highlight
-      }
-    },
-    select: {
-      label: {
-        show: true,
-        color: tokens.color.primary
-      },
-      itemStyle: {
-        color: tokens.color.highlight
-      }
-    },
-    nameProperty: 'name'
-  };
-  return MapSeries;
-}(SeriesModel);
-
-var MapView = /** @class */function (_super) {
-  __extends(MapView, _super);
-  function MapView() {
-    var _this = _super !== null && _super.apply(this, arguments) || this;
-    _this.type = SERIES_TYPE_MAP;
-    return _this;
-  }
-  MapView.prototype.render = function (mapModel, ecModel, api, payload) {
-    // Not render if it is an toggleSelect action from self
-    if (payload && payload.type === 'mapToggleSelect' && payload.from === this.uid) {
-      return;
-    }
-    var group = this.group;
-    group.removeAll();
-    if (mapModel.getHostGeoModel()) {
-      return;
-    }
-    var mapDraw = this._mapDraw;
-    if (mapDraw && payload && payload.type === 'geoRoam') {
-      mapDraw.resetForLabelLayout();
-    }
-    // Not update map if it is an roam action from self
-    if (!(payload && payload.type === 'geoRoam' && payload.componentType === 'series' && payload.seriesId === mapModel.id)) {
-      if (mapSeriesNeedsDrawMap(mapModel)) {
-        mapDraw = mapDraw || (this._mapDraw = new MapDraw(api));
-        group.add(mapDraw.group);
-        mapDraw.draw(mapModel, ecModel, api, this, payload);
-      } else {
-        this._clearMapDraw();
-      }
-    } else {
-      mapDraw && group.add(mapDraw.group);
-    }
-    mapModel.get('showLegendSymbol') && ecModel.getComponent('legend') && this._renderSymbols(mapModel);
-  };
-  /**
-   * @implements RoamHostView['__updateOnOwnRoam']
-   */
-  MapView.prototype.__updateOnOwnRoam = function (payload, model, api) {
-    var mapDraw = this._mapDraw;
-    if (mapSeriesNeedsDrawMap(model) && mapDraw) {
-      mapDraw.__updateOnOwnRoam(model);
-    }
-  };
-  MapView.prototype.remove = function () {
-    this._clearMapDraw();
-    this.group.removeAll();
-  };
-  MapView.prototype.dispose = function () {
-    this._clearMapDraw();
-  };
-  MapView.prototype._clearMapDraw = function () {
-    this._mapDraw && this._mapDraw.remove();
-    this._mapDraw = null;
-  };
-  MapView.prototype._renderSymbols = function (mapModel) {
-    var originalData = mapModel.originalData;
-    var group = this.group;
-    originalData.each(originalData.mapDimension('value'), function (value, originalDataIndex) {
-      if (isNaN(value)) {
-        return;
-      }
-      var layout = originalData.getItemLayout(originalDataIndex);
-      if (!layout || !layout.point) {
-        // Not exists in map
-        return;
-      }
-      var point = layout.point;
-      var offset = layout.offset;
-      var circle = new Circle({
-        style: {
-          // Because the special of map draw.
-          // Which needs statistic of multiple series and draw on one map.
-          // And each series also need a symbol with legend color
-          //
-          // Layout and visual are put one the different data
-          // TODO
-          fill: mapModel.getData().getVisual('style').fill
-        },
-        shape: {
-          cx: point[0] + offset * 9,
-          cy: point[1],
-          r: 3
-        },
-        silent: true,
-        // Do not overlap the first series, on which labels are displayed.
-        z2: 8 + (!offset ? Z2_EMPHASIS_LIFT + 1 : 0)
-      });
-      // Only the series that has the first value on the same region is in charge of rendering the label.
-      // But consider the case:
-      // series: [
-      //     {id: 'X', type: 'map', map: 'm', {data: [{name: 'A', value: 11}, {name: 'B', {value: 22}]},
-      //     {id: 'Y', type: 'map', map: 'm', {data: [{name: 'A', value: 21}, {name: 'C', {value: 33}]}
-      // ]
-      // The offset `0` of item `A` is at series `X`, but of item `C` is at series `Y`.
-      // For backward compatibility, we follow the rule that render label `A` by the
-      // settings on series `X` but render label `C` by the settings on series `Y`.
-      if (!offset) {
-        // `mapModel.seriesGroup.f` must not be empty here.
-        var fullData = getMainMapSeries(mapModel.seriesGroup).getData();
-        var name_1 = originalData.getName(originalDataIndex);
-        var fullIndex_1 = fullData.indexOfName(name_1);
-        var itemModel = originalData.getItemModel(originalDataIndex);
-        var labelModel = itemModel.getModel('label');
-        var regionGroup = fullData.getItemGraphicEl(fullIndex_1);
-        // `getFormattedLabel` needs to use `getData` inside. Here
-        // `mapModel.getData()` is shallow cloned from `mainSeries.getData()`.
-        // FIXME
-        // If this is not the `mainSeries`, the item model (like label formatter)
-        // set on original data item will never get. But it has been working
-        // like that from the beginning, and this scenario is rarely encountered.
-        // So it won't be fixed until we have to.
-        setLabelStyle(circle, getLabelStatesModels(itemModel), {
-          labelFetcher: {
-            getFormattedLabel: function (idx, state) {
-              return mapModel.getFormattedLabel(fullIndex_1, state);
-            }
-          },
-          defaultText: name_1
-        });
-        circle.disableLabelAnimation = true;
-        if (!labelModel.get('position')) {
-          circle.setTextConfig({
-            position: 'bottom'
-          });
-        }
-        regionGroup.onHoverStateChange = function (toState) {
-          setStatesFlag(circle, toState);
-        };
-      }
-      group.add(circle);
-    });
-  };
-  MapView.type = SERIES_TYPE_MAP;
-  return MapView;
-}(ChartView);
 
 var GeoModel = /** @class */function (_super) {
   __extends(GeoModel, _super);

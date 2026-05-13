@@ -51,7 +51,7 @@ import {Group} from '../../util/graphic';
 import { COORD_SYS_USAGE_KIND_BOX, decideCoordSysUsageKind } from '../../core/CoordinateSystem';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import tokens from '../../visual/tokens';
-import { MapSeriesGroup, mapSeriesNeedsDrawMap } from '../../coord/geo/geoCreator';
+import GlobalModel from '../../model/Global';
 
 export interface MapStateOption<TCbParams = never> {
     itemStyle?: GeoItemStyleOption<TCbParams>
@@ -65,6 +65,17 @@ export interface MapDataItemOption extends MapStateOption,
 }
 
 export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
+
+// See MAP_SERIES_GROUP
+export type MapSeriesGroup = {
+    // Raw (a group of series before series filtering)
+    // Never be empty.
+    r: MapSeries[];
+    // Filtered (a group of series after series filtering)
+    // If `getMainMapSeries(seriesGroup)` is falsy, `f` is an empty array.
+    f: MapSeries[];
+};
+type AllMapSeriesGroups = Dictionary<MapSeriesGroup>;
 
 export interface MapSeriesOption extends
     SeriesOption<MapStateOption<CallbackDataParams>, StatesMixinBase>,
@@ -360,6 +371,50 @@ class MapSeries extends SeriesModel<MapSeriesOption> implements RoamHostModel {
         nameProperty: 'name'
     };
 
+}
+
+/**
+ * Has exclusive geo, rahter than depends on a separate geo componet.
+ */
+export function mapSeriesGroupHasOwnGeo(groupKey: string): boolean {
+    return groupKey.indexOf('i') === 0;
+}
+
+export function mapSeriesNeedsDrawMap(mapSeries: MapSeries): boolean {
+    // Within a MAP_SERIES_GROUP, only `mainSeries` has `needsDrawMap: true`.
+    return getMainMapSeries(mapSeries.seriesGroup) === mapSeries && !mapSeries.getHostGeoModel();
+}
+
+export function getMainMapSeries(mapSeriesGroup: MapSeriesGroup): MapSeries | NullUndefined {
+    // The first series after filtering in a MAP_SERIES_GROUP.
+    return mapSeriesGroup.f[0];
+}
+
+
+/**
+ * @tutorial [MAP_SERIES_GROUP]
+ *  - For map series that reference external geo components (typically via `geoIndex` or `geoId` in ec option),
+ *    a map series group is all map series that reference to the same geo component.
+ *  - For other map series,
+ *    a map series group is all map series that use the same `map` in ec option.
+ *  NOTICE: series filtering (typically by legend) matters:
+ *   If this method is executed before series filtering, all series are included,
+ *   otherwise, series filtered out are excluded.
+ *   When legend disables the original first series, the original second series takes the responsibility
+ *   to render map (via its `MapDraw`).
+ */
+export function buildAllMapSeriesGroups(ecModel: GlobalModel, beforeSeriesFiltering?: boolean): AllMapSeriesGroups {
+    const allMapSeriesGroups: AllMapSeriesGroups = {};
+    ecModel.eachRawSeriesByType(SERIES_TYPE_MAP, function (seriesModel: MapSeries) {
+        const hostGeoModel = seriesModel.getHostGeoModel();
+        const key = hostGeoModel ? 'o' + hostGeoModel.id : 'i' + seriesModel.getMapType();
+        const group = allMapSeriesGroups[key] = allMapSeriesGroups[key] || {f: [], r: []};
+        if (!ecModel.isSeriesFiltered(seriesModel) && !beforeSeriesFiltering) {
+            group.f.push(seriesModel);
+        }
+        group.r.push(seriesModel);
+    });
+    return allMapSeriesGroups;
 }
 
 export default MapSeries;
