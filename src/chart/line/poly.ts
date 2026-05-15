@@ -45,7 +45,8 @@ function drawSegment(
     dir: number,
     smooth: number,
     smoothMonotone: 'x' | 'y' | 'none',
-    connectNulls: boolean
+    connectNulls: boolean,
+    step?: boolean
 ) {
     let prevX: number;
     let prevY: number;
@@ -81,7 +82,14 @@ function drawSegment(
             let dy = y - prevY;
 
             // Ignore tiny segment.
-            if ((dx * dx + dy * dy) < 0.5) {
+            // In step mode, keep every corner; only drop strict duplicates. See #21614.
+            if (step) {
+                if (dx === 0 && dy === 0) {
+                    idx += dir;
+                    continue;
+                }
+            }
+            else if ((dx * dx + dy * dy) < 0.5) {
                 idx += dir;
                 continue;
             }
@@ -218,6 +226,8 @@ class ECPolylineShape {
     smoothConstraint = true;
     smoothMonotone: 'x' | 'y' | 'none';
     connectNulls: boolean;
+    // True when `points` are step-expanded; keep every corner. See #21614.
+    step: boolean;
 }
 
 interface ECPolylineProps extends PathProps {
@@ -271,7 +281,8 @@ export class ECPolyline extends Path<ECPolylineProps> {
                 ctx, points, i, len, len,
                 1,
                 shape.smooth,
-                shape.smoothMonotone, shape.connectNulls
+                shape.smoothMonotone, shape.connectNulls,
+                shape.step
             ) + 1;
         }
     }
@@ -395,13 +406,15 @@ export class ECPolygon extends Path {
                 ctx, points, i, len, len,
                 1,
                 shape.smooth,
-                smoothMonotone, shape.connectNulls
+                smoothMonotone, shape.connectNulls,
+                shape.step
             );
             drawSegment(
                 ctx, stackedOnPoints, i + k - 1, k, len,
                 -1,
                 shape.stackedOnSmooth,
-                smoothMonotone, shape.connectNulls
+                smoothMonotone, shape.connectNulls,
+                shape.step
             );
             i += k + 1;
 
