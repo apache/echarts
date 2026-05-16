@@ -284,12 +284,19 @@ export default class CustomChartView extends ChartView {
         const progressiveEls: Element[] = this._progressiveEls = [];
 
         function setIncrementalAndHoverLayer(el: Displayable) {
-            if (!el.isGroup) {
-                el.incremental = true;
-                el.ensureState('emphasis').hoverLayer = true;
-            }
+    if (!el.isGroup) {
+        el.incremental = true;
+
+        const emphasisState = el.ensureState('emphasis');
+        emphasisState.hoverLayer = true;
+
+        if (el.cursor) {
+            emphasisState.cursor = el.cursor;
         }
-        for (let idx = params.start; idx < params.end; idx++) {
+    }
+}
+
+            for (let idx = params.start; idx < params.end; idx++) {
             const el = createOrUpdateItem(
                 null, null, idx, renderItem(idx, payload), customSeries, this.group, data
             );
