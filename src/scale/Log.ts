@@ -134,6 +134,12 @@ class LogScale extends IntervalScale {
         this._innerUnionExtent(loggedOther);
     }
 
+    unionExtentByValue(value: number): void {
+        this._originalScale.unionExtentByValue(value);
+        const loggedValue = logTransform(this.base, [value, value], true);
+        this._innerUnionExtent(loggedValue);
+    }
+
     /**
      * Update interval and extent of intervals for nice ticks
      * @param approxTickNum default 10 Given approx tick number
