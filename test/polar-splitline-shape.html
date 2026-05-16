@@ -1,0 +1,284 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                display: flex;
+                width: 100%;
+                height: 100%;
+            }
+            .chart-item {
+                flex: 1 1 25%;
+                display: flex;
+                flex-direction: column;
+                border-right: 1px solid #e0e0e0;
+            }
+            .chart-item:last-child {
+                border-right: none;
+            }
+            .title {
+                text-align: center;
+                font-size: 14px;
+                font-weight: bold;
+                padding: 10px;
+                background: #f0f0f0;
+            }
+            .chart {
+                flex: 1;
+            }
+        </style>
+        <div class="container">
+            <div class="chart-item">
+                <div class="title">Default (no shape specified)</div>
+                <div id="chart1" class="chart"></div>
+            </div>
+            <div class="chart-item">
+                <div class="title">shape: 'polygon'</div>
+                <div id="chart2" class="chart"></div>
+            </div>
+            <div class="chart-item">
+                <div class="title">Category angle (boundaryGap: true)</div>
+                <div id="chart3" class="chart"></div>
+            </div>
+            <div class="chart-item">
+                <div class="title">Value angle axis (polygon does not apply)</div>
+                <div id="chart4" class="chart"></div>
+            </div>
+        </div>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                const categories = ['A', 'B', 'C', 'D', 'E', 'F'];
+                const categoryAngleData = [];
+                const valueAngleData = [];
+                for (var i = 0; i < categories.length; i++) {
+                    var radius = 5 + Math.sin(i) * 2 + Math.random();
+                    categoryAngleData.push([radius, categories[i]]);
+                    valueAngleData.push([radius, (360 / categories.length) * i]);
+                }
+
+                // Chart 1: shape: 'arc' (default, no shape specified)
+                const chart1 = echarts.init(document.getElementById('chart1'));
+                chart1.setOption({
+                    title: {
+                        text: 'Circular Grid Lines (default)',
+                        left: 'center',
+                        top: 10
+                    },
+                    polar: {
+                        center: ['50%', '55%'],
+                        radius: '60%'
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        splitLine: {
+                            show: true,
+                            // shape is not specified, should default to 'arc'
+                            lineStyle: {
+                                color: '#ddd'
+                            }
+                        }
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: categories,
+                        boundaryGap: false,
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        type: 'line',
+                        data: categoryAngleData,
+                        lineStyle: {
+                            color: '#5470c6'
+                        },
+                        areaStyle: {
+                            opacity: 0.2
+                        }
+                    }]
+                });
+
+                // Chart 2: shape: 'polygon'
+                const chart2 = echarts.init(document.getElementById('chart2'));
+                chart2.setOption({
+                    title: {
+                        text: 'Polygon Grid Lines',
+                        left: 'center',
+                        top: 10
+                    },
+                    polar: {
+                        center: ['50%', '55%'],
+                        radius: '60%'
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        splitLine: {
+                            show: true,
+                            shape: 'polygon',
+                            lineStyle: {
+                                color: '#ddd'
+                            }
+                        }
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: categories,
+                        boundaryGap: false,
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        type: 'line',
+                        data: categoryAngleData,
+                        lineStyle: {
+                            color: '#91cc75'
+                        },
+                        areaStyle: {
+                            opacity: 0.2
+                        }
+                    }]
+                });
+
+                // Chart 3: category angle axis with boundaryGap
+                const chart3 = echarts.init(document.getElementById('chart3'));
+                chart3.setOption({
+                    title: {
+                        text: 'Category Angle (boundaryGap = true)',
+                        left: 'center',
+                        top: 10
+                    },
+                    polar: {
+                        center: ['50%', '55%'],
+                        radius: '60%'
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        splitLine: {
+                            show: true,
+                            shape: 'polygon',
+                            lineStyle: {
+                                color: '#ddd'
+                            }
+                        }
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: categories,
+                        boundaryGap: true,
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        type: 'line',
+                        data: categoryAngleData,
+                        lineStyle: {
+                            color: '#fac858'
+                        },
+                        areaStyle: {
+                            opacity: 0.2
+                        }
+                    }]
+                });
+
+                // Chart 4: value angle axis
+                const chart4 = echarts.init(document.getElementById('chart4'));
+                chart4.setOption({
+                    title: {
+                        text: 'Value Angle Axis (polygon not supported)',
+                        left: 'center',
+                        top: 10
+                    },
+                    polar: {
+                        center: ['50%', '55%'],
+                        radius: '60%'
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        splitLine: {
+                            show: true,
+                            shape: 'polygon',
+                            lineStyle: {
+                                color: '#ddd'
+                            }
+                        }
+                    },
+                    angleAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 360,
+                        boundaryGap: false,
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        type: 'line',
+                        data: valueAngleData,
+                        lineStyle: {
+                            color: '#ee6666'
+                        },
+                        areaStyle: {
+                            opacity: 0.2
+                        }
+                    }]
+                });
+
+                const charts = [chart1, chart2, chart3, chart4];
+                window.addEventListener('resize', function() {
+                    charts.forEach(function(chart) {
+                        chart.resize();
+                    });
+                });
+            });
+
+        </script>
+    </body>
+</html>
+
