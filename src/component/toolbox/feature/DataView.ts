@@ -61,6 +61,27 @@ interface SeriesGroup {
     valueAxis: Axis
 }
 
+function addCategory(categories: string[], category: unknown): void {
+    if (category == null) {
+        return;
+    }
+    const categoryName = category + '';
+    zrUtil.indexOf(categories, categoryName) < 0 && categories.push(categoryName);
+}
+
+function getCategoryNameByValue(categories: string[], categoryValue: unknown): string {
+    if (categoryValue == null) {
+        return;
+    }
+    if (typeof categoryValue === 'number') {
+        const category = categories[categoryValue];
+        if (category != null) {
+            return category;
+        }
+    }
+    return categoryValue + '';
+}
+
 /**
  * Group series into two types
  *  1. on category axis, like line, bar
@@ -116,17 +137,47 @@ function assembleSeriesWithCategoryAxis(groups: Dictionary<SeriesGroup>): string
     zrUtil.each(groups, function (group, key) {
         const categoryAxis = group.categoryAxis;
         const valueAxis = group.valueAxis;
+        const categoryAxisDim = categoryAxis.dim;
         const valueAxisDim = valueAxis.dim;
+        const categories: string[] = [];
 
         const headers = [' '].concat(zrUtil.map(group.series, function (series) {
             return series.name;
         }));
+
         // @ts-ignore TODO Polar
-        const columns = [categoryAxis.model.getCategories()];
+        zrUtil.each(categoryAxis.model.getCategories(), function (category) {
+            addCategory(categories, category);
+        });
+
         zrUtil.each(group.series, function (series) {
             const rawData = series.getRawData();
-            columns.push(series.getRawData().mapArray(rawData.mapDimension(valueAxisDim), function (val) {
-                return val;
+            for (let i = 0, len = rawData.count(); i < len; i++) {
+                addCategory(categories, rawData.getName(i));
+            }
+        });
+
+        const columns: unknown[][] = [categories];
+        zrUtil.each(group.series, function (series) {
+            const rawData = series.getRawData();
+            const valueDim = rawData.mapDimension(valueAxisDim);
+            const categoryDim = rawData.mapDimension(categoryAxisDim);
+            const valueByCategory: Dictionary<unknown> = {};
+            for (let i = 0, len = rawData.count(); i < len; i++) {
+                const name = rawData.getName(i);
+                if (name) {
+                    valueByCategory[name] = rawData.get(valueDim, i);
+                }
+                else {
+                    const categoryName = getCategoryNameByValue(categories, rawData.get(categoryDim, i));
+                    if (categoryName != null && valueByCategory[categoryName] == null) {
+                        valueByCategory[categoryName] = rawData.get(valueDim, i);
+                    }
+                }
+            }
+            columns.push(zrUtil.map(categories, function (category) {
+                const value = valueByCategory[category];
+                return value == null || isNaN(value as number) ? '' : value;
             }));
         });
         // Assemble table content
@@ -164,7 +215,7 @@ function assembleOtherSeries(series: SeriesModel[]) {
     }).join('\n\n' + BLOCK_SPLITER + '\n\n');
 }
 
-function getContentFromModel(ecModel: GlobalModel) {
+export function getContentFromModel(ecModel: GlobalModel) {
 
     const result = groupSeries(ecModel);
 
@@ -202,7 +253,7 @@ const itemSplitRegex = new RegExp('[' + ITEM_SPLITER + ']+', 'g');
  */
 function parseTSVContents(tsv: string) {
     const tsvLines = tsv.split(/\n+/g);
-    const headers = trim(tsvLines.shift()).split(itemSplitRegex);
+    const headers = trim(tsvLines.shift()).split(ITEM_SPLITER);
 
     const categories: string[] = [];
     const series: {name: string, data: string[]}[] = zrUtil.map(headers, function (header) {
@@ -212,10 +263,12 @@ function parseTSVContents(tsv: string) {
         };
     });
     for (let i = 0; i < tsvLines.length; i++) {
-        const items = trim(tsvLines[i]).split(itemSplitRegex);
+        const items = trim(tsvLines[i]).split(ITEM_SPLITER);
         categories.push(items.shift());
         for (let j = 0; j < items.length; j++) {
-            series[j] && (series[j].data[i] = items[j]);
+            if (series[j] && items[j] !== '') {
+                series[j].data[i] = items[j];
+            }
         }
     }
     return {
