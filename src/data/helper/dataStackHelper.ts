@@ -94,6 +94,12 @@ export function enableDataStack(
     let stackResultDimension: string;
     let stackedOverDimension: string;
 
+    const yCoordDimension = dimensionDefineList.find(
+        dimensionInfo => !isString(dimensionInfo) && dimensionInfo.coordDim === 'y'
+    ) as SeriesDimensionDefine | undefined;
+    const isYCoordDimensionStackable = yCoordDimension != null
+        && yCoordDimension.type !== 'ordinal' && yCoordDimension.type !== 'time';
+
     each(dimensionDefineList, function (dimensionInfo, index) {
         if (isString(dimensionInfo)) {
             dimensionDefineList[index] = dimensionInfo = {
@@ -110,12 +116,19 @@ export function enableDataStack(
             if (!stackedDimInfo
                 && dimensionInfo.type !== 'ordinal'
                 && dimensionInfo.type !== 'time'
+                && (yCoordDimension == null || (dimensionInfo.coordDim !== 'x' && isYCoordDimensionStackable))
                 && (!stackedCoordDimension || stackedCoordDimension === dimensionInfo.coordDim)
             ) {
                 stackedDimInfo = dimensionInfo;
             }
         }
     });
+
+    if (stackedDimInfo && !byIndex && !stackedByDimInfo) {
+        // Compatible with previous design, value axis (time axis) only stack by index.
+        // It may make sense if the user provides elaborately constructed data.
+        byIndex = true;
+    }
 
     if (stackedDimInfo && !byIndex && !stackedByDimInfo) {
         // Compatible with previous design, value axis (time axis) only stack by index.
