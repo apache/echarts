@@ -65,7 +65,6 @@ export function intervalScaleNiceTicks(
     if (maxInterval != null && interval > maxInterval) {
         interval = result.interval = maxInterval;
     }
-    // Tow more digital for tick.
     const precision = result.intervalPrecision = getIntervalPrecision(interval);
     // Niced extent inside original extent
     const niceTickExtent = result.niceTickExtent = [
@@ -101,8 +100,7 @@ export function increaseInterval(interval: number) {
  * @return interval precision
  */
 export function getIntervalPrecision(interval: number): number {
-    // Tow more digital for tick.
-    return getPrecision(interval) + 2;
+    return getPrecision(interval);
 }
 
 function clamp(
