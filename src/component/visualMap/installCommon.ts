@@ -20,7 +20,7 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import { VisualMapOption } from './VisualMapModel';
 import { PiecewiseVisualMapOption } from './PiecewiseModel';
-import { ContinousVisualMapOption } from './ContinuousModel';
+import { ContinuousVisualMapOption } from './ContinuousModel';
 import { visualMapActionInfo, visualMapActionHander } from './visualMapAction';
 import { visualMapEncodingHandlers } from './visualEncoding';
 import { each } from 'zrender/src/core/util';
@@ -44,7 +44,7 @@ export default function installCommon(registers: EChartsExtensionInstallRegister
                             ? ((option as PiecewiseVisualMapOption)).pieces.length > 0
                             : ((option as PiecewiseVisualMapOption)).splitNumber > 0
                     )
-                    || (option as ContinousVisualMapOption).calculable
+                    || (option as ContinuousVisualMapOption).calculable
                 )
             )
             ? 'continuous' : 'piecewise';

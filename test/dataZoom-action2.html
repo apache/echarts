@@ -1,0 +1,412 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                background: #360;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+                margin: 0;
+            }
+            .chart {
+                height: 400px;
+            }
+            .by-dispatch-action {
+                padding: 5px;
+            }
+        </style>
+
+        <div id="main_containShape"></div>
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            var _ctx = {
+                xAxisType: {
+                    value: 'value',
+                    values: ['value', 'category']
+                },
+                xAxisBoundaryGap: {
+                    value: 'NOT_SET',
+                    values: ['NOT_SET', false, true]
+                }
+            };
+
+            var X_ROUNDING_ERROR_PRECISION = 14;
+            var DATA_COUNT = 15;
+
+            function round(x, precision) {
+                precision = Math.min(Math.max(0, precision), 20);
+                return +(+x).toFixed(precision);
+            }
+
+            function makeButtons(ctx) {
+
+                function printAndValidateStates(btnDef) {
+                    var option = ctx.chart.getOption();
+                    var dzs = option.dataZoom;
+                    var states = [{
+                        type: dzs[0].type,
+                        start: dzs[0].start,
+                        end: dzs[0].end,
+                        startValue: dzs[0].startValue,
+                        endValue: dzs[0].endValue
+                    }, {
+                        type: dzs[1].type,
+                        start: dzs[1].start,
+                        end: dzs[1].end,
+                        startValue: dzs[1].startValue,
+                        endValue: dzs[1].endValue
+                    }]
+                    console.log('!!! ' + ctx.hint + ' !!!\n' + '(from chart.getOption())\n' + JSON.stringify(states, null, 2));
+
+                    validateStates(states, btnDef, 'GET_OPTION');
+                }
+
+                function validateStates(actualStates, btnDef, btnDefExpectKey) {
+                    if (!btnDef.expect) {
+                        return;
+                    }
+                    testHelper.printAssert(ctx.chart, function (assert) {
+                        actualStates.forEach(function (state, idx) {
+                            const expectItem = btnDef.expect[btnDefExpectKey][idx];
+                            Object.keys(expectItem).forEach(function (key) {
+                                if (key === 'epsilonDef') {
+                                    return;
+                                }
+                                const expectVal = expectItem[key];
+                                const epsilonDef = expectItem.epsilonDef;
+                                const actualVal = state[key];
+                                if (epsilonDef && epsilonDef[key] != null) {
+                                    assert(Math.abs(expectVal - actualVal) <= epsilonDef[key]);
+                                }
+                                else {
+                                    assert(expectVal === actualVal);
+                                }
+                            });
+                        });
+                    });
+                }
+
+                function dispatchPercent(start, end) {
+                    ctx.chart.dispatchAction({
+                        type: 'dataZoom',
+                        batch: [
+                            {id: 'dz-in', start: start, end: end},
+                            {id: 'dz-s', start: start, end: end}
+                        ]
+                    });
+                }
+                function dispatchValue(startValue, endValue) {
+                    ctx.chart.dispatchAction({
+                        type: 'dataZoom',
+                        batch: [
+                            {id: 'dz-in', startValue: startValue, endValue: endValue},
+                            {id: 'dz-s', startValue: startValue, endValue: endValue}
+                        ]
+                    });
+                }
+
+                var buttons = [];
+
+                ctx.percentButttons.forEach(function (item) {
+                    buttons.push({
+                        text: item.text,
+                        onclick: function () {
+                            dispatchPercent(item.start, item.end);
+                            printAndValidateStates(item);
+                        }
+                    })
+                });
+                ctx.valueButtons.forEach(function (item) {
+                    buttons.push({
+                        text: item.text,
+                        onclick: function () {
+                            dispatchValue(item.startValue, item.endValue);
+                            printAndValidateStates(item);
+                        }
+                    })
+                });
+
+                return buttons;
+            } // End of `makeButtons`
+
+
+            var xBase = 7;
+            var xOneStep = 0.1;
+            var yStartValue = Math.random() * 300;
+            var data2 = [];
+            var data3 = [];
+            var specialNormal = [];
+            var xDataMin;
+            var xDataMax;
+
+            xDataMin = xBase;
+            for (var i = 0, now = xBase; i < DATA_COUNT; i++, now = round(now + xOneStep, X_ROUNDING_ERROR_PRECISION)) {
+                var value = (i + 100) * 10;
+                data2.push([now, value]);
+                data3.push([now, value * 2]);
+                xDataMax = now;
+                if (i === 8) {
+                    specialNormal[0] = now;
+                }
+                else if (i === 13) {
+                    specialNormal[1] = now;
+                }
+            }
+            var specialOverXDataMin = [
+                round(xDataMin - xOneStep * 10, X_ROUNDING_ERROR_PRECISION),
+                specialNormal[0]
+            ];
+            var specialOverXDataMax = [
+                specialNormal[1],
+                round(xDataMax + xOneStep * 10, X_ROUNDING_ERROR_PRECISION)
+            ];
+
+            function createOption() {
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    toolbox: {
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            restore: {},
+                            saveAsImage: {}
+                        }
+                    },
+                    legend: {
+                        top: 10,
+                    },
+                    grid: {
+                        left: 50,
+                        right: 50,
+                    },
+                    xAxis: {
+                        type: _ctx.xAxisType.value,
+                        scale: true,
+                        axisTick: {show: true}
+                    },
+                    yAxis: {
+                    },
+                    dataZoom: [{
+                        type: 'inside',
+                        id: 'dz-in',
+                    }, {
+                        id: 'dz-s',
+                    }],
+                    series: [{
+                        name: 'a',
+                        type: 'bar',
+                        symbolSize: 5,
+                        data: data2
+                    }, {
+                        name: 'b',
+                        type: 'bar',
+                        symbolSize: 5,
+                        data: data3
+                    }]
+                };
+
+                if (_ctx.xAxisBoundaryGap.value !== 'NOT_SET') {
+                    option.xAxis.boundaryGap = _ctx.xAxisBoundaryGap.value;
+                }
+
+                return option;
+            }
+
+            function getBtnLabel(special, extra) {
+                extra = extra || '';
+                return 'startValue: ' + special[0] + ', endValue: ' + special[1] + ' ' + extra;
+            }
+
+            function getDefaultPercentButtons() {
+                // If expect is null, means no "expect".
+                const epsilon = 1e-12;
+
+                function makeStartEndConfig(start, end) {
+                    const START_MIN = 0;
+                    const END_MAX = 100;
+                    let overInfo = [];
+
+                    const inputSpan = end - start;
+                    if (start < START_MIN) {
+                        overInfo.push('over min');
+                    }
+                    if (end > END_MAX) {
+                        overInfo.push('over max');
+                    }
+
+                    const expectValues = {
+                        start: start,
+                        end: end,
+                        inputSpan: inputSpan,
+                    };
+                    if (expectValues.start < START_MIN) {
+                        expectValues.start = START_MIN;
+                        expectValues.end = expectValues.start + expectValues.inputSpan;
+                    }
+                    if (expectValues.end > END_MAX) {
+                        expectValues.end = END_MAX;
+                        expectValues.start = expectValues.end - expectValues.inputSpan;
+                    }
+
+                    const config = {
+                        text: `{start: ${start}, end: ${end}} ${overInfo.join(' ')}`,
+                        start: start,
+                        end: end,
+                        expect: {
+                            GET_OPTION: [{
+                                start: expectValues.start,
+                                end: expectValues.end,
+                                epsilonDef: {
+                                    start: epsilon,
+                                    end: epsilon,
+                                },
+                            }, {
+                                start: expectValues.start,
+                                end: expectValues.end,
+                                epsilonDef: {
+                                    start: epsilon,
+                                    end: epsilon,
+                                },
+                            }]
+                        }
+                    };
+                    return config;
+                }
+                return [
+                    makeStartEndConfig(0, 100),
+                    makeStartEndConfig(0, 60),
+                    makeStartEndConfig(60, 100),
+                    makeStartEndConfig(-5, 5),
+                    makeStartEndConfig(95, 105),
+                    makeStartEndConfig(40, 60),
+                    makeStartEndConfig(40, 41),
+                ];
+            } // End of `getDefaultPercentButtons`
+
+
+            var ctx = {
+                hint: '',
+                percentButttons: getDefaultPercentButtons(),
+                valueButtons: [{
+                    text: getBtnLabel(specialNormal),
+                    startValue: specialNormal[0],
+                    endValue: specialNormal[1],
+                    expect: {
+                        GET_OPTION: [{
+                            startValue: specialNormal[0],
+                            endValue: specialNormal[1],
+                        }, {
+                            startValue: specialNormal[0],
+                            endValue: specialNormal[1],
+                        }]
+                    }
+                }, {
+                    text: getBtnLabel(specialOverXDataMin, 'over xDataMin'),
+                    startValue: specialOverXDataMin[0],
+                    endValue: specialOverXDataMin[1],
+                    expect: {
+                        GET_OPTION: (function () {
+                            const startValue = xDataMin;
+                            const endValue = Math.min(
+                                round(xDataMin + (specialOverXDataMin[1] - specialOverXDataMin[0]), X_ROUNDING_ERROR_PRECISION),
+                                xDataMax
+                            );
+                            return [{
+                                startValue: startValue,
+                                endValue: endValue,
+                            }, {
+                                startValue: startValue,
+                                endValue: endValue,
+                            }]
+                        })()
+                    }
+                }, {
+                    text: getBtnLabel(specialOverXDataMax, 'over xDataMax'),
+                    startValue: specialOverXDataMax[0],
+                    endValue: specialOverXDataMax[1],
+                    expect: {
+                        GET_OPTION: (function () {
+                            const endValue = xDataMax;
+                            const startValue = Math.max(
+                                round(xDataMax - (specialOverXDataMax[1] - specialOverXDataMax[0]), X_ROUNDING_ERROR_PRECISION),
+                                xDataMin
+                            );
+                            return [{
+                                startValue: startValue,
+                                endValue: endValue,
+                            }, {
+                                startValue: startValue,
+                                endValue: endValue,
+                            }];
+                        })()
+                    }
+                }]
+            };
+
+            function updateChart() {
+                ctx.chart.setOption(createOption(), {notMerge: true});
+            }
+
+            ctx.chart = testHelper.create(echarts, 'main_containShape', {
+                option: createOption(),
+                title: [
+                    'dataZoom action on containShape case',
+                ],
+                height: 300,
+                inputsStyle: 'compact',
+                inputs: [
+                    ...testHelper.createInputsSimply(_ctx, updateChart),
+                    {
+                        type: 'br'
+                    },
+                    ...makeButtons(ctx)
+                ]
+            });
+        });
+        </script>
+
+
+
+    </body>
+</html>

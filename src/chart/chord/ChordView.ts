@@ -22,7 +22,7 @@ import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
-import ChordSeriesModel from './ChordSeries';
+import ChordSeriesModel, { SERIES_TYPE_CHORD } from './ChordSeries';
 import ChordPiece from './ChordPiece';
 import { ChordEdge } from './ChordEdge';
 import { parsePercent } from '../../util/number';
@@ -32,8 +32,8 @@ const RADIAN = Math.PI / 180;
 
 class ChordView extends ChartView {
 
-    static readonly type = 'chord';
-    readonly type: string = ChordView.type;
+    static readonly type = SERIES_TYPE_CHORD;
+    readonly type = SERIES_TYPE_CHORD;
 
     private _data: SeriesData;
     private _edgeData: SeriesData;

@@ -26,12 +26,13 @@ import SeriesData from '../../data/SeriesData';
 import { ColorString, BlurScope, AnimationOption, ZRColor, AnimationOptionMixin } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
-import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
+import { SymbolDrawSeriesScope } from './SymbolDraw';
 import { extend, retrieve2 } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { saveOldStyle } from '../../animation/basicTransition';
 import Model from '../../model/Model';
+import { SymbolDrawItemModelOption } from './baseDraw';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 

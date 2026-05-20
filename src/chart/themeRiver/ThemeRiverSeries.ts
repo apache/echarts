@@ -78,8 +78,10 @@ export interface ThemeRiverSeriesOption
     data?: ThemerRiverDataItem[]
 }
 
+export const SERIES_TYPE_THEME_RIVER = 'themeRiver';
+
 class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
-    static readonly type = 'series.themeRiver';
+    static readonly type = 'series.' + SERIES_TYPE_THEME_RIVER;
     readonly type = ThemeRiverSeriesModel.type;
 
     static readonly dependencies = ['singleAxis'];

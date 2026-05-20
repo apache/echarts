@@ -18,12 +18,12 @@
 */
 
 import { EChartsExtensionInstallRegisters, use } from '../../extension';
-import radarLayout from '../radar/radarLayout';
 import dataFilter from '../../processor/dataFilter';
 import backwardCompat from '../radar/backwardCompat';
 import RadarView from './RadarView';
 import RadarSeriesModel from './RadarSeries';
 import { install as installRadarComponent } from '../../component/radar/install';
+import { radarLayoutStageHandler } from './radarLayout';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     use(installRadarComponent);
@@ -31,7 +31,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(RadarView);
     registers.registerSeriesModel(RadarSeriesModel);
 
-    registers.registerLayout(radarLayout);
+    registers.registerLayout(radarLayoutStageHandler);
     registers.registerProcessor(dataFilter('radar'));
     registers.registerPreprocessor(backwardCompat);
 }

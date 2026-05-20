@@ -1,5 +1,13 @@
 [
   {
+    "link": "",
+    "comment": "as expected due to containShape change (bar on value axis)",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1774883786959
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/16978",
     "comment": "DataZoom shadow for time axis fixed",
     "type": "Bug Fixing",

@@ -1,6 +1,14 @@
 [
   {
     "link": "",
+    "comment": "acceptable",
+    "type": "Others",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775637966042
+  },
+  {
+    "link": "",
     "comment": "The label diff results from the fix of the margin. Indiscernible to naked eye. More compact so that the hideOverlap effect is changed, but both acceptable. Or indiscernible to the naked eye.",
     "type": "Others",
     "markedBy": "Ovilia",

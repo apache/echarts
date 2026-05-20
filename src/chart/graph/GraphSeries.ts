@@ -45,7 +45,8 @@ import {
     OptionDataValueNumeric,
     CallbackDataParams,
     DefaultEmphasisFocus,
-    PreserveAspectMixin
+    PreserveAspectMixin,
+    RoamHostModel
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -57,6 +58,7 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
 import tokens from '../../visual/tokens';
+import { isViewCoordSys } from '../../coord/View';
 
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
@@ -170,11 +172,6 @@ export interface GraphSeriesOption
      */
     focusNodeAdjacency?: boolean
 
-    /**
-     * Symbol size scale ratio in roam
-     */
-    nodeScaleRatio?: number,
-
     draggable?: boolean
 
     edgeSymbol?: string | string[]
@@ -235,8 +232,10 @@ export interface GraphSeriesOption
     autoCurveness?: boolean | number | number[]
 }
 
-class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
-    static readonly type = 'series.graph';
+export const SERIES_TYPE_GRAPH = 'graph';
+
+class GraphSeriesModel extends SeriesModel<GraphSeriesOption> implements RoamHostModel {
+    static readonly type = 'series.' + SERIES_TYPE_GRAPH;
     readonly type = GraphSeriesModel.type;
 
     static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
@@ -401,18 +400,17 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         });
     }
 
-    setZoom(zoom: number) {
-        this.option.zoom = zoom;
-    }
-
-    setCenter(center: number[]) {
-        this.option.center = center;
-    }
-
     isAnimationEnabled() {
         return super.isAnimationEnabled()
             // Not enable animation when do force layout
             && !(this.get('layout') === 'force' && this.get(['force', 'layoutAnimation']));
+    }
+
+    __ownRoamView() {
+        // Be an exclusive coord sys of graph series iff it is a `View` coord sys.
+        // Otherwise graph series is based on an external geo or Cartesian.
+        const coordSys = this.coordinateSystem;
+        return isViewCoordSys(coordSys) && coordSys;
     }
 
     static defaultOption: GraphSeriesOption = {

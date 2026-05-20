@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/canteen.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+
+        <div id="main0"></div>
+        <div id="record"></div>
+
+        <script>
+
+        var chart;
+        var recordContainer = document.getElementById('record');
+
+        testHelper.controlFrame({
+            pauseAt: 1,
+            onFrame: function (frameNumber) {
+                testHelper.printCanvasLayerDrawOperationsOnFrame(chart, frameNumber, recordContainer);
+            }
+        });
+
+        require([
+            'echarts',
+        ], function (echarts) {
+
+            const _ctx = {
+                useDataZoom: {
+                    value: false,
+                    values: [false, true],
+                },
+                hoverLayerThreshold: {
+                    value: undefined,
+                    values: [undefined, 300, 1000, 0],
+                },
+                br0: {},
+                large: {
+                    text: 'series.large:',
+                    value: false,
+                    values: [true, false],
+                },
+                largeThreshold: {
+                    text: 'series.largeThreshold:',
+                    value: undefined,
+                    values: [undefined, 1, 1000],
+                },
+                br1: {},
+                progressive: {
+                    text: 'series.progressive:',
+                    value: 1,
+                    values: [1, 1e4],
+                },
+                progressiveThreshold: {
+                    text: 'series.progressiveThreshold:',
+                    value: 1,
+                    values: [undefined, 1, 1000],
+                },
+                br2: {},
+                progressiveChunkMode: {
+                    text: 'series.progressiveChunkMode:',
+                    value: undefined,
+                    values: [undefined, 'sequential', 'mod']
+                }
+            };
+
+            var _iBatchCount;
+            var _initXMaxTimes;
+            var _xMax;
+            var _xColLen;
+            var _yCurr;
+            var _currI;
+
+            resetMeta();
+
+            function resetMeta() {
+                _iBatchCount = 1e4;
+                _initXMaxTimes = 5;
+                _xMax = _iBatchCount * _initXMaxTimes;
+                _xColLen = 1e2;
+                _yCurr = 100;
+                _currI = 0;
+            }
+
+            function createSingleBatchData() {
+                var seriesData = [];
+                for (var len = _currI + _iBatchCount; _currI < len; _currI++) {
+                    seriesData.push([_currI, _yCurr * (_currI % _xColLen)]);
+                }
+                return seriesData;
+            }
+
+            function createOption() {
+
+                var largeSettingsSeries = {};
+                if (_ctx.large.value != null) {
+                    largeSettingsSeries.large = _ctx.large.value;
+                }
+                if (_ctx.largeThreshold.value != null) {
+                    largeSettingsSeries.largeThreshold = _ctx.largeThreshold.value;
+                }
+                if (_ctx.progressive.value != null) {
+                    largeSettingsSeries.progressive = _ctx.progressive.value;
+                }
+                if (_ctx.progressiveThreshold.value != null) {
+                    largeSettingsSeries.progressiveThreshold = _ctx.progressiveThreshold.value;
+                }
+                if (_ctx.progressiveChunkMode.value != null) {
+                    largeSettingsSeries.progressiveChunkMode = _ctx.progressiveChunkMode.value;
+                }
+
+                if (_ctx.hoverLayerThreshold.value != null) {
+                    largeSettingsSeries.hoverLayerThreshold = _ctx.hoverLayerThreshold.value;
+                }
+
+                var initData = createSingleBatchData();
+
+                var option = {
+                    animation: false,
+                    tooltip: {},
+                    grid: {
+                        top: 20,
+                        bottom: 100,
+                        left: 10,
+                        right: 10,
+                    },
+                    xAxis: {
+                        max: _xMax
+                    },
+                    yAxis: {},
+                    series: [{
+                        type: 'scatter',
+                        ...largeSettingsSeries,
+                        // name: 'data',
+                        data: initData,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        itemStyle: {
+                            borderColor: '#111',
+                            borderWidth: 1
+                        }
+                    }]
+                };
+
+                if (_ctx.useDataZoom.value) {
+                    option.dataZoom = [
+                        {type: 'slider'},
+                        {type: 'inside'}
+                    ]
+                }
+
+                return option;
+            }
+
+            function updateChart() {
+                resetMeta();
+                chart.setOption(createOption(), {notMerge: true});
+            }
+
+            chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Cartesian appendData',
+                    'Test: Click btn appendData **before** progressive rendering finished;',
+                    'Test: Click btn appendData **after** the init data rendered.',
+                    'Expect: rendered part should be **retained** if no dataZoom, otherwise discarded (PENDING).',
+                ],
+                option: createOption(),
+                height: 350,
+                // recordCanvas: true
+                inputsStyle: 'compact',
+                inputs: [
+                    {
+                        type: 'button',
+                        text: 'appendData',
+                        onclick() {
+                            var newData = createSingleBatchData();
+                            chart.appendData({
+                                seriesIndex: 0,
+                                data: newData
+                            });
+                        }
+                    },
+                    ...testHelper.createInputsSimply(_ctx, updateChart)
+                ]
+            });
+        });
+        </script>
+
+
+    </body>
+</html>

@@ -24,8 +24,9 @@ import {linearMap} from '../../util/number';
 import * as vec2 from 'zrender/src/core/vector';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
+import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption, SERIES_TYPE_GRAPH } from './GraphSeries';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
 export interface ForceLayoutInstance {
     step(cb: (stopped: boolean) => void): void
@@ -34,9 +35,10 @@ export interface ForceLayoutInstance {
     setUnfixed(idx: number): void
 }
 
+export const graphForceLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_GRAPH, graphForceLayout);
 
-export default function graphForceLayout(ecModel: GlobalModel) {
-    ecModel.eachSeriesByType('graph', function (graphSeries: GraphSeriesModel) {
+function graphForceLayout(ecModel: GlobalModel) {
+    ecModel.eachSeriesByType(SERIES_TYPE_GRAPH, function (graphSeries: GraphSeriesModel) {
         const coordSys = graphSeries.coordinateSystem;
         if (coordSys && coordSys.type !== 'view') {
             return;

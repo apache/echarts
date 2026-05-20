@@ -1,5 +1,13 @@
 [
   {
+    "link": "",
+    "comment": "random",
+    "type": "Others",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775675858857
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/20865",
     "comment": "Sunburst use the first color for the \"Back Button\" after drilling down so it starts with the second theme color. v6 fixed this problem.",
     "type": "Bug Fixing",

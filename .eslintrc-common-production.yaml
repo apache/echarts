@@ -1,0 +1,137 @@
+
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+extends: './.eslintrc-common.yaml'
+parser: "@typescript-eslint/parser"
+parserOptions:
+    ecmaVersion: 6
+    sourceType: module
+    ecmaFeatures:
+        modules: true
+    project: "tsconfig.json"
+plugins:
+    - "@typescript-eslint"
+    - '@echarts-x/ec'
+env:
+    # Do not set `browser: true, node: true`, which introduces some global variables
+    # (e.g., "require", "global"), which bypasses checks and may lead to errors.
+    es6: false
+globals:
+    console: false
+    setTimeout: true
+    clearTimeout: true
+    navigator: false
+    __DEV__: true
+rules:
+    "no-restricted-syntax":
+        - 2
+        -
+            "selector": "SpreadElement"
+            "message": "Spread syntax is unnecessary; it introduces verbose code after compilation."
+        -
+            "selector": "AssignmentPattern"
+            "message": "Default parameters only apply to undefined, but echarts treats undefined and null the same."
+        -
+            "selector": "FunctionDeclaration[async=true]"
+            "message": "No need to use async/await yet; it introduces verbose code after compilation."
+        -
+            "selector": "ArrowFunctionExpression[async=true]"
+            "message": "No need to use async/await yet; it introduces verbose code after compilation."
+        -
+            "selector": "AwaitExpression"
+            "message": "No need to use async/await yet; it introduces verbose code after compilation."
+    "@echarts-x/ec/no-props-polyfill-uncertain":
+        # Currently, echarts does not officially discard legacy platforms. The following methods are
+        # not polyfilled, and alternatives are widely used in this codebase by convention, which also
+        # benefits compression.
+        - 2
+        - {"receiver": "Array.prototype", "method": "map", "message": "Use `map` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "forEach", "message": "Use `each` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "reduce", "message": "Use `reduce` or `each` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "reduceRight", "message": "Use `reduce` or `each` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "filter", "message": "Use `filter` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "indexOf", "message": "Use `indexOf` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "find", "message": "Use `find` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "findIndex", "message": "Use `find` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "findLast", "message": "Use `find` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "findLastIndex", "message": "Use `find` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "includes", "message": "Use `indexOf` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "some", "message": "Use `find` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Array.prototype", "method": "flat"}
+        - {"receiver": "Array.prototype", "method": "flatMap"}
+        - {"receiver": "Array.prototype", "method": "at"}
+        - {"receiver": "Array.prototype", "method": "every"}
+        - {"receiver": "Array.prototype", "method": "fill"}
+        - {"receiver": "String.prototype", "method": "startsWith", "message": "Use `String.prototype.indexOf` instead."}
+        - {"receiver": "String.prototype", "method": "endsWith", "message": "Use `String.prototype.indexOf` instead."}
+        - {"receiver": "String.prototype", "method": "includes", "message": "Use `String.prototype.indexOf` instead."}
+        - {"receiver": "String.prototype", "method": "repeat"}
+        - {"receiver": "String.prototype", "method": "padStart"}
+        - {"receiver": "String.prototype", "method": "padEnd"}
+        - {"receiver": "String.prototype", "method": "matchAll"}
+        - {"receiver": "String.prototype", "method": "replaceAll"}
+        - {"receiver": "Array", "method": "isArray", "message": "Use `isArray` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Function", "method": "bind", "message": "Use `bind` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Function.prototype", "method": "bind", "message": "Use `bind` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Date", "method": "now", "message": "Use `+(new Date())` instead."}
+        - {"receiver": "Date.prototype", "method": "toJSON"}
+        - {"receiver": "Object", "method": "assign", "message": "Use `extend` or `defaults` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Object", "method": "keys", "message": "Use `keys` in `zrender/src/core/util.ts` instead."}
+        - {"receiver": "Object", "method": "seal", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "isSealed", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "freeze", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "isFrozen", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "isExtensible", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "preventExtensions", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "create", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "defineProperty", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "defineProperties", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "getOwnPropertyDescriptor", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "getOwnPropertyNames", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "is", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "entries", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "values", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "fromEntries", "message": "Typically not necessary in production code."}
+        - {"receiver": "Object", "method": "hasOwn", "message": "Typically not necessary in production code."}
+    "no-restricted-globals":
+        - 2
+        # Avoid dangerous usage of globals for production code.
+        - "event"
+        - "name"
+        - "length"
+        - "orientation"
+        - "top"
+        - "parent"
+        - "location"
+        - "closed"
+        - "jQuery"
+        - "$"
+        # No need to use them yet.
+        - "Promise"
+        # Currently, echarts does not officially discard legacy platforms. The following methods are
+        # not polyfilled, and alternatives are widely used in this codebase by convention, which also
+        # benefits compression.
+        - {name: "Map", message: "Use `HashMap` in `zrender/src/core/util.ts` instead."}
+        - {name: "Set", message: "Use `HashMap` in `zrender/src/core/util.ts` instead."}
+        - {name: "WeakMap", message: "No polyfill for it. Typically it is not necessary. Use `makeInner` or `src/util/cycleCache` instead."}
+        - {name: "WeakSet", message: "No polyfill for it. Typically it is not necessary. Use `makeInner` or `src/util/cycleCache` instead."}
+        - {name: "Symbol", message: "No polyfill for it. Typically it is not necessary."}
+        - {name: "Proxy", message: "No polyfill for it. Typically it is not necessary."}
+        - {name: "Reflect", message: "No polyfill for it. Typically it is not necessary."}
+        - {name: "Intl", message: "No polyfill for it. Typically it is not necessary."}
+        - {name: "Atomics", message: "No polyfill for it. Typically it is not necessary."}

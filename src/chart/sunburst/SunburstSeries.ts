@@ -163,9 +163,12 @@ interface SunburstSeriesModel {
         state?: 'emphasis' | 'normal' | 'highlight' | 'blur' | 'select'
     ): string
 }
+
+export const SERIES_TYPE_SUNBURST = 'sunburst';
+
 class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
-    static readonly type = 'series.sunburst';
+    static readonly type = 'series.' + SERIES_TYPE_SUNBURST;
     readonly type = SunburstSeriesModel.type;
 
     ignoreStyleOnData = true;

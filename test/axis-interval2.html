@@ -56,9 +56,10 @@ under the License.
         <div class="chart" id="main6"></div>
         <div class="chart" id="main6.5"></div>
         <div class="chart" id="main7"></div>
-        <div class="chart" id="main8"></div>
+        <div class="chart" id="main_interval"></div>
         <div class="chart" id="main9"></div>
         <div class="chart" id="main10"></div>
+        <div class="chart" id="main_yAxis_interval"></div>
 
 
         <script>
@@ -1154,59 +1155,133 @@ under the License.
             require([
                 'echarts'
             ], function (echarts) {
-
-                var xAxisData = [];
-                var data1 = [];
-                var data3 = [];
-
-                for (var i = 0; i < 100; i++) {
-                    xAxisData.push('c' + i);
-                    data1.push((Math.random() * 5).toFixed(2));
-                    data3.push((Math.random() + 0.5).toFixed(2));
-                }
-
-                var option = {
-                    legend: {
+                var _ctx = {
+                    dataCount: {
+                        text: 'dataCount:',
+                        value: 10,
+                        values: [10, 1, 0]
                     },
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: {
-                            type: 'shadow'
-                        }
+                    xAxis_splitArea_interval: {
+                        text: 'xAxis.splitArea.interval:',
+                        value: 3,
+                        values: [0, 1, 2, 3]
                     },
-                    xAxis: {
-                        type: 'category',
-                        data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                        splitArea: {
-                            interval: 3,
-                            show: true,
-                            areaStyle: {
-                                color: ['blue', 'red']
-                            }
-                        }
+                    xAxis_boundaryGap: {
+                        text: 'xAxis.boundaryGap',
+                        value: true,
+                        values: [true, false],
                     },
-                    yAxis: {
-                        axisLabel: {
-                            show: false
-                        },
-                        splitArea: {
-                            show: false
-                        }
+                    customValues: {
+                        text: 'customValues:',
+                        value: 'NOT_SET',
+                        values: ['NOT_SET', [3, 6], [8, 11]]
                     },
-                    dataZoom: [{
-                        type: 'inside'
-                    }, {
-                    }],
-                    series: []
                 };
 
-                chart = myChart = testHelper.create(echarts, 'main8', {
+                function createOption() {
+                    var xAxisData = [];
+
+                    var categoryData = [];
+                    var seriesData0 = [];
+                    var seriesData1 = [];
+                    for (var i = 0; i < _ctx.dataCount.value; i++) {
+                        categoryData.push('Some' + i);
+                        seriesData0.push(11);
+                        seriesData1.push(15);
+                    }
+
+                    var option = {
+                        legend: {
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        grid: {
+                            left: 50,
+                            width: 300,
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: categoryData,
+                            boundaryGap: _ctx.xAxis_boundaryGap.value,
+                            axisTick: {
+                                show: true
+                            },
+                            axisLabel: {},
+                            splitArea: {
+                                interval: _ctx.xAxis_splitArea_interval.value,
+                                show: true,
+                                areaStyle: {
+                                    color: ['blue', 'red']
+                                }
+                            }
+                        },
+                        yAxis: {
+                            max: 30,
+                            axisLabel: {
+                                show: false
+                            },
+                            splitArea: {
+                                show: false
+                            }
+                        },
+                        dataZoom: [{
+                            type: 'inside'
+                        }, {
+                        }],
+                        legend: {
+                            top: 15,
+                            left: 140,
+                        },
+                        series: [{
+                            name: 'barA',
+                            type: 'bar',
+                            itemStyle: {
+                                color: '#333',
+                                borderRadius: [5, 5, 0, 0],
+                                borderWidth: 1,
+                                borderColor: '#000',
+                                opacity: 0.7,
+                            },
+                            symbolSize: 5,
+                            data: seriesData0
+                        }, {
+                            name: 'barB',
+                            type: 'bar',
+                            itemStyle: {
+                                color: '#888',
+                                borderRadius: [5, 5, 0, 0],
+                                borderWidth: 1,
+                                borderColor: '#000',
+                                opacity: 0.7,
+                            },
+                            data: seriesData1
+                        }]
+                    };
+
+                    if (_ctx.customValues.value !== 'NOT_SET') {
+                        option.xAxis.axisTick.customValues = _ctx.customValues.value.slice();
+                        option.xAxis.axisLabel.customValues = _ctx.customValues.value.slice();
+                    }
+
+                    return option;
+                }
+
+                function updateChart() {
+                    chart.setOption(createOption(), {notMerge: true});
+                }
+
+                var chart = testHelper.create(echarts, 'main_interval', {
                     title: [
-                        'Check splitArea correct for indivisible interval.',
-                        'Move left handle of the dataZoom and check splitArea correct'
+                        'Check splitArea/splitLine correct for interval.',
+                        'Move left handle of the dataZoom and check splitArea/splitLine correct'
                     ],
-                    option: option,
-                    info: {xAxis: option.xAxis}
+                    option: createOption(),
+                    inputsStyle: 'compact',
+                    inputs: testHelper.createInputsSimply(_ctx, updateChart),
                 });
             });
 
@@ -1350,6 +1425,115 @@ under the License.
 
 
 
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var _ctx = {
+                    dataKind: {
+                        value: 'SIMPLE_3',
+                        values: ['SIMPLE_3', 'MEDIUM_100']
+                    },
+                    yAxisType: {
+                        value: 'value',
+                        values: ['value', 'log'],
+                    },
+                    br0: {},
+                    yAxisInterval: {
+                        value: Number.MAX_SAFE_INTEGER,
+                        values: ['NOT_SET', Number.MAX_SAFE_INTEGER, 112233, 100, 0, 1]
+                    },
+                    yAxisScale: {
+                        value: true,
+                        values: ['NOT_SET', false, true],
+                    },
+                    useDataZoom: {
+                        value: true,
+                        values: [false, true]
+                    }
+                };
+
+                function createOption() {
+                    var xAxisData = [];
+                    var data1 = [];
+                    if (_ctx.dataKind.value === 'SIMPLE_3') {
+                        xAxisData = ['c1', 'c2', 'c3'];
+                        data1 = [135, 234, 313];
+                    }
+                    else if (_ctx.dataKind.value === 'MEDIUM_100') {
+                        for (var i = 0; i < 100; i++) {
+                            xAxisData.push('c' + i);
+                            data1.push(i * 113);
+                        }
+                    }
+
+                    var option = {
+                        legend: {
+                            top: 10,
+                        },
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+                        xAxis: [{
+                            data: xAxisData,
+                            splitArea: {
+                                show: true
+                            },
+                            splitLine: {
+                                show: true
+                            }
+                        }],
+                        yAxis: {
+                            type: _ctx.yAxisType.value,
+                        },
+                        series: [{
+                            name: 'line',
+                            type: 'line',
+                            // stack: 'one',
+                            // cursor: 'move',
+                            data: data1
+                        }]
+                    };
+                    if (_ctx.yAxisScale.value !== 'NOT_SET') {
+                        option.yAxis.scale = _ctx.yAxisScale.value;
+                    }
+                    if (_ctx.yAxisInterval.value !== 'NOT_SET') {
+                        option.yAxis.interval = _ctx.yAxisInterval.value;
+                    }
+                    if (_ctx.useDataZoom.value) {
+                        option.dataZoom = [{
+                            type: 'inside',
+                            xAxisIndex: 0,
+                        }, {
+                            type: 'slider',
+                        }];
+                    }
+                    return option;
+                }
+
+                function updateChart() {
+                    chart.setOption(createOption(), {notMerge: true});
+                }
+
+                chart = myChart = testHelper.create(echarts, 'main_yAxis_interval', {
+                    title: [
+                        'Check yAxis interval extreme case',
+                    ],
+                    option: createOption(),
+                    inputsStyle: 'compact',
+                    inputs: testHelper.createInputsSimply(_ctx, updateChart),
+                });
+
+            });
+
+        </script>
 
 
 

@@ -213,3 +213,5 @@ todo
 /features.js
 /features.d.ts
 *.tgz
+/test/ZEXAMPLE_*
+/build/eslint/eslint-plugin-ec/package-lock.json

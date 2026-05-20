@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import SunburstPiece from './SunburstPiece';
 import DataDiffer from '../../data/DataDiffer';
-import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSeries';
+import SunburstSeriesModel, { SERIES_TYPE_SUNBURST, SunburstSeriesNodeItemOption } from './SunburstSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
@@ -35,8 +35,8 @@ interface DrawTreeNode extends TreeNode {
 }
 class SunburstView extends ChartView {
 
-    static readonly type = 'sunburst';
-    readonly type = SunburstView.type;
+    static readonly type = SERIES_TYPE_SUNBURST;
+    readonly type = SERIES_TYPE_SUNBURST;
 
     seriesModel: SunburstSeriesModel;
     api: ExtensionAPI;

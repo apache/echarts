@@ -31,7 +31,8 @@ class AxisPointerView extends ComponentView {
     render(globalAxisPointerModel: AxisPointerModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const globalTooltipModel = ecModel.getComponent('tooltip') as TooltipModel;
         const triggerOn = globalAxisPointerModel.get('triggerOn')
-            || (globalTooltipModel && globalTooltipModel.get('triggerOn') || 'mousemove|click');
+            // mousewheel can change view by dataZoom.
+            || (globalTooltipModel && globalTooltipModel.get('triggerOn') || 'mousemove|click|mousewheel');
 
         // Register global listener in AxisPointerView to enable
         // AxisPointerView to be independent to Tooltip.

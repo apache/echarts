@@ -27,7 +27,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, ColorString } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
-import PieSeriesModel, {PieDataItemOption} from './PieSeries';
+import PieSeriesModel, {PieDataItemOption, SERIES_TYPE_PIE} from './PieSeries';
 import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
@@ -227,10 +227,10 @@ class PiePiece extends graphic.Sector {
 }
 
 
-// Pie view
 class PieView extends ChartView {
 
-    static type = 'pie';
+    static readonly type = SERIES_TYPE_PIE;
+    readonly type = SERIES_TYPE_PIE;
 
     ignoreLabelLineUpdate = true;
 

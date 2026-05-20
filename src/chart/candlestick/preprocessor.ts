@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import { ECUnitOption } from '../../util/types';
+import { SERIES_TYPE_CANDLESTICK } from './CandlestickSeries';
 
 export default function candlestickPreprocessor(option: ECUnitOption) {
     if (!option || !zrUtil.isArray(option.series)) {
@@ -28,7 +29,7 @@ export default function candlestickPreprocessor(option: ECUnitOption) {
     // Translate 'k' to 'candlestick'.
     zrUtil.each(option.series, function (seriesItem) {
         if (zrUtil.isObject(seriesItem) && seriesItem.type === 'k') {
-            seriesItem.type = 'candlestick';
+            seriesItem.type = SERIES_TYPE_CANDLESTICK;
         }
     });
 }

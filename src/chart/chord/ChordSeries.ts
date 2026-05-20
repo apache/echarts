@@ -172,9 +172,11 @@ export interface ChordSeriesOption
     }
 }
 
+export const SERIES_TYPE_CHORD = 'chord';
+
 class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
 
-    static type = 'series.chord';
+    static readonly type = 'series.' + SERIES_TYPE_CHORD;
     readonly type = ChordSeriesModel.type;
 
     init(option: ChordSeriesOption) {

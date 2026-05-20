@@ -1,0 +1,10 @@
+[
+  {
+    "link": "",
+    "comment": "Fix map roam bug: roam, then legend hide the first series, then roam, then legend show the first series -- map should no jump.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1777404931869
+  }
+]

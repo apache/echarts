@@ -24,7 +24,7 @@ import {setLabelStyle, getLabelStatesModels} from '../../label/labelStyle';
 import {bind} from 'zrender/src/core/util';
 import DataDiffer from '../../data/DataDiffer';
 import ChartView from '../../view/Chart';
-import ThemeRiverSeriesModel from './ThemeRiverSeries';
+import ThemeRiverSeriesModel, { SERIES_TYPE_THEME_RIVER } from './ThemeRiverSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { RectLike } from 'zrender/src/core/BoundingRect';
@@ -35,8 +35,8 @@ type LayerSeries = ReturnType<ThemeRiverSeriesModel['getLayerSeries']>;
 
 class ThemeRiverView extends ChartView {
 
-    static readonly type = 'themeRiver';
-    readonly type = ThemeRiverView.type;
+    static readonly type = SERIES_TYPE_THEME_RIVER;
+    readonly type = SERIES_TYPE_THEME_RIVER;
 
     private _layersSeries: LayerSeries;
     private _layers: graphic.Group[] = [];

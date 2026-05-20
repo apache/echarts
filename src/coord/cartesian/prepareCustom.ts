@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import Cartesian2D from './Cartesian2D';
+import { calcBandWidth } from '../axisBand';
 
 function dataToCoordSize(this: Cartesian2D, dataSize: number[], dataItem: number[]): number[] {
     // dataItem is necessary in log axis.
@@ -28,7 +29,7 @@ function dataToCoordSize(this: Cartesian2D, dataSize: number[], dataItem: number
         const val = dataItem[dimIdx];
         const halfSize = dataSize[dimIdx] / 2;
         return axis.type === 'category'
-            ? axis.getBandWidth()
+            ? calcBandWidth(axis).w
             : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
     }, this);
 }

@@ -32,11 +32,18 @@ import {
 } from '../../util/types';
 import { AxisBaseOption, CategoryAxisBaseOption, ValueAxisBaseOption } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
-import Radar from './Radar';
+import type Radar from './Radar';
 import {CoordinateSystemHostModel} from '../../coord/CoordinateSystem';
 import tokens from '../../visual/tokens';
+import { getUID } from '../../util/component';
 
 const valueAxisDefault = axisDefault.value;
+
+export const COORD_SYS_TYPE_RADAR = 'radar';
+export const COMPONENT_TYPE_RADAR = COORD_SYS_TYPE_RADAR;
+export const SERIES_TYPE_RADAR = COORD_SYS_TYPE_RADAR;
+
+export const RADAR_DEFAULT_SPLIT_NUMBER = 5;
 
 function defaultsShow(opt: object, show: boolean) {
     return zrUtil.defaults({
@@ -103,7 +110,7 @@ export type InnerIndicatorAxisOption = AxisBaseOption & {
 };
 
 class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystemHostModel {
-    static readonly type = 'radar';
+    static readonly type = COMPONENT_TYPE_RADAR;
     readonly type = RadarModel.type;
 
     coordinateSystem: Radar;
@@ -173,6 +180,9 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
             // For triggerEvent.
             model.mainType = 'radar';
             model.componentIndex = this.componentIndex;
+            // FIXME: construct an AxisBaseModel directly, rather than mixin.
+            // @ts-ignore
+            model.uid = getUID('ec_radar');
 
             return model;
         }, this);
@@ -207,7 +217,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
 
         boundaryGap: [0, 0],
 
-        splitNumber: 5,
+        splitNumber: RADAR_DEFAULT_SPLIT_NUMBER,
 
         axisNameGap: 15,
 

@@ -18,7 +18,6 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
 import * as graphic from '../../util/graphic';
@@ -724,25 +723,13 @@ function dispatchSelectAction(
     dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
 }
 
-function isUseHoverLayer(api: ExtensionAPI) {
-    const list = api.getZr().storage.getDisplayList();
-    let emphasisState: DisplayableState;
-    let i = 0;
-    const len = list.length;
-    while (i < len && !(emphasisState = list[i].states.emphasis)) {
-        i++;
-    }
-    return emphasisState && emphasisState.hoverLayer;
-}
-
 function dispatchHighlightAction(
     seriesName: string,
     dataName: string,
     api: ExtensionAPI,
     excludeSeriesId: string[]
 ) {
-    // If element hover will move to a hoverLayer.
-    if (!isUseHoverLayer(api)) {
+    if (!api.usingTHL()) {
         api.dispatchAction({
             type: 'highlight',
             seriesName: seriesName,
@@ -758,8 +745,7 @@ function dispatchDownplayAction(
     api: ExtensionAPI,
     excludeSeriesId: string[]
 ) {
-    // If element hover will move to a hoverLayer.
-    if (!isUseHoverLayer(api)) {
+    if (!api.usingTHL()) {
         api.dispatchAction({
             type: 'downplay',
             seriesName: seriesName,

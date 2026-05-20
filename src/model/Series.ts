@@ -31,7 +31,7 @@ import {
     OptionEncodeValue,
     ColorBy,
     StatesOptionMixin,
-    DimensionLoose
+    DimensionLoose,
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -46,7 +46,7 @@ import {createTask} from '../core/task';
 import GlobalModel from './Global';
 import { CoordinateSystem } from '../coord/CoordinateSystem';
 import { ExtendableConstructor, mountExtend, Constructor } from '../util/clazz';
-import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask } from '../core/Scheduler';
+import { PipelineContext, SeriesTaskContext, GeneralTask, OverallTask, SeriesTask, Pipeline } from '../core/Scheduler';
 import LegendVisualProvider from '../visual/LegendVisualProvider';
 import SeriesData from '../data/SeriesData';
 import Axis from '../coord/Axis';
@@ -59,6 +59,8 @@ import {ECSymbol} from '../util/symbol';
 import {Group} from '../util/graphic';
 import {LegendIconParams} from '../component/legend/LegendModel';
 import {dimPermutations} from '../component/marker/MarkAreaView';
+import type ChartView from '../view/Chart';
+
 
 const inner = modelUtil.makeInner<{
     data: SeriesData
@@ -72,12 +74,30 @@ function getSelectionKey(data: SeriesData, dataIndex: number): string {
 
 export const SERIES_UNIVERSAL_TRANSITION_PROP = '__universalTransitionEnabled';
 
+/**
+ * NOTICE:
+ *  - prefix `__` can be used to avoid conflicts with possible outside subclasses.
+ *  - All of these methods are optional - null-check is needed.
+ */
 interface SeriesModel {
-    /**
-     * Convenient for override in extended class.
-     * Implement it if needed.
-     */
+
     preventIncremental(): boolean;
+
+    __preparePipelineContext(
+        view: ChartView,
+        pipeline: Pick<Pipeline, 'progressiveEnabled' | 'threshold'>
+    ): PipelineContext;
+
+    /**
+     * If `true`, a default `startValue` (`0`) is used if not specified in ec option,
+     * and axis extent will union it.
+     * Otherwise, `startValue` will be included in the union of axis extent only if
+     * it is explicitly specified in ec option.
+     *
+     * @see {AxisBaseOptionCommon['startValue']} for more info.
+     */
+    __requireStartValue(axis: Axis): boolean;
+
     /**
      * See tooltip.
      * Implement it if needed.
@@ -154,6 +174,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // Injected outside
     dataTask: SeriesTask;
     // Injected outside
+    // CAUTION: Can read from it; but never write to it!
     pipelineContext: PipelineContext;
 
     // ---------------------------------------
@@ -434,7 +455,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      */
     getBaseAxis(): Axis {
         const coordSys = this.coordinateSystem;
-        // @ts-ignore
         return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
     }
 
@@ -467,7 +487,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         let minDiff = -1;
         let nearestIndicesLen = 0;
 
-        data.each(dim, (dimValue, idx) => {
+        // Performance-sensitive on large data (triggered by `tooltip`/`axisPointer` frequently).
+        const dimIdx = data.getDimensionIndex(dim);
+        const store = data.getStore();
+        for (let idx = 0, len = store.count(); idx < len; idx++) {
+            const dimValue = store.get(dimIdx, idx);
             const dataCoord = axis.dataToCoord(dimValue);
             const diff = targetCoord - dataCoord;
             const dist = Math.abs(diff);
@@ -489,7 +513,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
                     nearestIndices[nearestIndicesLen++] = idx;
                 }
             }
-        });
+        }
+
         nearestIndices.length = nearestIndicesLen;
         return nearestIndices;
     }
@@ -537,6 +562,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     restoreData() {
+        // See `dataTaskReset`.
         this.dataTask.dirty();
     }
 

@@ -25,93 +25,44 @@ import type Displayable from 'zrender/src/graphic/Displayable';
 import {
     StageHandlerProgressParams,
     LabelOption,
-    SymbolOptionMixin,
-    ItemStyleOption,
-    ZRColor,
-    AnimationOptionMixin,
     ZRStyleProps,
-    StatesOptionMixin,
     BlurScope,
     DisplayState,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    NullUndefined
 } from '../../util/types';
-import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
 import { ScatterSeriesOption } from '../scatter/ScatterSeries';
 import { getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
 import SeriesModel from '../../model/Series';
+import { ISymbolDraw, ListForSymbolDraw, SymbolDrawItemModelOption, SymbolDrawUpdateOpt } from './baseDraw';
 
-interface UpdateOpt {
-    isIgnore?(idx: number): boolean
-    clipShape?: CoordinateSystemClipArea,
-    getSymbolPoint?(idx: number): number[]
-
-    disableAnimation?: boolean
-}
 
 interface SymbolLike extends graphic.Group {
-    updateData(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): void
+    updateData(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: SymbolDrawUpdateOpt): void
     fadeOut?(cb: () => void, seriesModel: SeriesModel): void
 }
 
 interface SymbolLikeCtor {
-    new(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): SymbolLike
+    new(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: SymbolDrawUpdateOpt): SymbolLike
 }
 
-function symbolNeedsDraw(data: SeriesData, point: number[], idx: number, opt: UpdateOpt) {
+function symbolNeedsDraw(data: SeriesData, point: number[], idx: number, opt: SymbolDrawUpdateOpt | NullUndefined) {
     return point && !isNaN(point[0]) && !isNaN(point[1])
-        && !(opt.isIgnore && opt.isIgnore(idx))
+        && !(opt && opt.isIgnore && opt.isIgnore(idx))
         // We do not set clipShape on group, because it will cut part of
         // the symbol element shape. We use the same clip shape here as
         // the line clip.
-        && !(opt.clipShape && !opt.clipShape.contain(point[0], point[1]))
+        && !(opt && opt.clipShape && !opt.clipShape.contain(point[0], point[1]))
         && data.getItemVisual(idx, 'symbol') !== 'none';
 }
 
-function normalizeUpdateOpt(opt: UpdateOpt) {
+function normalizeUpdateOpt(opt: SymbolDrawUpdateOpt) {
     if (opt != null && !isObject(opt)) {
         opt = {isIgnore: opt};
     }
     return opt || {};
-}
-
-interface RippleEffectOption {
-    period?: number
-    /**
-     * Scale of ripple
-     */
-    scale?: number
-
-    brushType?: 'fill' | 'stroke'
-
-    color?: ZRColor,
-
-    /**
-     * ripple number
-     */
-    number?: number
-}
-
-interface SymbolDrawStateOption {
-    itemStyle?: ItemStyleOption
-    label?: LabelOption
-}
-
-// TODO Separate series and item?
-export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object>,
-    StatesOptionMixin<SymbolDrawStateOption, {
-        emphasis?: {
-            focus?: DefaultEmphasisFocus
-            scale?: boolean | number
-        }
-    }>,
-    SymbolDrawStateOption {
-
-    cursor?: string
-
-    // If has ripple effect
-    rippleEffect?: RippleEffectOption
 }
 
 export interface SymbolDrawSeriesScope {
@@ -153,9 +104,23 @@ function makeSeriesScope(data: SeriesData): SymbolDrawSeriesScope {
     };
 }
 
-export type ListForSymbolDraw = SeriesData<Model<SymbolDrawItemModelOption & AnimationOptionMixin>>;
+function createEl(
+    SymbolCtor: SymbolLikeCtor,
+    data: SeriesData,
+    newIdx: number,
+    seriesScope: SymbolDrawSeriesScope,
+    symbolUpdateOpt: SymbolDrawUpdateOpt,
+    point: number[],
+    group: graphic.Group
+): SymbolLike {
+    const symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
+    symbolEl.setPosition(point);
+    data.setItemGraphicEl(newIdx, symbolEl);
+    group.add(symbolEl);
+    return symbolEl;
+}
 
-class SymbolDraw {
+class SymbolDraw implements ISymbolDraw {
     group = new graphic.Group();
 
     private _data: ListForSymbolDraw;
@@ -164,7 +129,7 @@ class SymbolDraw {
 
     private _seriesScope: SymbolDrawSeriesScope;
 
-    private _getSymbolPoint: UpdateOpt['getSymbolPoint'];
+    private _getSymbolPoint: SymbolDrawUpdateOpt['getSymbolPoint'];
 
     private _progressiveEls: SymbolLike[];
 
@@ -175,7 +140,7 @@ class SymbolDraw {
     /**
      * Update symbols draw by new data
      */
-    updateData(data: ListForSymbolDraw, opt?: UpdateOpt) {
+    updateData(data: ListForSymbolDraw, opt?: SymbolDrawUpdateOpt) {
         // Remove progressive els.
         this._progressiveEls = null;
 
@@ -187,14 +152,13 @@ class SymbolDraw {
         const SymbolCtor = this._SymbolCtor;
         const disableAnimation = opt.disableAnimation;
 
-        const seriesScope = makeSeriesScope(data);
+        const seriesScope = this._seriesScope = makeSeriesScope(data);
 
         const symbolUpdateOpt = { disableAnimation };
 
         const getSymbolPoint = opt.getSymbolPoint || function (idx: number) {
             return data.getItemLayout(idx);
         };
-
 
         // There is no oldLineData only when first rendering or switching from
         // stream mode to normal mode, where previous elements should be removed.
@@ -206,10 +170,7 @@ class SymbolDraw {
             .add(function (newIdx) {
                 const point = getSymbolPoint(newIdx);
                 if (symbolNeedsDraw(data, point, newIdx, opt)) {
-                    const symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
-                    symbolEl.setPosition(point);
-                    data.setItemGraphicEl(newIdx, symbolEl);
-                    group.add(symbolEl);
+                    createEl(SymbolCtor, data, newIdx, seriesScope, symbolUpdateOpt, point, group);
                 }
             })
             .update(function (newIdx, oldIdx) {
@@ -261,15 +222,42 @@ class SymbolDraw {
         this._data = data;
     };
 
-    updateLayout() {
+    updateLayout(opt?: SymbolDrawUpdateOpt) {
         const data = this._data;
-        if (data) {
-            // Not use animation
-            data.eachItemGraphicEl((el, idx) => {
-                const point = this._getSymbolPoint(idx);
+        if (!data) {
+            return;
+        }
+        const symbolDraw = this;
+        const store = data.getStore();
+        for (let idx = 0, len = store.count(); idx < len; idx++) {
+            let el = data.getItemGraphicEl(idx);
+            const point = symbolDraw._getSymbolPoint(idx);
+
+            // FIXME: [FIXME_SYMBOL_CLIP_CONSIDERING_COORD_SYS_ALIGNMENT_DURING_ANIMATION]
+            //  See VIEW_COORD_SYS animation (by center/zoom change) and FIXME_VIEW_COORD_SYS_SYNC_BACK.
+            //  If we create symbols when roaming them into the clip area, they can not be laid out
+            //  based on the intermediate state but can only based on the final state of VIEW_COORD_SYS,
+            //  and introduce visual artifacts.
+
+            // Consider clip, need to handle create or remove.
+            if (symbolNeedsDraw(data, point, idx, opt)) {
+                el = el || createEl(
+                    symbolDraw._SymbolCtor,
+                    data,
+                    idx,
+                    symbolDraw._seriesScope,
+                    {disableAnimation: true},
+                    point,
+                    symbolDraw.group
+                );
+                el.stopAnimation();
                 el.setPosition(point);
                 el.markRedraw();
-            });
+            }
+            else if (el) {
+                symbolDraw.group.remove(el);
+                data.setItemGraphicEl(idx, null);
+            }
         }
     };
 
@@ -279,11 +267,12 @@ class SymbolDraw {
         this.group.removeAll();
     };
 
-    /**
-     * Update symbols draw by new data
-     */
-    incrementalUpdate(taskParams: StageHandlerProgressParams, data: ListForSymbolDraw, opt?: UpdateOpt) {
-
+    incrementalUpdate(
+        taskParams: StageHandlerProgressParams,
+        data: ListForSymbolDraw,
+        incrementalId: Displayable['incremental'],
+        opt?: SymbolDrawUpdateOpt
+    ) {
         // Clear
         this._progressiveEls = [];
 
@@ -291,8 +280,8 @@ class SymbolDraw {
 
         function updateIncrementalAndHover(el: Displayable) {
             if (!el.isGroup) {
-                el.incremental = true;
-                el.ensureState('emphasis').hoverLayer = true;
+                el.incremental = incrementalId;
+                el.ensureState('emphasis').hoverLayer = graphic.HOVER_LAYER_FOR_INCREMENTAL;
             }
         }
         for (let idx = taskParams.start; idx < taskParams.end; idx++) {

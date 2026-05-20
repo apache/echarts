@@ -175,6 +175,7 @@ under the License.
                             name: 'iphone4',
                             type: 'map',
                             mapType: 'china',
+                            roam: true,
                             itemStyle: itemStyle,
                             showLegendSymbol: true,
                             label: {
@@ -211,6 +212,7 @@ under the License.
                             name: 'iphone5',
                             type: 'map',
                             mapType: 'china',
+                            roam: true,
                             itemStyle: itemStyle,
                             showLegendSymbol: true,
                             label: {
@@ -461,6 +463,7 @@ under the License.
                         {
                             name: '中国',
                             type: 'map',
+                            roam: true,
                             mapType: 'china',
                             selectedMode : 'multiple',
                             label: {
@@ -475,7 +478,7 @@ under the License.
                     title: ['Animation when changing map zoom and center']
                 });
                 var currentLoc = 0;
-                setInterval(function () {
+                myChart && setInterval(function () {
                     myChart.setOption({
                         series: [{
                             center: locations[currentLoc].coord,

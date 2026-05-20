@@ -1,0 +1,10 @@
+[
+  {
+    "link": "https://github.com/apache/echarts/issues/21430",
+    "comment": "The diff is introduced by changing the \"alignTicks\" logic and provided a better precision strategy in both ticks and dataZoom. Expected.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1767946162935
+  }
+]

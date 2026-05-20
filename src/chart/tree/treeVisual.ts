@@ -18,12 +18,16 @@
 */
 
 import GlobalModel from '../../model/Global';
-import TreeSeriesModel, { TreeSeriesNodeItemOption } from './TreeSeries';
+import { createSimpleOverallStageHandler } from '../../util/model';
+import TreeSeriesModel, { SERIES_TYPE_TREE, TreeSeriesNodeItemOption } from './TreeSeries';
 import { extend } from 'zrender/src/core/util';
 
-export default function treeVisual(ecModel: GlobalModel) {
 
-    ecModel.eachSeriesByType('tree', function (seriesModel: TreeSeriesModel) {
+export const treeVisualStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_TREE, treeVisual);
+
+function treeVisual(ecModel: GlobalModel) {
+
+    ecModel.eachSeriesByType(SERIES_TYPE_TREE, function (seriesModel: TreeSeriesModel) {
         const data = seriesModel.getData();
         const tree = data.tree;
         tree.eachNode(function (node) {

@@ -19,7 +19,7 @@
 
 import createRenderPlanner from '../helper/createRenderPlanner';
 import { StageHandler } from '../../util/types';
-import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
+import CandlestickSeriesModel, { SERIES_TYPE_CANDLESTICK, CandlestickDataItemOption } from './CandlestickSeries';
 import Model from '../../model/Model';
 import { extend } from 'zrender/src/core/util';
 
@@ -46,7 +46,7 @@ export function getBorderColor(sign: number, model: Model<Pick<CandlestickDataIt
 
 const candlestickVisual: StageHandler = {
 
-    seriesType: 'candlestick',
+    seriesType: SERIES_TYPE_CANDLESTICK,
 
     plan: createRenderPlanner(),
 

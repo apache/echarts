@@ -18,17 +18,21 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import {groupData} from '../../util/model';
+import {createSimpleOverallStageHandler, groupData} from '../../util/model';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import SankeySeriesModel, { SankeySeriesOption, SankeyNodeItemOption } from './SankeySeries';
+import SankeySeriesModel, { SankeySeriesOption, SankeyNodeItemOption, SERIES_TYPE_SANKEY } from './SankeySeries';
 import { GraphNode, GraphEdge } from '../../data/Graph';
 import { LayoutOrient } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { createBoxLayoutReference, getLayoutRect } from '../../util/layout';
+import { asc } from '../../util/number';
 
-export default function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
-    ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
+export const sankeyLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_SANKEY, sankeyLayout);
+
+function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
+
+    ecModel.eachSeriesByType(SERIES_TYPE_SANKEY, function (seriesModel: SankeySeriesModel) {
 
         const nodeWidth = seriesModel.get('nodeWidth');
         const nodeGap = seriesModel.get('nodeGap');
@@ -147,11 +151,11 @@ function computeNodeBreadths(
 
             for (let edgeIdx = 0; edgeIdx < node.outEdges.length; edgeIdx++) {
                 const edge = node.outEdges[edgeIdx];
-                const indexEdge = edges.indexOf(edge);
+                const indexEdge = zrUtil.indexOf(edges, edge);
                 remainEdges[indexEdge] = 0;
                 const targetNode = edge.node2;
-                const nodeIndex = nodes.indexOf(targetNode);
-                if (--indegreeArr[nodeIndex] === 0 && nextTargetNode.indexOf(targetNode) < 0) {
+                const nodeIndex = zrUtil.indexOf(nodes, targetNode);
+                if (--indegreeArr[nodeIndex] === 0 && zrUtil.indexOf(nextTargetNode, targetNode) < 0) {
                     nextTargetNode.push(targetNode);
                 }
             }
@@ -199,7 +203,7 @@ function adjustNodeWithNodeAlign(
                 node.setLayout({skNodeHeight: nodeHeight}, true);
                 for (let j = 0; j < node.inEdges.length; j++) {
                     const edge = node.inEdges[j];
-                    if (nextSourceNode.indexOf(edge.node1) < 0) {
+                    if (zrUtil.indexOf(nextSourceNode, edge.node1) < 0) {
                         nextSourceNode.push(edge.node1);
                     }
                 }
@@ -294,9 +298,7 @@ function prepareNodesByBreadth(nodes: GraphNode[], orient: LayoutOrient) {
     const groupResult = groupData(nodes, function (node) {
         return node.getLayout()[keyAttr] as number;
     });
-    groupResult.keys.sort(function (a, b) {
-        return a - b;
-    });
+    asc(groupResult.keys);
     zrUtil.each(groupResult.keys, function (key) {
         nodesByBreadth.push(groupResult.buckets.get(key));
     });

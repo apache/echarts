@@ -38,8 +38,11 @@ import { Dictionary } from '../../util/types';
 import {
     ModelFinderObject, ModelFinder,
     parseFinder as modelUtilParseFinder,
-    ParsedModelFinderKnown
+    ParsedModelFinderKnown,
+    initExtentForUnion
 } from '../../util/model';
+import { viewCoordSysCopyBoundingRect, viewCoordSysCopyOverallMatrix } from '../../coord/View';
+import { boundingRectApplyTransform } from 'zrender/src/core/BoundingRect';
 
 type COORD_CONVERTS_INDEX = 0 | 1;
 
@@ -398,10 +401,9 @@ const panelRectBuilders: Record<BrushTargetBuilderKey, PanelRectBuilder> = {
     },
 
     geo: function (this: BrushTargetInfoGeo) {
-        const coordSys = this.coordSys;
-        const rect = coordSys.getBoundingRect().clone();
-        // geo roam and zoom transform
-        rect.applyTransform(graphic.getTransform(coordSys));
+        const viewCoordSys = this.coordSys.view;
+        const rect = viewCoordSysCopyBoundingRect(null, viewCoordSys);
+        boundingRectApplyTransform(rect, rect, viewCoordSysCopyOverallMatrix(null, viewCoordSys));
         return rect;
     }
 };
@@ -442,7 +444,7 @@ const coordConvert: Record<BrushType, ConvertCoord> = {
         values: BrushDimensionMinMax[],
         xyMinMax: BrushDimensionMinMax[]
     } {
-        const xyMinMax = [[Infinity, -Infinity], [Infinity, -Infinity]];
+        const xyMinMax = [initExtentForUnion(), initExtentForUnion()];
         const values = map(rangeOrCoordRange, function (item) {
             const p = to ? coordSys.pointToData(item, clamp) : coordSys.dataToPoint(item, clamp);
             xyMinMax[0][0] = Math.min(xyMinMax[0][0], p[0]);

@@ -20,20 +20,20 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import dataZoomProcessor from './dataZoomProcessor';
 import installDataZoomAction from './dataZoomAction';
+import { makeCallOnlyOnce } from '../../util/model';
 
-let installed = false;
+const callOnlyOnce = makeCallOnlyOnce();
+
 export default function installCommon(registers: EChartsExtensionInstallRegisters) {
-    if (installed) {
-        return;
-    }
-    installed = true;
 
-    registers.registerProcessor(registers.PRIORITY.PROCESSOR.FILTER, dataZoomProcessor);
+    callOnlyOnce(registers, function () {
+        registers.registerProcessor(registers.PRIORITY.PROCESSOR.FILTER, dataZoomProcessor);
 
-    installDataZoomAction(registers);
+        installDataZoomAction(registers);
 
-    registers.registerSubTypeDefaulter('dataZoom', function () {
-        // Default 'slider' when no type specified.
-        return 'slider';
+        registers.registerSubTypeDefaulter('dataZoom', function () {
+            // Default 'slider' when no type specified.
+            return 'slider';
+        });
     });
 }

@@ -23,7 +23,7 @@ import ComponentView from '../../view/Component';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import GeoModel from '../../coord/geo/GeoModel';
-import { Payload, ZRElementEvent, ECEventData } from '../../util/types';
+import { Payload, ZRElementEvent, ECEventData, RoamPayload } from '../../util/types';
 import { getECData } from '../../util/innerStore';
 import { findEventDispatcher } from '../../util/event';
 import Element from 'zrender/src/Element';
@@ -65,6 +65,20 @@ class GeoView extends ComponentView {
         mapDraw.group.silent = geoModel.get('silent');
         this.group.add(mapDraw.group);
         this.updateSelectStatus(geoModel, ecModel, api);
+    }
+
+    /**
+     * @implements RoamHostView['__updateOnOwnRoam']
+     */
+    __updateOnOwnRoam(
+        payload: RoamPayload,
+        model: GeoModel,
+        api: ExtensionAPI
+    ): void {
+        const mapDraw = this._mapDraw;
+        if (mapDraw) {
+            mapDraw.__updateOnOwnRoam(model);
+        }
     }
 
     private _handleRegionClick(e: ZRElementEvent) {

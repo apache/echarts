@@ -21,7 +21,7 @@ import { EChartsExtensionInstallRegisters } from '../../extension';
 import brushPreprocessor from './preprocessor';
 import BrushView from './BrushView';
 import BrushModel, { BrushAreaParam } from './BrushModel';
-import brushVisual from './visualEncoding';
+import { brushVisualStageHandler } from './visualEncoding';
 import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
 
@@ -43,7 +43,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
 
     registers.registerPreprocessor(brushPreprocessor);
 
-    registers.registerVisual(registers.PRIORITY.VISUAL.BRUSH, brushVisual);
+    registers.registerVisual(registers.PRIORITY.VISUAL.BRUSH, brushVisualStageHandler);
 
     registers.registerAction(
         {type: 'brush', event: 'brush', update: 'updateVisual' },

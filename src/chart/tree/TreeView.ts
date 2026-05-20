@@ -23,20 +23,26 @@ import {getECData} from '../../util/innerStore';
 import SymbolClz from '../helper/Symbol';
 import {radialCoordinate} from './layoutHelper';
 import * as bbox from 'zrender/src/core/bbox';
-import View from '../../coord/View';
-import * as roamHelper from '../../component/helper/roamHelper';
+import {
+    applyViewCoordSysTransToElement, calcCompensationScaleToPreserveNodeSize,
+    VIEW_COORD_SYS_TRANS_OVERALL
+} from '../../coord/View';
 import RoamController from '../../component/helper/RoamController';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
-import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
+import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption, SERIES_TYPE_TREE } from './TreeSeries';
 import Path, { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import SeriesData from '../../data/SeriesData';
 import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
-import { AnimationOption, ECElement, NullUndefined } from '../../util/types';
+import { AnimationOption, ECElement, RoamPayload } from '../../util/types';
 import tokens from '../../visual/tokens';
+import {
+    createIsInSelfByPointerCheckerEl, createViewCoordSysSimply,
+    isRoamPayloadHasZoom, updateRoamControllerSimply
+} from '../../component/helper/roamHelper';
 
 type TreeSymbol = SymbolClz & {
     __edge: graphic.BezierCurve | TreePath
@@ -126,28 +132,23 @@ class TreePath extends Path<TreeEdgePathProps> {
 
 class TreeView extends ChartView {
 
-    static readonly type = 'tree';
-    readonly type = TreeView.type;
+    static readonly type = SERIES_TYPE_TREE;
+    readonly type = SERIES_TYPE_TREE;
 
     private _mainGroup = new graphic.Group();
 
     private _controller: RoamController;
-    private _controllerHost: roamHelper.RoamControllerHost;
 
     private _data: SeriesData<TreeSeriesModel>;
 
-    private _nodeScaleRatio: number;
     private _min: number[];
     private _max: number[];
+    private _firstRender: boolean;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this._controller = new RoamController(api.getZr());
-
-        this._controllerHost = {
-            target: this.group
-        } as roamHelper.RoamControllerHost;
-
         this.group.add(this._mainGroup);
+        this._firstRender = true;
     }
 
     render(
@@ -173,7 +174,14 @@ class TreeView extends ChartView {
         }
 
         this._updateViewCoordSys(seriesModel, api);
-        this._updateController(seriesModel, null, ecModel, api);
+
+        updateRoamControllerSimply(
+            seriesModel,
+            api,
+            this._controller,
+            createIsInSelfByPointerCheckerEl(this.group),
+            null,
+        );
 
         const oldData = this._data;
 
@@ -206,8 +214,6 @@ class TreeView extends ChartView {
             })
             .execute();
 
-        this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
-
         this._updateNodeAndLinkScale(seriesModel);
 
         if (seriesModel.get('expandAndCollapse') === true) {
@@ -222,9 +228,28 @@ class TreeView extends ChartView {
             });
         }
         this._data = data;
+
+        this._firstRender = false;
     }
 
-    _updateViewCoordSys(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
+    __updateOnOwnRoam(
+        payload: RoamPayload,
+        seriesModel: TreeSeriesModel,
+        api: ExtensionAPI
+    ): void {
+        applyViewCoordSysTransToElement(
+            this.group,
+            VIEW_COORD_SYS_TRANS_OVERALL,
+            seriesModel.coordinateSystem,
+            null,
+        );
+
+        if (isRoamPayloadHasZoom(payload)) {
+            this._updateNodeAndLinkScale(seriesModel);
+        }
+    }
+
+    private _updateViewCoordSys(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
         const points: number[][] = [];
         data.each(function (idx) {
@@ -252,77 +277,36 @@ class TreeView extends ChartView {
             max[1] = oldMax ? oldMax[1] : max[1] + 1;
         }
 
-        const viewCoordSys = seriesModel.coordinateSystem = new View(null, {api, ecModel: seriesModel.ecModel});
-        viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
-
-        viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);
-
-        viewCoordSys.setCenter(seriesModel.get('center'));
-        viewCoordSys.setZoom(seriesModel.get('zoom'));
-
         // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group,
         // and 'treeRoam' action.
-        this.group.attr({
-            x: viewCoordSys.x,
-            y: viewCoordSys.y,
-            scaleX: viewCoordSys.scaleX,
-            scaleY: viewCoordSys.scaleY
-        });
+        const ownCoordSys = seriesModel.coordinateSystem = createViewCoordSysSimply(
+            seriesModel,
+            api,
+            min[0], min[1], max[0] - min[0], max[1] - min[1]
+        );
+
+        applyViewCoordSysTransToElement(
+            this.group,
+            VIEW_COORD_SYS_TRANS_OVERALL,
+            ownCoordSys,
+            this._firstRender ? null : seriesModel,
+        );
 
         this._min = min;
         this._max = max;
     }
 
-    _updateController(
-        seriesModel: TreeSeriesModel,
-        clipRect: graphic.BoundingRect | NullUndefined,
-        ecModel: GlobalModel,
-        api: ExtensionAPI
-    ) {
-        roamHelper.updateController(
-            seriesModel,
-            api,
-            this.group,
-            this._controller,
-            this._controllerHost,
-            clipRect
-        );
-
-        this._controller
-            .on('zoom', (e) => {
-                this._updateNodeAndLinkScale(seriesModel);
-            });
-    }
-
     _updateNodeAndLinkScale(seriesModel: TreeSeriesModel) {
         const data = seriesModel.getData();
-
-        const nodeScale = this._getNodeGlobalScale(seriesModel);
+        const nodeScale = calcCompensationScaleToPreserveNodeSize(seriesModel.coordinateSystem, seriesModel);
 
         data.eachItemGraphicEl(function (el: SymbolClz, idx) {
             el.setSymbolScale(nodeScale);
         });
     }
 
-    _getNodeGlobalScale(seriesModel: TreeSeriesModel) {
-        const coordSys = seriesModel.coordinateSystem;
-        if (coordSys.type !== 'view') {
-            return 1;
-        }
-
-        const nodeScaleRatio = this._nodeScaleRatio;
-
-        const groupZoom = coordSys.scaleX || 1;
-        // Scale node when zoom changes
-        const roamZoom = coordSys.getZoom();
-        const nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
-
-        return nodeScale / groupZoom;
-    }
-
     dispose() {
         this._controller && this._controller.dispose();
-        this._controllerHost = null;
     }
 
     remove() {
@@ -691,7 +675,7 @@ function removeNode(
     });
 
     // remove edge as parent node
-    node.children.forEach(childNode => {
+    zrUtil.each(node.children, function (childNode) {
         removeNodeEdge(childNode, data, group, seriesModel, removeAnimationOpt);
     });
     // remove edge as child node

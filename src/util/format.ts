@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import { encodeHTML } from 'zrender/src/core/dom';
-import { parseDate, isNumeric, numericToNumber } from './number';
+import { parseDate, isNumeric, numericToNumber, isNullableNumberFinite } from './number';
 import { TooltipRenderMode, ColorString, ZRColor, DimensionType } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
@@ -72,7 +72,7 @@ export function makeValueReadable(
         return (str && zrUtil.trim(str)) ? str : '-';
     }
     function isNumberUserReadable(num: number): boolean {
-        return !!(num != null && !isNaN(num) && isFinite(num));
+        return isNullableNumberFinite(num);
     }
 
     const isTypeTime = valueType === 'time';

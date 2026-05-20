@@ -1,5 +1,21 @@
 [
   {
+    "link": "",
+    "comment": "splitArea change",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775676074411
+  },
+  {
+    "link": "",
+    "comment": "The result is expected - by interval tweak and dataZoom label show fix.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.1.0",
+    "markTime": 1774540571773
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/21059",
     "comment": "Due to the axis name avoiding overlapping by default.",
     "type": "New Feature",

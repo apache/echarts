@@ -17,10 +17,12 @@
 * under the License.
 */
 
-// @ts-nocheck
-import * as echarts from 'echarts';
+import { extendComponentView, util as zrUtil } from 'echarts';
+import { BMapModel, COMPONENT_MAIN_TYPE_BMAP } from './BMapModel';
+import { bmapLib, ECExtensionAPI, ECGlobalModel } from './BMapCoordSys';
 
-function isEmptyObject(obj) {
+
+function isEmptyObject(obj: object) {
     for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
             return false;
@@ -29,20 +31,24 @@ function isEmptyObject(obj) {
     return true;
 }
 
-export default echarts.extendComponentView({
-    type: 'bmap',
+const proto = {
 
-    render: function (bMapModel, ecModel, api) {
+    type: COMPONENT_MAIN_TYPE_BMAP,
+
+    _oldMoveHandler: undefined as bmapLib.Callback,
+    _oldZoomEndHandler: undefined as bmapLib.Callback,
+
+    render: function (bMapModel: BMapModel, ecModel: ECGlobalModel, api: ECExtensionAPI): void {
         let rendering = true;
 
         const bmap = bMapModel.getBMap();
         const viewportRoot = api.getZr().painter.getViewportRoot();
         const coordSys = bMapModel.coordinateSystem;
-        const moveHandler = function (type, target) {
+        const moveHandler = function () {
             if (rendering) {
                 return;
             }
-            const offsetEl = viewportRoot.parentNode.parentNode.parentNode;
+            const offsetEl = viewportRoot.parentNode.parentNode.parentNode as HTMLElement;
             const mapOffset = [
                 -parseInt(offsetEl.style.left, 10) || 0,
                 -parseInt(offsetEl.style.top, 10) || 0
@@ -118,7 +124,7 @@ export default echarts.extendComponentView({
         if (JSON.stringify(originalStyle) !== mapStyleStr) {
             // FIXME May have blank tile when dragging if setMapStyle
             if (!isEmptyObject(newMapStyle)) {
-                bmap.setMapStyle(echarts.util.clone(newMapStyle));
+                bmap.setMapStyle(zrUtil.clone(newMapStyle));
             }
             bMapModel.__mapStyle = JSON.parse(mapStyleStr);
         }
@@ -132,11 +138,13 @@ export default echarts.extendComponentView({
         if (JSON.stringify(originalStyle2) !== mapStyleStr2) {
             // FIXME May have blank tile when dragging if setMapStyle
             if (!isEmptyObject(newMapStyle2)) {
-                bmap.setMapStyleV2(echarts.util.clone(newMapStyle2));
+                bmap.setMapStyleV2(zrUtil.clone(newMapStyle2));
             }
             bMapModel.__mapStyle2 = JSON.parse(mapStyleStr2);
         }
 
         rendering = false;
     }
-});
+};
+
+extendComponentView(proto);

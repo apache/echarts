@@ -33,6 +33,7 @@ import {
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { inheritDefaultOption } from '../../util/component';
 import tokens from '../../visual/tokens';
+import { SERIES_TYPE_PICTORIAL_BAR } from '../../layout/barCommon';
 
 export interface PictorialBarStateOption {
     itemStyle?: ItemStyleOption
@@ -126,7 +127,7 @@ export interface PictorialBarSeriesOption
 }
 
 class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOption> {
-    static type = 'series.pictorialBar';
+    static type = 'series.' + SERIES_TYPE_PICTORIAL_BAR;
     type = PictorialBarSeriesModel.type;
 
     static dependencies = ['grid'];

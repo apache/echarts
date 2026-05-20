@@ -561,7 +561,10 @@ under the License.
             makeChart('main4', {
                 color: ['#bb0004', 'orange'],
                 xAxis: {
+                    // NOTICE: Preserve this legacy setting: `data: []` as a test case:
+                    // declare it as a category axis by an empty data array.
                     data: [],
+                    // type: 'category',
                     axisTick: {show: false},
                     axisLabel: {show: false}
                 },

@@ -37,6 +37,10 @@ import { inheritDefaultOption } from '../../util/component';
 import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 import tokens from '../../visual/tokens';
+import { preparePipelineContext } from '../../util/model';
+import type { Pipeline } from '../../core/Scheduler';
+import type ChartView from '../../view/Chart';
+import { SERIES_TYPE_BAR } from '../../layout/barCommon';
 
 type PolarBarLabelPositionExtra = 'start' | 'insideStart' | 'middle' | 'end' | 'insideEnd';
 export type PolarBarLabelPosition = SeriesLabelOption['position'] | PolarBarLabelPositionExtra;
@@ -94,7 +98,7 @@ export interface BarSeriesOption
 }
 
 class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
-    static type = 'series.bar';
+    static type = 'series.' + SERIES_TYPE_BAR;
     type = BarSeriesModel.type;
 
     static dependencies = ['grid', 'polar'];
@@ -119,16 +123,18 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
     }
 
     /**
-     * @override
+     * @implement
      */
-    getProgressiveThreshold() {
+    __preparePipelineContext(
+        view: ChartView,
+        pipeline: Pick<Pipeline, 'progressiveEnabled' | 'threshold'>
+    ) {
+        const context = preparePipelineContext(this, view, pipeline);
         // Do not support progressive in normal mode.
-        let progressiveThreshold = this.get('progressiveThreshold');
-        const largeThreshold = this.get('largeThreshold');
-        if (largeThreshold > progressiveThreshold) {
-            progressiveThreshold = largeThreshold;
+        if (context.progressiveRender) {
+            context.large = true;
         }
-        return progressiveThreshold;
+        return context;
     }
 
     brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {

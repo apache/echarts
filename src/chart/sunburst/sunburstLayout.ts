@@ -21,18 +21,20 @@ import { parsePercent } from '../../util/number';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import SunburstSeriesModel, { SunburstSeriesOption } from './SunburstSeries';
+import SunburstSeriesModel, { SERIES_TYPE_SUNBURST, SunburstSeriesOption } from './SunburstSeries';
 import { TreeNode } from '../../data/Tree';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
 // let PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
 
-export default function sunburstLayout(
-    seriesType: 'sunburst',
+export const sunburstLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_SUNBURST, sunburstLayout);
+
+function sunburstLayout(
     ecModel: GlobalModel,
     api: ExtensionAPI
 ) {
-    ecModel.eachSeriesByType(seriesType, function (seriesModel: SunburstSeriesModel) {
+    ecModel.eachSeriesByType(SERIES_TYPE_SUNBURST, function (seriesModel: SunburstSeriesModel) {
         let center = seriesModel.get('center');
         let radius = seriesModel.get('radius');
 

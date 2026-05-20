@@ -556,11 +556,13 @@
         return raw_hmac_md5(key, string);
     }
 
-    if (typeof define === 'function' && define.amd) {
-        define(function () {
-            return md5;
-        });
-    } else {
-        $.md5 = md5;
-    }
+    // PENDING: conflict with simpleRequire.js when
+    // the second param is used. So comment it out.
+    // if (typeof define === 'function' && define.amd) {
+    //     define(function () {
+    //         return md5;
+    //     });
+    // } else {
+    //     $.md5 = md5;
+    // }
 }(Canteen));

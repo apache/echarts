@@ -55,6 +55,9 @@
         whiteList: [
             'stream-basic1.html',
             'stream-basic2.html',
+            'stream-basic3.html',
+            'stream-basic4.html',
+            'stream-basic5.html',
             'lines-ny-appendData.html',
             'scatter-stream-large.html',
             'scatter-stream-not-large.html',

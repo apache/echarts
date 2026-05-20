@@ -91,7 +91,10 @@ export default function pointsLayout(seriesType: string, forceStoreInTypedArray?
                         }
                     }
 
-                    useTypedArray && data.setLayout('points', points);
+                    if (useTypedArray) {
+                        data.setLayout('points', points);
+                        data.setLayout('pointsRange', {start: params.start, end: params.end});
+                    }
                 }
             };
         }

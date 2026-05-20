@@ -555,14 +555,16 @@ class TooltipView extends ComponentView {
             each(itemCoordSys.dataByAxis, function (axisItem) {
                 const axisModel = ecModel.getComponent(axisItem.axisDim + 'Axis', axisItem.axisIndex) as AxisBaseModel;
                 const axisValue = axisItem.value;
+                const axis = axisModel.axis;
+                const axisValueParsed = axis.scale.parse(axisValue);
                 if (!axisModel || axisValue == null) {
                     return;
                 }
                 // FIXME: when using `tooltip.trigger: 'axis'`, the precision of the axis value displayed in tooltip
-                //  should match the original series values rather than using the default stretegy in Interval.ts
-                //  (getPrecision(interval) + 2); otherwise it may cuase confusion.
+                //  should match the original series values rather than using the default strategy in Interval.ts
+                //  (getPrecision(interval) + 2); otherwise it may cause confusion.
                 const axisValueLabel = axisPointerViewHelper.getValueLabel(
-                    axisValue, axisModel.axis, ecModel,
+                    axisValue, axis, ecModel,
                     axisItem.seriesDataIndices,
                     axisItem.valueLabelOpt
                 );
@@ -588,7 +590,7 @@ class TooltipView extends ComponentView {
                     cbParams.axisType = axisItem.axisType;
                     cbParams.axisId = axisItem.axisId;
                     cbParams.axisValue = axisHelper.getAxisRawValue(
-                        axisModel.axis, { value: axisValue as number }
+                        axisModel.axis, { value: axisValueParsed }
                     );
                     cbParams.axisValueLabel = axisValueLabel;
                     // Pre-create marker style for makers. Users can assemble richText
@@ -808,7 +810,7 @@ class TooltipView extends ComponentView {
     }
 
     private _showTooltipContent(
-        // Use Model<TooltipOption> insteadof TooltipModel because this model may be from series or other options.
+        // Use Model<TooltipOption> instead of TooltipModel because this model may be from series or other options.
         // Instead of top level tooltip.
         tooltipModel: Model<TooltipOption>,
         defaultHtml: string,

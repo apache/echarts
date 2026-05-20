@@ -20,9 +20,9 @@
 import { linearMap } from '../../util/number';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import PieSeriesModel from './PieSeries';
+import PieSeriesModel, { SERIES_TYPE_PIE } from './PieSeries';
 import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
-import { makeInner } from '../../util/model';
+import { createSimpleOverallStageHandler, makeInner } from '../../util/model';
 import { getCircleLayout } from '../../util/layout';
 
 
@@ -30,12 +30,13 @@ const PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
 
 
-export default function pieLayout(
-    seriesType: 'pie',
+export const pieLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_PIE, pieLayout);
+
+function pieLayout(
     ecModel: GlobalModel,
     api: ExtensionAPI
-) {
-    ecModel.eachSeriesByType(seriesType, function (seriesModel: PieSeriesModel) {
+): void {
+    ecModel.eachSeriesByType(SERIES_TYPE_PIE, function (seriesModel: PieSeriesModel) {
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');
 

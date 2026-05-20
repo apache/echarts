@@ -18,15 +18,15 @@
 */
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import ThemeRiverView from './ThemeRiverView';
-import ThemeRiverSeriesModel from './ThemeRiverSeries';
-import themeRiverLayout from './themeRiverLayout';
+import ThemeRiverSeriesModel, { SERIES_TYPE_THEME_RIVER } from './ThemeRiverSeries';
 import dataFilter from '../../processor/dataFilter';
+import { themeRiverLayoutStageHandler } from './themeRiverLayout';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(ThemeRiverView);
     registers.registerSeriesModel(ThemeRiverSeriesModel);
 
-    registers.registerLayout(themeRiverLayout);
-    registers.registerProcessor(dataFilter('themeRiver'));
+    registers.registerLayout(themeRiverLayoutStageHandler);
+    registers.registerProcessor(dataFilter(SERIES_TYPE_THEME_RIVER));
 
 }

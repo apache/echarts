@@ -1,0 +1,10 @@
+[
+  {
+    "link": "",
+    "comment": "When toolbox is set in theme, corresponding toolbox feature should not show by default.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775155181126
+  }
+]

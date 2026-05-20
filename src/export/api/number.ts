@@ -19,7 +19,7 @@
 
 export {
     linearMap,
-    round,
+    roundLegacy as round,
     asc,
     getPrecision,
     getPrecisionSafe,

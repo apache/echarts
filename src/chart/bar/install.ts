@@ -18,27 +18,33 @@
 */
 
 import { EChartsExtensionInstallRegisters } from '../../extension';
-import * as zrUtil from 'zrender/src/core/util';
-import {layout, createProgressiveLayout} from '../../layout/barGrid';
+import {
+    createCrossSeriesLayoutHandler, createProgressiveLayout, registerBarGridAxisHandlers
+} from '../../layout/barGrid';
 import dataSample from '../../processor/dataSample';
 
 import BarSeries from './BarSeries';
 import BarView from './BarView';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
+import { SERIES_TYPE_BAR } from '../../layout/barCommon';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
 
     registers.registerChartView(BarView);
     registers.registerSeriesModel(BarSeries);
 
-    registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, zrUtil.curry(layout, 'bar'));
+    registers.registerLayout(
+        registers.PRIORITY.VISUAL.LAYOUT, createCrossSeriesLayoutHandler(SERIES_TYPE_BAR)
+    );
     // Do layout after other overall layout, which can prepare some information.
-    registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, createProgressiveLayout('bar'));
+    registers.registerLayout(
+        registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, createProgressiveLayout(SERIES_TYPE_BAR)
+    );
 
     // Down sample after filter
     registers.registerProcessor(
         registers.PRIORITY.PROCESSOR.STATISTIC,
-        dataSample('bar')
+        dataSample(SERIES_TYPE_BAR)
     );
 
     /**
@@ -67,4 +73,5 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         );
     });
 
+    registerBarGridAxisHandlers(registers);
 }

@@ -28,21 +28,4 @@
 # ```
 # Note that it should be "workingDirectories" rather than "WorkingDirectories".
 
-parser: "@typescript-eslint/parser"
-parserOptions:
-    ecmaVersion: 6
-    sourceType: module
-    ecmaFeatures:
-        modules: true
-    project: "tsconfig.json"
-plugins: ["@typescript-eslint"]
-env:
-    es6: false
-globals:
-    jQuery: false
-    Promise: false
-    console: true
-    setTimeout: true
-    clearTimeout: true
-    __DEV__: true
-extends: '../.eslintrc-common.yaml'
+extends: '../.eslintrc-common-production.yaml'

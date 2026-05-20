@@ -20,10 +20,14 @@
 import * as zrUtil from 'zrender/src/core/util';
 import VisualMapping from '../../visual/VisualMapping';
 import GlobalModel from '../../model/Global';
-import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
+import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption, SERIES_TYPE_SANKEY } from './SankeySeries';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
-export default function sankeyVisual(ecModel: GlobalModel) {
-    ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
+
+export const sankeyVisualStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_SANKEY, sankeyVisual);
+
+function sankeyVisual(ecModel: GlobalModel) {
+    ecModel.eachSeriesByType(SERIES_TYPE_SANKEY, function (seriesModel: SankeySeriesModel) {
         const graph = seriesModel.getGraph();
         const nodes = graph.nodes;
         const edges = graph.edges;

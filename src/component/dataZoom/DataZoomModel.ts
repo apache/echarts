@@ -23,13 +23,14 @@ import ComponentModel from '../../model/Component';
 import {
     LayoutOrient,
     ComponentOption,
-    LabelOption
+    LabelOption,
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import {
-    getAxisMainType, DATA_ZOOM_AXIS_DIMENSIONS, DataZoomAxisDimension
+    getAxisMainType, DATA_ZOOM_AXIS_DIMENSIONS, DataZoomAxisDimension,
+    getAxisProxyFromModel
 } from './helper';
 import SingleAxisModel from '../../coord/single/AxisModel';
 import { MULTIPLE_REFERRING, SINGLE_REFERRING, ModelFinderIndexQuery, ModelFinderIdQuery } from '../../util/model';
@@ -131,15 +132,11 @@ export interface DataZoomOption extends ComponentOption {
 
 type RangeOption = Pick<DataZoomOption, 'start' | 'end' | 'startValue' | 'endValue'>;
 
-export type DataZoomExtendedAxisBaseModel = AxisBaseModel & {
-    __dzAxisProxy: AxisProxy
-};
-
 class DataZoomAxisInfo {
     indexList: number[] = [];
     indexMap: boolean[] = [];
 
-    add(axisCmptIdx: number) {
+    add(axisCmptIdx: ComponentModel['componentIndex']): void {
         // Remove duplication.
         if (!this.indexMap[axisCmptIdx]) {
             this.indexList.push(axisCmptIdx);
@@ -456,10 +453,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
      * @return If not found, return null/undefined.
      */
     getAxisProxy(axisDim: DataZoomAxisDimension, axisIndex: number): AxisProxy {
-        const axisModel = this.getAxisModel(axisDim, axisIndex);
-        if (axisModel) {
-            return (axisModel as DataZoomExtendedAxisBaseModel).__dzAxisProxy;
-        }
+        return getAxisProxyFromModel(this.getAxisModel(axisDim, axisIndex));
     }
 
     /**
@@ -510,7 +504,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     getPercentRange(): number[] {
         const axisProxy = this.findRepresentativeAxisProxy();
         if (axisProxy) {
-            return axisProxy.getDataPercentWindow();
+            return axisProxy.getWindow().percent;
         }
     }
 
@@ -523,11 +517,11 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
         if (axisDim == null && axisIndex == null) {
             const axisProxy = this.findRepresentativeAxisProxy();
             if (axisProxy) {
-                return axisProxy.getDataValueWindow();
+                return axisProxy.getWindow().value;
             }
         }
         else {
-            return this.getAxisProxy(axisDim, axisIndex).getDataValueWindow();
+            return this.getAxisProxy(axisDim, axisIndex).getWindow().value;
         }
     }
 
@@ -537,7 +531,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
      */
     findRepresentativeAxisProxy(axisModel?: AxisBaseModel): AxisProxy {
         if (axisModel) {
-            return (axisModel as DataZoomExtendedAxisBaseModel).__dzAxisProxy;
+            return getAxisProxyFromModel(axisModel);
         }
 
         // Find the first hosted axisProxy
@@ -576,6 +570,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     }
 
 }
+
 /**
  * Retrieve those raw params from option, which will be cached separately,
  * because they will be overwritten by normalized/calculated values in the main

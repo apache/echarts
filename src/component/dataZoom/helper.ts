@@ -17,13 +17,17 @@
 * under the License.
 */
 
-import { Payload } from '../../util/types';
+import { NullUndefined, Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import DataZoomModel from './DataZoomModel';
 import { indexOf, createHashMap, assert, HashMap } from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import type AxisProxy from './AxisProxy';
+import { makeInner } from '../../util/model';
+import type ComponentModel from '../../model/Component';
+import { getCachePerECPrepare, GlobalModelCachePerECPrepare } from '../../util/cycleCache';
 
 
 export interface DataZoomPayloadBatchItem {
@@ -36,8 +40,8 @@ export interface DataZoomPayloadBatchItem {
 
 export interface DataZoomReferCoordSysInfo {
     model: CoordinateSystemHostModel;
-    // Notice: if two dataZooms refer the same coordinamte system model,
-    // (1) The axis they refered may different
+    // Notice: if two dataZooms refer the same coordinate system model,
+    // (1) The axis they referred may different
     // (2) The sequence the axisModels matters, may different in
     // different dataZooms.
     axisModels: AxisBaseModel[];
@@ -55,6 +59,12 @@ type DataZoomAxisIndexPropName =
 type DataZoomAxisIdPropName =
     'xAxisId' | 'yAxisId' | 'radiusAxisId' | 'angleAxisId' | 'singleAxisId';
 export type DataZoomCoordSysMainType = 'polar' | 'grid' | 'singleAxis';
+
+const ecModelCacheInner = makeInner<{
+    axisProxyMap: AxisProxyMap;
+}, GlobalModelCachePerECPrepare>();
+
+type AxisProxyMap = HashMap<AxisProxy, ComponentModel['uid']>;
 
 // Supported coords.
 // FIXME: polar has been broken (but rarely used).
@@ -204,4 +214,43 @@ export function collectReferCoordSysModelInfo(dataZoomModel: DataZoomModel): {
     });
 
     return coordSysInfoWrap;
+}
+
+function ensureAxisProxyMap(ecModel: GlobalModel): AxisProxyMap {
+    // Consider some axes may be deleted, and dataZoom options may be changed at and only at each run of
+    // "ec prepare", we save axis proxies to a cache that is auto-cleared for each run of "ec prepare".
+    const store = ecModelCacheInner(getCachePerECPrepare(ecModel));
+    return store.axisProxyMap || (store.axisProxyMap = createHashMap());
+}
+
+export function getAxisProxyFromModel(axisModel: AxisBaseModel | NullUndefined): AxisProxy | NullUndefined {
+    if (!axisModel) {
+        return;
+    }
+    if (__DEV__) {
+        assert(axisModel.ecModel);
+    }
+    return ensureAxisProxyMap(axisModel.ecModel).get(axisModel.uid);
+}
+
+export function setAxisProxyToModel(axisModel: AxisBaseModel, axisProxy: AxisProxy): void {
+    if (__DEV__) {
+        assert(axisModel.ecModel);
+    }
+    ensureAxisProxyMap(axisModel.ecModel).set(axisModel.uid, axisProxy);
+}
+
+/**
+ * NOTICE: If `axis_a` aligns to `axis_b`, but they are not controlled by
+ * the same `dataZoom`, do not consider `axis_b` as `alignTo` and
+ * then do not input it into `AxisProxy#reset`.
+ */
+export function getAlignTo(dataZoomModel: DataZoomModel, axisProxy: AxisProxy): AxisProxy | NullUndefined {
+    const alignToAxis = axisProxy.getAxisModel().axis.__alignTo;
+    return (
+        alignToAxis && dataZoomModel.getAxisProxy(
+            alignToAxis.dim as DataZoomAxisDimension,
+            alignToAxis.model.componentIndex
+        )
+    ) ? getAxisProxyFromModel(alignToAxis.model) : null;
 }

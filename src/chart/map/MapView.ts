@@ -21,18 +21,18 @@
 import * as graphic from '../../util/graphic';
 import MapDraw from '../../component/helper/MapDraw';
 import ChartView from '../../view/Chart';
-import MapSeries, { MapDataItemOption } from './MapSeries';
+import MapSeries, { getMainMapSeries, MapDataItemOption, mapSeriesNeedsDrawMap, SERIES_TYPE_MAP } from './MapSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { Payload, DisplayState, ECElement } from '../../util/types';
+import { Payload, DisplayState, ECElement, RoamPayload } from '../../util/types';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { setStatesFlag, Z2_EMPHASIS_LIFT } from '../../util/states';
 
 
 class MapView extends ChartView {
 
-    static type = 'map' as const;
-    readonly type = MapView.type;
+    static readonly type = SERIES_TYPE_MAP;
+    readonly type = SERIES_TYPE_MAP;
 
     private _mapDraw: MapDraw;
 
@@ -56,8 +56,9 @@ class MapView extends ChartView {
             return;
         }
 
-        if (this._mapDraw && payload && payload.type === 'geoRoam') {
-            this._mapDraw.resetForLabelLayout();
+        let mapDraw = this._mapDraw;
+        if (mapDraw && payload && payload.type === 'geoRoam') {
+            mapDraw.resetForLabelLayout();
         }
 
         // Not update map if it is an roam action from self
@@ -66,41 +67,53 @@ class MapView extends ChartView {
                 && payload.seriesId === mapModel.id
             )
         ) {
-            if (mapModel.needsDrawMap) {
-                const mapDraw = this._mapDraw || new MapDraw(api);
+            if (mapSeriesNeedsDrawMap(mapModel)) {
+                mapDraw = mapDraw || (this._mapDraw = new MapDraw(api));
                 group.add(mapDraw.group);
 
                 mapDraw.draw(mapModel, ecModel, api, this, payload);
-
-                this._mapDraw = mapDraw;
             }
             else {
-                // Remove drawn map
-                this._mapDraw && this._mapDraw.remove();
-                this._mapDraw = null;
+                this._clearMapDraw();
             }
         }
         else {
-            const mapDraw = this._mapDraw;
             mapDraw && group.add(mapDraw.group);
         }
 
         mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
-            && this._renderSymbols(mapModel, ecModel, api);
+            && this._renderSymbols(mapModel);
+    }
+
+    /**
+     * @implements RoamHostView['__updateOnOwnRoam']
+     */
+    __updateOnOwnRoam(
+        payload: RoamPayload,
+        model: MapSeries,
+        api: ExtensionAPI
+    ): void {
+        const mapDraw = this._mapDraw;
+        if (mapSeriesNeedsDrawMap(model) && mapDraw) {
+            mapDraw.__updateOnOwnRoam(model);
+        }
     }
 
     remove(): void {
-        this._mapDraw && this._mapDraw.remove();
-        this._mapDraw = null;
+        this._clearMapDraw();
         this.group.removeAll();
     }
 
     dispose(): void {
+        this._clearMapDraw();
+    }
+
+    private _clearMapDraw(): void {
         this._mapDraw && this._mapDraw.remove();
         this._mapDraw = null;
     }
 
-    private _renderSymbols(mapModel: MapSeries, ecModel: GlobalModel, api: ExtensionAPI): void {
+    private _renderSymbols(mapModel: MapSeries): void {
         const originalData = mapModel.originalData;
         const group = this.group;
 
@@ -149,8 +162,8 @@ class MapView extends ChartView {
             // For backward compatibility, we follow the rule that render label `A` by the
             // settings on series `X` but render label `C` by the settings on series `Y`.
             if (!offset) {
-
-                const fullData = mapModel.mainSeries.getData();
+                // `mapModel.seriesGroup.f` must not be empty here.
+                const fullData = getMainMapSeries(mapModel.seriesGroup).getData();
                 const name = originalData.getName(originalDataIndex);
 
                 const fullIndex = fullData.indexOfName(name);

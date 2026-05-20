@@ -106,7 +106,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         trigger: 'item',
 
         // 'click' | 'mousemove' | 'none'
-        triggerOn: 'mousemove|click',
+        triggerOn: 'mousemove|click|mousewheel',
 
         alwaysShowContent: false,
 

@@ -18,24 +18,26 @@
 */
 
 
-import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import MapSeries from './MapSeries';
+import { buildAllMapSeriesGroups, getMainMapSeries, mapSeriesGroupHasOwnGeo, SERIES_TYPE_MAP } from './MapSeries';
 import { Dictionary } from '../../util/types';
+import { createSimpleOverallStageHandler } from '../../util/model';
+import { each } from 'zrender/src/core/util';
 
-export default function mapSymbolLayout(ecModel: GlobalModel) {
 
-    const processedMapType = {} as {[mapType: string]: boolean};
+export const mapSymbolLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_MAP, mapSymbolLayout);
 
-    ecModel.eachSeriesByType('map', function (mapSeries: MapSeries) {
-        const mapType = mapSeries.getMapType();
-        if (mapSeries.getHostGeoModel() || processedMapType[mapType]) {
+function mapSymbolLayout(ecModel: GlobalModel) {
+
+    each(buildAllMapSeriesGroups(ecModel), function (mapSeriesGroup, groupKey) {
+        if (!getMainMapSeries(mapSeriesGroup) || !mapSeriesGroupHasOwnGeo(groupKey)) {
+            // map series on separate geo components only provide "choropleth map", but symbols are ignored.
             return;
         }
 
         const mapSymbolOffsets = {} as Dictionary<number>;
 
-        zrUtil.each(mapSeries.seriesGroup, function (subMapSeries) {
+        each(mapSeriesGroup.f, function (subMapSeries) {
             const geo = subMapSeries.coordinateSystem;
             const data = subMapSeries.originalData;
 
@@ -66,7 +68,7 @@ export default function mapSymbolLayout(ecModel: GlobalModel) {
         });
 
         // Show label of those region not has legendIcon (which is offset 0)
-        const data = mapSeries.getData();
+        const data = getMainMapSeries(mapSeriesGroup).getData();
         data.each(function (idx) {
             const name = data.getName(idx);
             const layout = data.getItemLayout(idx) || {};
@@ -74,6 +76,5 @@ export default function mapSymbolLayout(ecModel: GlobalModel) {
             data.setItemLayout(idx, layout);
         });
 
-        processedMapType[mapType] = true;
     });
 }

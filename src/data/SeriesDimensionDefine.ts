@@ -51,8 +51,8 @@ class SeriesDimensionDefine {
      * 1. When there are too many dimensions in data store, seriesData only save the
      * used store dimensions.
      * 2. We use dimensionIndex but not name to reference store dimension
-     * becuause the dataset dimension definition might has no name specified by users,
-     * or names in sereis dimension definition might be different from dataset.
+     * because the dataset dimension definition might has no name specified by users,
+     * or names in series dimension definition might be different from dataset.
      */
     storeDimIndex?: number;
 
@@ -69,9 +69,25 @@ class SeriesDimensionDefine {
     /**
      * The index of this dimension in `series.encode[coordDim]`.
      * Mandatory.
+     *
+     * For example,
+     *  Suppose
+     *      - encode option:
+     *          ```js
+     *          encode: {
+     *              x: [1, 3, 5],
+     *              y: [0, 2],
+     *          }
+     *          ```
+     *      - This `seriesDimensionDefine` corresponds to series dimension index `3`,
+     *      - `coordDim` is `x`
+     *  Then
+     *      coordDimIndex should be `1`, where `encode[coordDim][coordDimIndex] === 3`
      */
     coordDimIndex?: number;
+
     /**
+     * The term "other" means "other than coord".
      * The format of `otherDims` is:
      * ```js
      * {

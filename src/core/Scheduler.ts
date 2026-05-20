@@ -25,7 +25,7 @@ import {
 import {getUID} from '../util/component';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from './ExtensionAPI';
-import {normalizeToArray} from '../util/model';
+import {normalizeToArray, preparePipelineContext} from '../util/model';
 import {
     StageHandlerInternal, StageHandlerOverallReset, StageHandler,
     Payload, StageHandlerReset, StageHandlerPlan, StageHandlerProgressExecutor, SeriesLargeOptionMixin, SeriesOption
@@ -34,6 +34,7 @@ import { EChartsType } from './echarts';
 import SeriesModel from '../model/Series';
 import ChartView from '../view/Chart';
 import SeriesData from '../data/SeriesData';
+import { ZRenderType } from 'zrender/src/zrender';
 
 export type GeneralTask = Task<TaskContext>;
 export type SeriesTask = Task<SeriesTaskContext>;
@@ -49,6 +50,9 @@ export type Pipeline = {
     head: GeneralTask,
     tail: GeneralTask,
     threshold: number,
+    // It is only a setting - progressive rendering may not be performed even if
+    // it is `true`. See also `PipelineContext['progressiveRender']`.
+    // FIXME: remove it? Only use `PipelineContext['progressiveRender']`.
     progressiveEnabled: boolean,
     blockIndex: number,
     step: number,
@@ -57,8 +61,14 @@ export type Pipeline = {
     context?: PipelineContext
 };
 export type PipelineContext = {
+    // Progressive rendering must be performed in this EC_CYCLE if it is `true`.
     progressiveRender: boolean,
     modDataCount: number,
+    // Should be rendered in large mode (large shape optimization) in this EC_CYCLE.
+    // Theoretically, `large` can be orthogonal composited with `progressiveRender`,
+    // i.e., progressvie can also be applied in non-large mode, and non-progressive
+    // rendering can be applied on large mode.
+    // But series can simplify it to disable some compositions.
     large: boolean
 };
 
@@ -68,6 +78,8 @@ type TaskRecord = {
     overallTask?: OverallTask
 };
 type PerformStageTaskOpt = {
+    // `block` means running from the beginning to the final end within
+    // an individual "progress".
     block?: boolean,
     setDirty?: boolean,
     visualType?: StageHandlerInternal['visualType'],
@@ -96,7 +108,7 @@ interface OverallTaskContext extends TaskContext {
 }
 interface StubTaskContext extends TaskContext {
     model: SeriesModel;
-    overallProgress: boolean;
+    dirtyOnOverallProgress: StageHandler['dirtyOnOverallProgress'];
 };
 
 class Scheduler {
@@ -147,7 +159,7 @@ class Scheduler {
         // if a data processor depends on a component (e.g., dataZoomProcessor depends
         // on the settings of `dataZoom`), it should be re-performed if the component
         // is modified by `setOption`.
-        // (2) If a processor depends on sevral series, speicified by its `getTargetSeries`,
+        // (2) If a processor depends on several series, specified by its `getTargetSeries`,
         // it should be re-performed when the result array of `getTargetSeries` changed.
         // We use `dependencies` to cover these issues.
         // (3) How to update target series when coordinate system related components modified.
@@ -206,37 +218,26 @@ class Scheduler {
      */
     updateStreamModes(seriesModel: SeriesModel<SeriesOption & SeriesLargeOptionMixin>, view: ChartView): void {
         const pipeline = this._pipelineMap.get(seriesModel.uid);
-        const data = seriesModel.getData();
-        const dataLen = data.count();
 
         // `progressiveRender` means that can render progressively in each
         // animation frame. Note that some types of series do not provide
         // `view.incrementalPrepareRender` but support `chart.appendData`. We
         // use the term `incremental` but not `progressive` to describe the
-        // case that `chart.appendData`.
-        const progressiveRender = pipeline.progressiveEnabled
-            && view.incrementalPrepareRender
-            && dataLen >= pipeline.threshold;
+        // case `chart.appendData`.
+        // Regarding zrender, both echarts "progressive" and "incremental" use `el.incremental: true`.
+        const context = seriesModel.__preparePipelineContext
+            ? seriesModel.__preparePipelineContext(view, pipeline)
+            : preparePipelineContext(seriesModel, view, pipeline);
 
-        const large = seriesModel.get('large') && dataLen >= seriesModel.get('largeThreshold');
-
-        // TODO: modDataCount should not updated if `appendData`, otherwise cause whole repaint.
-        // see `test/candlestick-large3.html`
-        const modDataCount = seriesModel.get('progressiveChunkMode') === 'mod' ? dataLen : null;
-
-        seriesModel.pipelineContext = pipeline.context = {
-            progressiveRender: progressiveRender,
-            modDataCount: modDataCount,
-            large: large
-        };
+        seriesModel.pipelineContext = pipeline.context = context;
     }
 
-    restorePipelines(ecModel: GlobalModel): void {
+    restorePipelines(zr: ZRenderType, ecModel: GlobalModel): void {
         const scheduler = this;
         const pipelineMap = scheduler._pipelineMap = createHashMap();
 
         ecModel.eachSeries(function (seriesModel) {
-            const progressive = seriesModel.getProgressive();
+            const progressive = zr.painter.type === 'canvas' && seriesModel.getProgressive();
             const pipelineId = seriesModel.uid;
 
             pipelineMap.set(pipelineId, {
@@ -265,7 +266,7 @@ class Scheduler {
 
             let errMsg = '';
             if (__DEV__) {
-                // Currently do not need to support to sepecify them both.
+                // Currently do not need to support to specify them both.
                 errMsg = '"reset" and "overallReset" must not be both specified.';
             }
             assert(!(handler.reset && handler.overallReset), errMsg);
@@ -371,7 +372,6 @@ class Scheduler {
         function needSetDirty(opt: PerformStageTaskOpt, task: GeneralTask): boolean {
             return opt.setDirty && (!opt.dirtyMap || opt.dirtyMap.get(task.__pipeline.id));
         }
-
         this.unfinished = unfinished || this.unfinished;
     }
 
@@ -382,7 +382,6 @@ class Scheduler {
             // Progress to the end for dataInit and dataRestore.
             unfinished = seriesModel.dataTask.perform() || unfinished;
         });
-
         this.unfinished = unfinished || this.unfinished;
     }
 
@@ -488,15 +487,13 @@ class Scheduler {
 
         const seriesType = stageHandler.seriesType;
         const getTargetSeries = stageHandler.getTargetSeries;
-        let overallProgress = true;
+        const dirtyOnOverallProgress = stageHandler.dirtyOnOverallProgress;
         let shouldOverallTaskDirty = false;
         // FIXME:TS never used, so comment it
         // let modifyOutputEnd = stageHandler.modifyOutputEnd;
 
         // An overall task with seriesType detected or has `getTargetSeries`, we add
-        // stub in each pipelines, it will set the overall task dirty when the pipeline
-        // progress. Moreover, to avoid call the overall task each frame (too frequent),
-        // we set the pipeline block.
+        // stub in each pipelines to receive dirty info from upstream.
         let errMsg = '';
         if (__DEV__) {
             errMsg = '"createOnAllSeries" is not supported for "overallReset", '
@@ -509,12 +506,7 @@ class Scheduler {
         else if (getTargetSeries) {
             getTargetSeries(ecModel, api).each(createStub);
         }
-        // Otherwise, (usually it is legacy case), the overall task will only be
-        // executed when upstream is dirty. Otherwise the progressive rendering of all
-        // pipelines will be disabled unexpectedly. But it still needs stubs to receive
-        // dirty info from upstream.
         else {
-            overallProgress = false;
             each(ecModel.getSeries(), createStub);
         }
 
@@ -534,12 +526,12 @@ class Scheduler {
             );
             stub.context = {
                 model: seriesModel,
-                overallProgress: overallProgress
+                dirtyOnOverallProgress: dirtyOnOverallProgress
                 // FIXME:TS never used, so comment it
                 // modifyOutputEnd: modifyOutputEnd
             };
             stub.agent = overallTask;
-            stub.__block = overallProgress;
+            stub.__block = dirtyOnOverallProgress;
 
             scheduler._pipe(seriesModel, stub);
         }
@@ -586,7 +578,7 @@ function overallTaskReset(context: OverallTaskContext): void {
 }
 
 function stubReset(context: StubTaskContext): TaskProgressCallback<StubTaskContext> {
-    return context.overallProgress && stubProgress;
+    return context.dirtyOnOverallProgress && stubProgress;
 }
 
 function stubProgress(this: StubTask): void {

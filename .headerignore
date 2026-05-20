@@ -1,6 +1,10 @@
-# Only support regexp, testing against each relative file path
-# based on the echart base directory. And the pattern should
-# match the relative path completely.
+# Each line is a RegExp, testing against each relative file path;
+# case-sensitive; based on the echarts base directory.
+# And the pattern should match the relative path completely.
+# A relative path to matching is like:
+#  types/src/i18n/langZH.d.ts
+#  dist
+#  (no prefix './'; no trailing '/' for a directory)
 
 node_modules
 .*\.git
@@ -18,6 +22,7 @@ node_modules
 .*rat\.iml
 __MAC_OS
 .*README.md
+CONTRIBUTING.md
 .*MANIFEST\.txt
 DISCLAIMER
 NOTICE
@@ -25,33 +30,39 @@ KEYS
 LICENSE
 LICENSE-.+
 licenses
-map/js
-map/json
-benchmark/dep/*
-test/ut/lib
-test/data$
-test/lib/esl\.js
-test/lib/perlin\.js
-test/lib/countup\.js
-.*jquery\.min\.js
-.*rollup\.browser\.js
-.*configure
-.+\.json
-.+\.map
-.+\.gexf
-.+\.jar
-.+\.bin
-.+\.csv
-.+\.png
-.+\.PNG
-.+\.jpg
-.+\.JPG
-.+\.jpeg
-.+\.JPEG
-.+\.gif
-.+\.GIF
-.+\.class
-types
-lib
-esm
-dist
+^map/js$
+^map/json$
+^benchmark/dep/*
+^test/ut/lib
+^test/runTest/tmp
+^test/data$
+^test/lib$
+^coverage$
+^test/ut/coverage$
+.*jquery\.min\.js$
+.*rollup\.browser\.js$
+.*configure$
+.eslintignore
+.+\.json$
+.+\.map$
+.+\.gexf$
+.+\.jar$
+.+\.bin$
+.+\.csv$
+.+\.png$
+.+\.PNG$
+.+\.jpg$
+.+\.JPG$
+.+\.jpeg$
+.+\.JPEG$
+.+\.gif$
+.+\.GIF$
+.+\.class$
+^types$
+^lib$
+^ssr/client/lib$
+^ssr/client/types$
+^ssr/client/index.d.ts$
+^ssr/client/index.js$
+^dist$
+^build/source-release/template$

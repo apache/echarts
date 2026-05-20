@@ -20,17 +20,14 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import SunburstView from './SunburstView';
 import SunburstSeriesModel from './SunburstSeries';
-import sunburstLayout from './sunburstLayout';
-import sunburstVisual from './sunburstVisual';
-import dataFilter from '../../processor/dataFilter';
-import { curry } from 'zrender/src/core/util';
+import { sunburstVisualStageHandler } from './sunburstVisual';
 import { installSunburstAction } from './sunburstAction';
+import { sunburstLayoutStageHandler } from './sunburstLayout';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(SunburstView);
     registers.registerSeriesModel(SunburstSeriesModel);
-    registers.registerLayout(curry(sunburstLayout, 'sunburst'));
-    registers.registerProcessor(curry(dataFilter, 'sunburst'));
-    registers.registerVisual(sunburstVisual);
+    registers.registerLayout(sunburstLayoutStageHandler);
+    registers.registerVisual(sunburstVisualStageHandler);
     installSunburstAction(registers);
 }

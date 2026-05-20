@@ -19,13 +19,13 @@
 
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import FunnelView from './FunnelView';
-import FunnelSeriesModel from './FunnelSeries';
-import funnelLayout from './funnelLayout';
+import FunnelSeriesModel, { SERIES_TYPE_FUNNEL } from './FunnelSeries';
 import dataFilter from '../../processor/dataFilter';
+import { funnelLayoutStageHandler } from './funnelLayout';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(FunnelView);
     registers.registerSeriesModel(FunnelSeriesModel);
-    registers.registerLayout(funnelLayout);
-    registers.registerProcessor(dataFilter('funnel'));
+    registers.registerLayout(funnelLayoutStageHandler);
+    registers.registerProcessor(dataFilter(SERIES_TYPE_FUNNEL));
 }

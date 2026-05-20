@@ -305,6 +305,22 @@ body > .main {
     padding-left: 10px;
     overflow: auto;
 }
+.test-info-overlay {
+    padding: 3px;
+    overflow: auto;
+    left: 0;
+    bottom: 0;
+    position: absolute;
+    z-index: 9999991;
+    border: 1px solid #000;
+    box-sizing: border-box;
+    background-color: rgba(255,255,255,0.7);
+}
+.test-info-overlay pre.test-print-object {
+    padding: 0;
+    margin: 0;
+    font-size: 10px;
+}
 pre.test-print-object {
     font-size: 12px;
     font-family: Menlo, Monaco, 'Courier New', monospace;
@@ -366,9 +382,60 @@ td.test-data-table-key {
     box-shadow: 0 0 3px #000;
     background: green;
     padding: 5px;
+    z-index: 99999;
+}
+.control-frame-btn-panel-avoid-occlusion {
+    opacity: 0.2;
 }
 .control-frame-btn-panel .control-frame-info {
     display: block;
     color: #fff;
     font-size: 10px;
+}
+.control-frame-mask {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+}
+.control-frame-mask::after {
+    content: "PAUSED";
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 18px;
+    color: white;
+    background: red;
+    padding: 2px 6px;
+    border-radius: 3px;
+    pointer-events: none;
+}
+
+.print-canvas-layer-draw-operations-on-frame-record-title {
+    margin: 5px 10px;
+    font-size: 12px;
+    color: #777;
+}
+.print-canvas-layer-draw-operations-on-frame-record-title .print-canvas-layer-draw-operations-on-frame-cmd-count {
+    color: red;
+}
+.print-canvas-layer-draw-operations-on-frame-record {
+    margin: 5px 20px;
+}
+.print-canvas-layer-draw-operations-on-frame-record-line {
+    margin: 5px 10px;
+    font-size: 10px;
+    line-height: 1;
+}
+.print-canvas-layer-draw-operations-on-frame-record-line-title {
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 1.2;
+}
+.print-canvas-layer-draw-operations-on-frame-record-line .print-canvas-layer-draw-operations-on-frame-cmd-count {
+    color: red;
+    font-size: 10px;
+    margin-right: 3px;
 }

@@ -36,9 +36,10 @@ import {
     StatesMixinBase,
     CallbackDataParams,
     ComponentOnCalendarOptionMixin,
-    ComponentOnMatrixOptionMixin
+    ComponentOnMatrixOptionMixin,
+    RoamHostModel
 } from '../../util/types';
-import { Dictionary } from 'zrender/src/core/types';
+import { Dictionary, NullUndefined } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
 import SeriesData from '../../data/SeriesData';
 import Model from '../../model/Model';
@@ -47,9 +48,10 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
-import { CoordinateSystemUsageKind, decideCoordSysUsageKind } from '../../core/CoordinateSystem';
+import { COORD_SYS_USAGE_KIND_BOX, decideCoordSysUsageKind } from '../../core/CoordinateSystem';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import tokens from '../../visual/tokens';
+import GlobalModel from '../../model/Global';
 
 export interface MapStateOption<TCbParams = never> {
     itemStyle?: GeoItemStyleOption<TCbParams>
@@ -63,6 +65,17 @@ export interface MapDataItemOption extends MapStateOption,
 }
 
 export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
+
+// See MAP_SERIES_GROUP
+export type MapSeriesGroup = {
+    // Raw (a group of series before series filtering)
+    // Never be empty.
+    r: MapSeries[];
+    // Filtered (a group of series after series filtering)
+    // If `getMainMapSeries(seriesGroup)` is falsy, `f` is an empty array.
+    f: MapSeries[];
+};
+type AllMapSeriesGroups = Dictionary<MapSeriesGroup>;
 
 export interface MapSeriesOption extends
     SeriesOption<MapStateOption<CallbackDataParams>, StatesMixinBase>,
@@ -99,10 +112,12 @@ export interface MapSeriesOption extends
     nameProperty?: string;
 }
 
-class MapSeries extends SeriesModel<MapSeriesOption> {
+export const SERIES_TYPE_MAP = 'map';
 
-    static type = 'series.map' as const;
-    type = MapSeries.type;
+class MapSeries extends SeriesModel<MapSeriesOption> implements RoamHostModel {
+
+    static readonly type = 'series.' + SERIES_TYPE_MAP;
+    readonly type = MapSeries.type;
 
     static dependencies = ['geo'];
 
@@ -113,11 +128,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
     // -----------------
     // Injected outside
     originalData: SeriesData;
-    mainSeries: MapSeries;
-    // Only first map series of same mapType will drawMap.
-    needsDrawMap: boolean = false;
-    // Group of all map series with same mapType
-    seriesGroup: MapSeries[] = [];
+    seriesGroup: MapSeriesGroup | NullUndefined;
 
 
     getInitialData(this: MapSeries, option: MapSeriesOption): SeriesData {
@@ -164,8 +175,8 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
      * inner exclusive geo model.
      */
     getHostGeoModel(): GeoModel {
-        if (decideCoordSysUsageKind(this).kind === CoordinateSystemUsageKind.boxCoordSys) {
-            // Always use an internal geo if specify a boxCoordSys.
+        if (decideCoordSysUsageKind(this).kind === COORD_SYS_USAGE_KIND_BOX) {
+            // Always use an internal geo if specify as `COORD_SYS_USAGE_KIND_BOX`.
             // Notice that currently we do not support laying out a geo based on
             // another geo, but preserve the possibility.
             return;
@@ -211,20 +222,19 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         multipleSeries: boolean,
         dataType: string
     ) {
-        // FIXME orignalData and data is a bit confusing
+        // FIXME originalData and data is a bit confusing
         const data = this.getData();
         const value = this.getRawValue(dataIndex);
         const name = data.getName(dataIndex);
 
-        const seriesGroup = this.seriesGroup;
-        const seriesNames = [];
-        for (let i = 0; i < seriesGroup.length; i++) {
-            const otherIndex = seriesGroup[i].originalData.indexOfName(name);
+        const seriesNames: string[] = [];
+        zrUtil.each(this.seriesGroup.f, function (mapSeries) {
+            const otherIndex = mapSeries.originalData.indexOfName(name);
             const valueDim = data.mapDimension('value');
-            if (!isNaN(seriesGroup[i].originalData.get(valueDim, otherIndex) as number)) {
-                seriesNames.push(seriesGroup[i].name);
+            if (!isNaN(mapSeries.originalData.get(valueDim, otherIndex) as number)) {
+                seriesNames.push(mapSeries.name);
             }
-        }
+        });
 
         return createTooltipMarkup('section', {
             header: seriesNames.join(', '),
@@ -244,14 +254,6 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             return region && geo.dataToPoint(region.getCenter());
         }
     };
-
-    setZoom(zoom: number): void {
-        this.option.zoom = zoom;
-    }
-
-    setCenter(center: number[]): void {
-        this.option.center = center;
-    }
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
         const iconType = opt.icon || 'roundRect';
@@ -275,6 +277,10 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             icon.style.lineWidth = 2;
         }
         return icon;
+    }
+
+    __ownRoamView() {
+        return mapSeriesNeedsDrawMap(this) ? this.coordinateSystem.view : null;
     }
 
     static defaultOption: MapSeriesOption = {
@@ -365,6 +371,50 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         nameProperty: 'name'
     };
 
+}
+
+/**
+ * Has exclusive geo, rahter than depends on a separate geo componet.
+ */
+export function mapSeriesGroupHasOwnGeo(groupKey: string): boolean {
+    return groupKey.indexOf('i') === 0;
+}
+
+export function mapSeriesNeedsDrawMap(mapSeries: MapSeries): boolean {
+    // Within a MAP_SERIES_GROUP, only `mainSeries` has `needsDrawMap: true`.
+    return getMainMapSeries(mapSeries.seriesGroup) === mapSeries && !mapSeries.getHostGeoModel();
+}
+
+export function getMainMapSeries(mapSeriesGroup: MapSeriesGroup): MapSeries | NullUndefined {
+    // The first series after filtering in a MAP_SERIES_GROUP.
+    return mapSeriesGroup.f[0];
+}
+
+
+/**
+ * @tutorial [MAP_SERIES_GROUP]
+ *  - For map series that reference external geo components (typically via `geoIndex` or `geoId` in ec option),
+ *    a map series group is all map series that reference to the same geo component.
+ *  - For other map series,
+ *    a map series group is all map series that use the same `map` in ec option.
+ *  NOTICE: series filtering (typically by legend) matters:
+ *   If this method is executed before series filtering, all series are included,
+ *   otherwise, series filtered out are excluded.
+ *   When legend disables the original first series, the original second series takes the responsibility
+ *   to render map (via its `MapDraw`).
+ */
+export function buildAllMapSeriesGroups(ecModel: GlobalModel, beforeSeriesFiltering?: boolean): AllMapSeriesGroups {
+    const allMapSeriesGroups: AllMapSeriesGroups = {};
+    ecModel.eachRawSeriesByType(SERIES_TYPE_MAP, function (seriesModel: MapSeries) {
+        const hostGeoModel = seriesModel.getHostGeoModel();
+        const key = hostGeoModel ? 'o' + hostGeoModel.id : 'i' + seriesModel.getMapType();
+        const group = allMapSeriesGroups[key] = allMapSeriesGroups[key] || {f: [], r: []};
+        if (!ecModel.isSeriesFiltered(seriesModel) && !beforeSeriesFiltering) {
+            group.f.push(seriesModel);
+        }
+        group.r.push(seriesModel);
+    });
+    return allMapSeriesGroups;
 }
 
 export default MapSeries;

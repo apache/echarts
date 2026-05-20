@@ -56,6 +56,8 @@ under the License.
         <div id="main3-boundary-test"></div>
         <div id="main3-boundary-test-no-overlap"></div>
 
+        <div id="main4"></div>
+        <div id="main5"></div>
 
 
         <script>
@@ -708,6 +710,189 @@ under the License.
                     });
                 });
                 </script>
+
+            <script>
+                require([
+                    'echarts'
+                ], function (echarts) {
+                    function genData(len, offset) {
+                        let arr = new Float32Array(len * 2);
+                        let off = 0;
+                        for (let i = 0; i < len; i++) {
+                            let x = +Math.random() * 10;
+                            let y = +Math.sin(x) - x * (len % 2 ? 0.1 : -0.1) * Math.random() + (offset || 0) / 10;
+                            arr[off++] = x;
+                            arr[off++] = y;
+                        }
+                        return arr;
+                    }
+                    const data1 = genData(5e5);
+                    const data2 = genData(5e5, 10);
+                    var option = {
+                        title: {
+                            text:
+                            echarts.format.addCommas(data1.length / 2 + data2.length / 2) + ' Points'
+                        },
+                        tooltip: {},
+                        xAxis: {},
+                        yAxis: {},
+                        dataZoom: [
+                            {
+                                type: 'inside'
+                            },
+                            {
+                                type: 'slider'
+                            }
+                        ],
+                        animation: true,
+                        series: [
+                            {
+                                name: 'A',
+                                type: 'scatter',
+                                data: data1,
+                                dimensions: ['x', 'y'],
+                                symbolSize: 3,
+                                itemStyle: {
+                                    opacity: 0.4
+                                },
+                                large: true
+                            },
+                            {
+                                name: 'B',
+                                type: 'scatter',
+                                data: data2,
+                                dimensions: ['x', 'y'],
+                                symbolSize: 3,
+                                itemStyle: {
+                                    opacity: 0.4
+                                },
+                                large: true
+                            }
+                        ]
+                    };
+
+                    // NOTE: Please manually test this case, as the chart may get stuck and cause the VRT to fail.
+                    var chart = testHelper.create(echarts, 'main4', {
+                        title: [
+                            'Large Dataset **without** Jittering',
+                            'The chart **SHOULD NOT** get stuck and render as expected',
+                            'Notice: **DO NOT** use SVG renderer for this test case'
+                        ],
+                        buttons: [
+                            {
+                                text: 'Click to load chart',
+                                onclick: function () {
+                                    const elapsedTimeTip = document.createElement('div');
+                                    elapsedTimeTip.style.position = 'absolute';
+                                    elapsedTimeTip.style.top = '0';
+                                    elapsedTimeTip.style.left = '0';
+                                    elapsedTimeTip.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                                    elapsedTimeTip.style.color = '#fff';
+                                    elapsedTimeTip.style.padding = '4px 8px';
+                                    elapsedTimeTip.style.zIndex = '9999';
+                                    elapsedTimeTip.innerText = 'Rendering...';
+                                    chart.getDom().appendChild(elapsedTimeTip);
+                                    if (chart.getZr().painter.type === 'svg') {
+                                        elapsedTimeTip.innerText = 'SVG renderer detected! Please switch to Canvas renderer to test large dataset rendering performance.';
+                                        return;
+                                    }
+                                    const onFinished = () => {
+                                        const elapsed = performance.now() - startTime;
+                                        elapsedTimeTip.innerText = `Rendered in ${elapsed.toFixed(2)} ms`;
+                                        chart.off('finished', onFinished);
+                                    }
+                                    chart.on('finished', onFinished);
+                                    const startTime = performance.now();
+                                    chart.setOption(option);
+
+                                    // NOTICE: Remove this logic to see the stuck behavior
+                                    requestIdleCallback((deadline) => {
+                                        if (deadline.didTimeout) {
+                                            // Show tip and stop rendering to prevent getting stuck
+                                            elapsedTimeTip.innerText = 'Rendering is taking longer than expected! Stopping to prevent getting stuck.';
+                                            chart.clear();
+                                        }
+                                    }, { timeout: 5000 } );
+                                }
+                            }
+                        ]
+                    });
+                });
+            </script>
+
+            <script>
+                require([
+                    'echarts'
+                ], async function (echarts) {
+                    function genData(len, offset) {
+                        let arr = new Float32Array(len * 2);
+                        let off = 0;
+                        for (let i = 0; i < len; i++) {
+                            let x = +Math.random() * 10;
+                            let y = +Math.sin(x) - x * (len % 2 ? 0.1 : -0.1) * Math.random() + (offset || 0) / 10;
+                            arr[off++] = x;
+                            arr[off++] = y;
+                        }
+                        return arr;
+                    }
+                    const data1 = genData(5e5);
+                    const data2 = genData(5e5, 10);
+                    var option = {
+                        title: {
+                            text:
+                            echarts.format.addCommas(data1.length / 2 + data2.length / 2) + ' Points'
+                        },
+                        tooltip: {},
+                        xAxis: {
+                            jitter: 1.5,
+                            type: 'category',
+                            data: Array.from({ length: 5 }, (_, idx) => idx)
+                        },
+                        yAxis: {},
+                        dataZoom: [
+                            {
+                                type: 'inside'
+                            },
+                            {
+                                type: 'slider'
+                            }
+                        ],
+                        animation: false,
+                        series: [
+                            {
+                                name: 'A',
+                                type: 'scatter',
+                                data: data1,
+                                dimensions: ['x', 'y'],
+                                symbolSize: 3,
+                                itemStyle: {
+                                    opacity: 0.4
+                                },
+                                large: true
+                            },
+                            {
+                                name: 'B',
+                                type: 'scatter',
+                                data: data2,
+                                dimensions: ['x', 'y'],
+                                symbolSize: 3,
+                                itemStyle: {
+                                    opacity: 0.4
+                                },
+                                large: true
+                            }
+                        ]
+                    };
+
+                    var chart = testHelper.create(echarts, 'main5', {
+                        title: [
+                            'Large Dataset **with** Jittering',
+                            'The chart **SHOULD NOT** throw errors'
+                        ],
+                        option: option
+                    });
+                });
+            </script>
     </body>
 </html>
 

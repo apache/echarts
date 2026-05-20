@@ -22,7 +22,7 @@ import ExtensionAPI from '../core/ExtensionAPI';
 import GlobalModel from '../model/Global';
 import Model from '../model/Model';
 import SeriesModel from '../model/Series';
-import {makeInner} from '../util/model';
+import {createSimpleOverallStageHandler2, makeInner} from '../util/model';
 import {Dictionary, DecalObject, InnerDecalObject, AriaOption} from '../util/types';
 import {LocaleOption} from '../core/locale';
 import { getDecalFromPalette } from '../model/mixin/palette';
@@ -37,19 +37,23 @@ const DEFAULT_OPTION: AriaOption = {
     }
 };
 
-const inner = makeInner<{scope: object}, SeriesModel>();
-
-const decalPaletteScope: Dictionary<DecalObject> = {};
+const innerSeries = makeInner<{scope: object}, SeriesModel>();
+const innerGlobal = makeInner<{scope: object}, GlobalModel>();
 
 type SeriesTypes = keyof LocaleOption['series']['typeNames'];
 
-export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
+
+export const ariaVisualStageHandler = createSimpleOverallStageHandler2(ariaVisual);
+
+function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
     const ariaModel: Model<AriaOption> = ecModel.getModel('aria');
 
     // See "area enabled" detection code in `GlobalModel.ts`.
     if (!ariaModel.get('enabled')) {
         return;
     }
+
+    const decalPaletteScope = innerGlobal(ecModel).scope || (innerGlobal(ecModel).scope = {});
 
     const defaultOption = zrUtil.clone(DEFAULT_OPTION);
     zrUtil.merge(defaultOption.label, ecModel.getLocaleModel().get('aria'), false);
@@ -63,25 +67,18 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
 
         const useDecal = decalModel.get('show');
         if (useDecal) {
+
             // Each type of series use one scope.
             // Pie and funnel are using different scopes.
-            const paletteScopeGroupByType = zrUtil.createHashMap<object>();
+            const paletteScopeGroupByType = zrUtil.createHashMap<object, SeriesModel['type']>();
             ecModel.eachSeries((seriesModel: SeriesModel) => {
-                if (seriesModel.isColorBySeries()) {
-                    return;
+                if (!seriesModel.isColorBySeries()) {
+                    innerSeries(seriesModel).scope = paletteScopeGroupByType.get(seriesModel.type)
+                        || paletteScopeGroupByType.set(seriesModel.type, {});
                 }
-                let decalScope = paletteScopeGroupByType.get(seriesModel.type);
-                if (!decalScope) {
-                    decalScope = {};
-                    paletteScopeGroupByType.set(seriesModel.type, decalScope);
-                }
-                inner(seriesModel).scope = decalScope;
             });
 
-            ecModel.eachRawSeries((seriesModel: SeriesModel) => {
-                if (ecModel.isSeriesFiltered(seriesModel)) {
-                    return;
-                }
+            ecModel.eachSeries((seriesModel: SeriesModel) => {
                 if (zrUtil.isFunction(seriesModel.enableAriaDecal)) {
                     // Let series define how to use decal palette on data
                     seriesModel.enableAriaDecal();
@@ -93,7 +90,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                 if (!seriesModel.isColorBySeries()) {
                     const dataAll = seriesModel.getRawData();
                     const idxMap: Dictionary<number> = {};
-                    const decalScope = inner(seriesModel).scope;
+                    const decalScope = innerSeries(seriesModel).scope;
 
                     data.each(function (idx) {
                         const rawIdx = data.getRawIndex(idx);

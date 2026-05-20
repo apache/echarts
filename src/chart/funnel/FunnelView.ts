@@ -20,7 +20,7 @@
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
-import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
+import FunnelSeriesModel, {FunnelDataItemOption, SERIES_TYPE_FUNNEL} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
@@ -175,8 +175,8 @@ class FunnelPiece extends graphic.Polygon {
 }
 
 class FunnelView extends ChartView {
-    static type = 'funnel' as const;
-    type = FunnelView.type;
+    static readonly type = SERIES_TYPE_FUNNEL;
+    readonly type = SERIES_TYPE_FUNNEL;
 
     private _data: SeriesData;
 

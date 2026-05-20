@@ -18,7 +18,8 @@
 */
 
 import GlobalModel from '../../model/Global';
-import GraphSeriesModel, { GraphEdgeItemOption } from './GraphSeries';
+import { createSimpleOverallStageHandler } from '../../util/model';
+import GraphSeriesModel, { GraphEdgeItemOption, SERIES_TYPE_GRAPH } from './GraphSeries';
 import { extend } from 'zrender/src/core/util';
 
 function normalize(a: string | string[]): string[];
@@ -30,8 +31,10 @@ function normalize(a: string | number | (string | number)[]): (string | number)[
     return a;
 }
 
-export default function graphEdgeVisual(ecModel: GlobalModel) {
-    ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
+export const graphEdgeVisualStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_GRAPH, graphEdgeVisual);
+
+function graphEdgeVisual(ecModel: GlobalModel) {
+    ecModel.eachSeriesByType(SERIES_TYPE_GRAPH, function (seriesModel: GraphSeriesModel) {
         const graph = seriesModel.getGraph();
         const edgeData = seriesModel.getEdgeData();
         const symbolType = normalize(seriesModel.get('edgeSymbol'));

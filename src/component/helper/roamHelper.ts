@@ -17,199 +17,196 @@
 * under the License.
 */
 
-import Element from 'zrender/src/Element';
-import type SeriesModel from '../../model/Series';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import Group from 'zrender/src/graphic/Group';
-import RoamController from './RoamController';
-import type { SeriesOption } from '../../export/option';
-import type View from '../../coord/View';
-import type { NullUndefined, RoamOptionMixin, Payload } from '../../util/types';
-import { BoundingRect } from '../../util/graphic';
-import type Geo from '../../coord/geo/Geo';
-import Transformable from 'zrender/src/core/Transformable';
-
-export interface ZoomLimit {
-    max?: number;
-    min?: number;
-}
-
-export interface RoamControllerHost {
-    // Its transform x/y/scaleX/scaleY will be modified when roaming.
-    target: Element;
-    zoom?: number;
-    zoomLimit?: ZoomLimit;
-}
-
-/**
- * [CAVEAT] `updateViewOnPan` and `updateViewOnZoom` modifies the group transform directly,
- *  but the 'center' and 'zoom' in echarts option and 'View' coordinate system are not updated yet,
- *  which must be performed later in 'xxxRoam' action by calling `updateCenterAndZoom`.
- * @see {updateCenterAndZoomInAction}
- */
-export function updateViewOnPan(controllerHost: RoamControllerHost, dx: number, dy: number) {
-    const target = controllerHost.target;
-    target.x += dx;
-    target.y += dy;
-    target.dirty();
-}
-
-export function updateViewOnZoom(controllerHost: RoamControllerHost, zoomDelta: number, zoomX: number, zoomY: number) {
-    const target = controllerHost.target;
-    const zoomLimit = controllerHost.zoomLimit;
-
-    let newZoom = controllerHost.zoom = controllerHost.zoom || 1;
-    newZoom *= zoomDelta;
-
-    newZoom = clampByZoomLimit(newZoom, zoomLimit);
-
-    const zoomScale = newZoom / controllerHost.zoom;
-    controllerHost.zoom = newZoom;
-    zoomTransformableByOrigin(target, zoomX, zoomY, zoomScale);
-    target.dirty();
-}
+import RoamController, { RoamOption } from './RoamController';
+import View, {
+    getOwnRoamViewCoordSys,
+    ownRoamModelCoordSysUpdateInAction, ownRoamViewUpdateDirectlyInAction,
+    viewCoordSysSetBoundingRect,
+    viewCoordSysSetViewRect,
+    useLegacyViewCoordSysCenterBase,
+    viewCoordSysSetRoamOptionFromModel,
+} from '../../coord/View';
+import {
+    NullUndefined, COMPONENT_MAIN_TYPE_SERIES, ComponentMainType,
+    ComponentSubType,
+    RoamPayload,
+    ROAM_ACTION_TYPE_SUFFIX,
+    RoamHostComponentOrSeries,
+    RoamOptionMixin,
+    Payload,
+} from '../../util/types';
+import { BoundingRect, payloadDisableAnimation } from '../../util/graphic';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import { makeQueryConditionKindA } from '../../util/model';
+import { defaults, retrieve2 } from 'zrender/src/core/util';
 
 /**
- * A abstraction for some similar impl in roaming.
+ * An abstraction for some similar impl in roaming.
+ *
+ * Require action like `registerRoamActionSimply`.
  */
-export function updateController(
-    seriesModel: SeriesModel<SeriesOption & RoamOptionMixin>,
+export function updateRoamControllerSimply(
+    componentOrSeries: RoamHostComponentOrSeries,
     api: ExtensionAPI,
-    pointerCheckerEl: Group,
     controller: RoamController,
-    controllerHost: RoamControllerHost,
+
+    // Can use `createIsInSelfByPointerCheckerEl`
+    isInSelf: RoamOption['triggerInfo']['isInSelf'],
     clipRect: BoundingRect | NullUndefined,
+
+    extraOnRoam?: ((roamOp: 'zoom' | 'pan') => void) | NullUndefined,
+    roamTypeDefault?: RoamOptionMixin['roam'],
+    geoBackwardCompat?: boolean
 ) {
-    const tmpRect = new BoundingRect(0, 0, 0, 0);
-    controller.enable(seriesModel.get('roam'), {
-        api,
-        zInfo: {component: seriesModel},
-        triggerInfo: {
-            roamTrigger: seriesModel.get('roamTrigger'),
-            isInSelf: function (e, x, y) {
-                tmpRect.copy(pointerCheckerEl.getBoundingRect());
-                tmpRect.applyTransform(pointerCheckerEl.getComputedTransform());
-                return tmpRect.contain(x, y);
-            },
-            isInClip: function (e, x, y) {
-                return !clipRect || clipRect.contain(x, y);
+    const coordSys = getOwnRoamViewCoordSys(componentOrSeries);
+    if (!coordSys) {
+        controller.disable();
+        return;
+    }
+
+    controller.enable(
+        // NOTE:
+        //  If roamTypeDefault is null/undefined, roamType will be set as true.
+        // PENDING:
+        //  In MapSeries case, it has long been retrieving `roam` option from the first MapSeries
+        //  that are not filtered out by a legend. But that requires `roam: true` to be set in all
+        //  MapSeries option, otherwise if a legend hides the `roam: true` MapSeries, the map can
+        //  not be roamed unexpectedly.
+        retrieve2(componentOrSeries.get('roam'), roamTypeDefault),
+        {
+            api,
+            zInfo: {component: componentOrSeries},
+            triggerInfo: {
+                roamTrigger: componentOrSeries.get('roamTrigger'),
+                isInSelf,
+                isInClip: function (e, x, y) {
+                    return !clipRect || clipRect.contain(x, y);
+                }
             }
         }
-    });
-    controllerHost.zoomLimit = seriesModel.get('scaleLimit');
-    const coordinate = seriesModel.coordinateSystem;
-    controllerHost.zoom = coordinate ? (coordinate as View).getZoom() : 1;
-    const type = seriesModel.subType + 'Roam';
+    );
+
+    function dispatchAction(extra: Partial<RoamPayload>): void {
+        const mainType = componentOrSeries.mainType;
+        const payload = payloadDisableAnimation(defaults({
+            type: makeViewCoordSysActionType(mainType, componentOrSeries.subType, ROAM_ACTION_TYPE_SUFFIX),
+        }, extra)) as RoamPayload;
+        if (geoBackwardCompat) {
+            payload.componentType = mainType;
+        }
+        // Like `seriesId`, `geoId`.
+        payload[`${mainType}Id`] = componentOrSeries.id;
+
+        api.dispatchAction(payload);
+    }
 
     controller
         .off('pan')
         .off('zoom')
-        .on('pan', (e) => {
-            updateViewOnPan(controllerHost, e.dx, e.dy);
-            api.dispatchAction({
-                seriesId: seriesModel.id,
-                type,
-                dx: e.dx,
-                dy: e.dy
+        // NOTICE: 'pan' and 'zoom' listener should do nothing except `api.dispatchAction`,
+        // the rest logic should be performed in the action handler and `updateTransform`;
+        // otherwise, it can cause inconsistency if users trigger this action explicitly.
+        .on('pan', function (event) {
+            extraOnRoam && extraOnRoam('pan');
+            dispatchAction({
+                dx: event.dx,
+                dy: event.dy,
             });
         })
-        .on('zoom', (e) => {
-            /**
-             * FIXME: should do nothing except `api.dispatchAction` here, the other logic
-             *  should be performed in the action handler and `updateTransform`; otherwise,
-             *  they are inconsistent if user triggers this action explicitly.
-             */
-            updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
-            api.dispatchAction({
-                seriesId: seriesModel.id,
-                type,
-                zoom: e.scale,
-                originX: e.originX,
-                originY: e.originY
+        .on('zoom', function (event) {
+            extraOnRoam && extraOnRoam('zoom');
+            dispatchAction({
+                zoom: event.scale,
+                originX: event.originX,
+                originY: event.originY,
             });
-            // Only update label layout on zoom
-            api.updateLabelLayout();
         });
 }
 
-export interface RoamPayload extends Payload {
-    dx: number
-    dy: number
-    // This is a delta zoom, not an absolute zoom.
-    zoom: number
-    originX: number
-    originY: number
-}
-
-function getCenterCoord(view: View, point: number[]) {
-    // Use projected coord as center because it's linear.
-    return (view as Geo).pointToProjected
-        ? (view as Geo).pointToProjected(point)
-        : view.pointToData(point);
-}
-
-/**
- * Should be called only in action handler.
- * @see {updateViewOnPan|updateViewOnZoom}
- */
-export function updateCenterAndZoomInAction(
-    view: View,
-    payload: RoamPayload,
-    zoomLimit?: ZoomLimit
-) {
-    const previousZoom = view.getZoom();
-    const center = view.getCenter();
-    let deltaZoom = payload.zoom;
-
-    const point = (view as Geo).projectedToPoint
-        ? (view as Geo).projectedToPoint(center)
-        : view.dataToPoint(center);
-
-    if (payload.dx != null && payload.dy != null) {
-        point[0] -= payload.dx;
-        point[1] -= payload.dy;
-
-        view.setCenter(getCenterCoord(view, point));
-    }
-    if (deltaZoom != null) {
-        deltaZoom = clampByZoomLimit(previousZoom * deltaZoom, zoomLimit) / previousZoom;
-
-        zoomTransformableByOrigin(view, payload.originX, payload.originY, deltaZoom);
-        view.updateTransform();
-
-        // [NOTICE] Tricky: `getCetnerCoord` uses `this.invTransform` modified by the `updateTransform` above.
-        view.setCenter(getCenterCoord(view, point));
-        view.setZoom(deltaZoom * previousZoom);
-    }
-
-    return {
-        center: view.getCenter(),
-        zoom: view.getZoom()
+export function createIsInSelfByPointerCheckerEl(
+    pointerCheckerEl: Group
+): RoamOption['triggerInfo']['isInSelf'] {
+    return function (e, x, y) {
+        tmpRectCII.copy(pointerCheckerEl.getBoundingRect());
+        tmpRectCII.applyTransform(pointerCheckerEl.getComputedTransform());
+        return tmpRectCII.contain(x, y);
     };
 }
+const tmpRectCII = new BoundingRect(0, 0, 0, 0);
 
-
-function zoomTransformableByOrigin(
-    target: Transformable,
-    originX: number,
-    originY: number,
-    deltaZoom: number, // positive number, 1 means no zooming.
+export function registerRoamActionSimply(
+    registers: EChartsExtensionInstallRegisters,
+    mainType: ComponentMainType,
+    subType: ComponentSubType | NullUndefined
 ): void {
-    // Keep the mouse center when scaling.
-    target.x -= (originX - target.x) * (deltaZoom - 1);
-    target.y -= (originY - target.y) * (deltaZoom - 1);
-    target.scaleX *= deltaZoom;
-    target.scaleY *= deltaZoom;
+    const actionType = makeViewCoordSysActionType(mainType, subType, ROAM_ACTION_TYPE_SUFFIX);
+
+    registers.registerAction({
+        type: actionType,
+        event: actionType,
+        // If `mainType` is a coord sys, 'update:' should be 'updateTransform' to
+        // broadcast the update. But currently there is no such case required.
+        // If 'updateTransform' is used, the owner of VIEW_COORD_SYS update firstly
+        // in the action handler as follows, and then series and components laid
+        // out on this VIEW_COORD_SYS update in `View['updateTransform']`.
+        update: 'none',
+    }, function (payload: RoamPayload, ecModel, api) {
+        ecModel.eachComponent(
+            makeQueryConditionKindA(payload, mainType, subType),
+            function (componentOrSeries: RoamHostComponentOrSeries) {
+                ownRoamModelCoordSysUpdateInAction(payload, componentOrSeries);
+                ownRoamViewUpdateDirectlyInAction(payload, componentOrSeries, ecModel, api);
+        });
+    });
 }
 
-export function clampByZoomLimit(zoom: number, zoomLimit: ZoomLimit | NullUndefined): number {
-    if (zoomLimit) {
-        const zoomMin = zoomLimit.min || 0;
-        const zoomMax = zoomLimit.max || Infinity;
-        zoom = Math.max(
-            Math.min(zoomMax, zoom),
-            zoomMin
-        );
-    }
-    return zoom;
+function makeViewCoordSysActionType<TPayload extends Payload>(
+    mainType: ComponentMainType,
+    subType: ComponentSubType | NullUndefined,
+    suffix: string
+): TPayload['type'] {
+    // e.g. 'treeRoam', 'sankeyRoam', 'geoRoam'
+    return (
+        (
+            mainType !== COMPONENT_MAIN_TYPE_SERIES ? mainType
+            : subType === 'map' ? 'geo' // Historical setting.
+            : subType
+        )
+        + suffix
+    ) as TPayload['type'];
+}
+
+export function isRoamPayloadHasZoom(payload: RoamPayload): boolean {
+    return payload.zoom != null;
+}
+
+export function createViewCoordSysSimply(
+    componentOrSeries: RoamHostComponentOrSeries,
+    api: ExtensionAPI,
+    // VIEW_COORD_SYS DataRect init:
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    // VIEW_COORD_SYS ViewRect init:
+    // Use DataRect by default, which means DataRect is in pixel space.
+    viewRect?: RectLike | NullUndefined
+): View {
+    const viewCoordSys = new View(
+        null,
+        useLegacyViewCoordSysCenterBase(componentOrSeries.ecModel, api)
+    );
+
+    viewCoordSysSetBoundingRect(viewCoordSys, x, y, width, height);
+
+    viewRect
+        ? viewCoordSysSetViewRect(viewCoordSys, viewRect.x, viewRect.y, viewRect.width, viewRect.height)
+        : viewCoordSysSetViewRect(viewCoordSys, x, y, width, height);
+
+    viewCoordSysSetRoamOptionFromModel(viewCoordSys, componentOrSeries);
+
+    return viewCoordSys;
 }

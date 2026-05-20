@@ -22,7 +22,12 @@ const fs = require('fs');
 
 // In the `.headerignore`, each line is a pattern in RegExp.
 // all relative path (based on the echarts base directory) is tested.
-// The pattern should match the relative path completely.
+// The pattern should match the relative path completely. case-sensitive.
+// A relative path to matching is like:
+//  types/src/i18n/langZH.d.ts
+//  dist
+//  (no prefix './'; no trailing '/' for a directory)
+
 const excludesPath = pathTool.join(__dirname, '../.headerignore');
 const ecBasePath = pathTool.join(__dirname, '../');
 
@@ -34,18 +39,20 @@ function eachFile(visit) {
     travel('./');
 
     function travel(relativePath) {
-        if (isExclude(relativePath)) {
+        const absolutePath = pathTool.join(ecBasePath, relativePath);
+
+        const relativePathForMatching = pathTool.relative(ecBasePath, absolutePath);
+        if (relativePathForMatching && isExclude(relativePathForMatching)) {
             return;
         }
 
-        const absolutePath = pathTool.join(ecBasePath, relativePath);
         const stat = fs.statSync(absolutePath);
 
         if (stat.isFile()) {
             visit(absolutePath, getExt(absolutePath));
         }
         else if (stat.isDirectory()) {
-            fs.readdirSync(relativePath).forEach(function (file) {
+            fs.readdirSync(absolutePath).forEach(function (file) {
                 travel(pathTool.join(relativePath, file));
             });
         }

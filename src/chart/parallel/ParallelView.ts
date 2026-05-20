@@ -31,6 +31,7 @@ import { numericToNumber } from '../../util/number';
 import { eqNaN } from 'zrender/src/core/util';
 import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
+import { getIncrementalId } from '../../util/model';
 
 const DEFAULT_SMOOTH = 0.3;
 
@@ -63,10 +64,12 @@ class ParallelView extends ChartView {
         payload: Payload
     ) {
 
-        // Clear previously rendered progressive elements.
-        this._progressiveEls = null;
-
         const dataGroup = this._dataGroup;
+
+        // Clear previously rendered progressive elements.
+        this._progressiveEls = [];
+        dataGroup.removeAll();
+
         const data = seriesModel.getData();
         const oldData = this._data;
         const coordSys = seriesModel.coordinateSystem;
@@ -86,6 +89,7 @@ class ParallelView extends ChartView {
 
         function update(newDataIndex: number, oldDataIndex: number) {
             const line = oldData.getItemGraphicEl(oldDataIndex) as graphic.Polyline;
+            dataGroup.add(line);
 
             const points = createLinePoints(data, newDataIndex, dimensions, coordSys);
             data.setItemGraphicEl(newDataIndex, line);
@@ -128,14 +132,12 @@ class ParallelView extends ChartView {
     incrementalRender(taskParams: StageHandlerProgressParams, seriesModel: ParallelSeriesModel, ecModel: GlobalModel) {
         const data = seriesModel.getData();
         const coordSys = seriesModel.coordinateSystem;
-        const dimensions = coordSys.dimensions;
-        const seriesScope = makeSeriesScope(seriesModel);
         const progressiveEls: Element[] = this._progressiveEls = [];
 
         for (let dataIndex = taskParams.start; dataIndex < taskParams.end; dataIndex++) {
-            const line = addEl(data, this._dataGroup, dataIndex, dimensions, coordSys);
-            line.incremental = true;
-            updateElCommon(line, data, dataIndex, seriesScope);
+            const line = addEl(data, this._dataGroup, dataIndex, coordSys.dimensions, coordSys);
+            line.incremental = getIncrementalId(seriesModel);
+            updateElCommon(line, data, dataIndex, makeSeriesScope(seriesModel));
             progressiveEls.push(line);
         }
     }

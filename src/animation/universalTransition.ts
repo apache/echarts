@@ -278,10 +278,9 @@ function transitionBetween(
     // find all groupIds and childGroupIds from oldDiffItems
     const oldGroupIds = createHashMap();
     const oldChildGroupIds = createHashMap();
-    oldDiffItems.forEach((item) => {
+    each(oldDiffItems, function (item) {
         item.groupId && oldGroupIds.set(item.groupId, true);
         item.childGroupId && oldChildGroupIds.set(item.childGroupId, true);
-
     });
     // traverse newDiffItems and decide the direction according to the rule
     for (let i = 0; i < newDiffItems.length; i++) {

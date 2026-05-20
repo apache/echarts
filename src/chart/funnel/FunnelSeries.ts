@@ -101,9 +101,11 @@ export interface FunnelSeriesOption
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | FunnelDataItemOption)[]
 }
 
+export const SERIES_TYPE_FUNNEL = 'funnel';
+
 class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
-    static type = 'series.funnel' as const;
-    type = FunnelSeriesModel.type;
+    static readonly type = 'series.' + SERIES_TYPE_FUNNEL;
+    readonly type = FunnelSeriesModel.type;
 
     init(option: FunnelSeriesOption) {
         super.init.apply(this, arguments as any);

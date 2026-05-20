@@ -38,8 +38,8 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
-import type { SymbolDrawItemModelOption } from '../helper/SymbolDraw';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
+import { SymbolDrawItemModelOption } from '../helper/baseDraw';
 
 type ScatterDataValue = OptionDataValue | OptionDataValue[];
 

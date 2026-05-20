@@ -65,6 +65,7 @@ export interface BoxplotSeriesOption
     coordinateSystem?: 'cartesian2d'
 
     layout?: LayoutOrient
+    clip?: boolean;
     /**
      * [min, max] can be percent of band width.
      */
@@ -73,9 +74,11 @@ export interface BoxplotSeriesOption
     data?: (BoxplotDataValue | BoxplotDataItemOption)[]
 }
 
+export const SERIES_TYPE_BOXPLOT = 'boxplot';
+
 class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
 
-    static readonly type = 'series.boxplot';
+    static readonly type = 'series.' + SERIES_TYPE_BOXPLOT;
     readonly type = BoxplotSeriesModel.type;
 
     static readonly dependencies = ['xAxis', 'yAxis', 'grid'];
@@ -109,6 +112,7 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
         legendHoverLink: true,
 
         layout: null,
+        clip: true,
         boxWidth: [7, 50],
 
         itemStyle: {

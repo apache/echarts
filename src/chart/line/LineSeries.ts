@@ -209,7 +209,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         //           follow the label interval strategy.
         showAllSymbol: 'auto',
 
-        // Whether to connect break point.
+        // Whether to connect break point. (non-finite values)
         connectNulls: false,
 
         // Sampling for large data. Can be: 'average', 'max', 'min', 'sum', 'lttb'.

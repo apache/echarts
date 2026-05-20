@@ -21,10 +21,14 @@ import {each} from 'zrender/src/core/util';
 import {simpleLayout, simpleLayoutEdge} from './simpleLayoutHelper';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import GraphSeriesModel from './GraphSeries';
+import GraphSeriesModel, { SERIES_TYPE_GRAPH } from './GraphSeries';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
-export default function graphSimpleLayout(ecModel: GlobalModel, api: ExtensionAPI) {
-    ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
+
+export const graphSimpleLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_GRAPH, graphSimpleLayout);
+
+function graphSimpleLayout(ecModel: GlobalModel, api: ExtensionAPI) {
+    ecModel.eachSeriesByType(SERIES_TYPE_GRAPH, function (seriesModel: GraphSeriesModel) {
         const layout = seriesModel.get('layout');
         const coordSys = seriesModel.coordinateSystem;
         if (coordSys && coordSys.type !== 'view') {

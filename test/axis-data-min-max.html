@@ -51,6 +51,8 @@ under the License.
     <div id="main8" class="chart"></div>
     <div id="main9" class="chart"></div>
 
+    <div id="main_invalid_min_max_permissive" class="chart"></div>
+
     <script>
         require(['echarts'], function (echarts) {
             // Basic data
@@ -330,6 +332,152 @@ under the License.
             });
         });
     </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+
+                var _ctx = {
+                    yAxisInverse: false,
+                    yAxisMinMax: [3, -3]
+                };
+
+                function createOption() {
+                    var xAxisData = [];
+                    var data1 = [];
+                    var data2 = [];
+                    var data3 = [];
+
+                    for (var i = 0; i < 5; i++) {
+                        xAxisData.push('Category' + i);
+                        data1.push((-Math.random() - 0.2).toFixed(3));
+                        data2.push((Math.random() + 0.3).toFixed(3));
+                        data3.push((Math.random() + 0.2).toFixed(3));
+                    }
+
+                    xAxisData.push({
+                        value: 'Category' + i,
+                        textStyle: {
+                            color: 'red'
+                        }
+                    });
+                    data1.push('-');
+                    data2.push('-');
+                    data3.push('-');
+
+                    for (; i < 10; i++) {
+                        xAxisData.push('Category' + i);
+                        data1.push((-Math.random() - 0.2).toFixed(3));
+                        data2.push((Math.random() + 0.3).toFixed(3));
+                        data3.push((Math.random() + 0.2).toFixed(3));
+                    }
+
+                    var option = {
+                        legend: {
+                            data: ['line', 'line2', 'line3']
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'line'
+                            }
+                        },
+                        xAxis: {
+                            data: xAxisData,
+                            boundaryGap: false,
+                            // inverse: true,
+                            splitArea: {
+                                show: true
+                            },
+                        },
+                        yAxis: {
+                            splitLine: {
+                                show: true
+                            },
+                            axisTick: {
+                                show: true
+                            },
+                            axisLine: {
+                                show: true
+                            },
+                            inverse: _ctx.yAxisInverse,
+                            min: _ctx.yAxisMinMax[0],
+                            max: _ctx.yAxisMinMax[1],
+                        },
+                        series: [{
+                            name: 'line',
+                            type: 'line',
+                            stack: 'all',
+                            symbolSize: 10,
+                            data: data1,
+                            areaStyle: {},
+                            smooth: true
+                        }, {
+                            name: 'line2',
+                            type: 'line',
+                            stack: 'all',
+                            symbolSize: 10,
+                            data: data2,
+                            areaStyle: {},
+                            smooth: true
+                        }, {
+                            name: 'line3',
+                            type: 'line',
+                            stack: 'all',
+                            symbolSize: 10,
+                            data: data3,
+                            areaStyle: {},
+                            smooth: true
+                        }]
+                    };
+                    return option;
+                }
+
+                function updateChart() {
+                    myChart.setOption(createOption());
+                }
+
+                var myChart = testHelper.create(echarts, 'main_invalid_min_max_permissive', {
+                    title: [
+                        'Invalid but permissive: yAxis.min > yAxis.max',
+                        'yAxis should inverse',
+                    ],
+                    option: createOption(),
+                    height: 400,
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        name: 'yAxis min/max:',
+                        values: [
+                            _ctx.yAxisMinMax,
+                            [-0.5, 5],
+                            [undefined, undefined],
+                            ['dataMin', 'dataMax'],
+                            ['dataMax', 'dataMin'],
+                            [NaN, NaN],
+                        ],
+                        onchange() {
+                            _ctx.yAxisMinMax = this.value;
+                            updateChart();
+                        }
+                    }, {
+                        type: 'select',
+                        name: 'yAxis.inverse:',
+                        values: [_ctx.yAxisInverse, !_ctx.yAxisInverse],
+                        onchange() {
+                            _ctx.yAxisInverse = this.value;
+                            updateChart();
+                        }
+                    }]
+                });
+            });
+        </script>
+
+
+
 </body>
 
 </html>

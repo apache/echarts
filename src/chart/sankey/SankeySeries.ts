@@ -37,7 +37,8 @@ import {
     CallbackDataParams,
     RoamOptionMixin,
     ComponentOnCalendarOptionMixin,
-    ComponentOnMatrixOptionMixin
+    ComponentOnMatrixOptionMixin,
+    RoamHostModel
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -157,8 +158,10 @@ export interface SankeySeriesOption
     }
 }
 
-class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
-    static readonly type = 'series.sankey';
+export const SERIES_TYPE_SANKEY = 'sankey';
+
+class SankeySeriesModel extends SeriesModel<SankeySeriesOption> implements RoamHostModel {
+    static readonly type = 'series.' + SERIES_TYPE_SANKEY;
     readonly type = SankeySeriesModel.type;
 
     static layoutMode = 'box' as const;
@@ -230,14 +233,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         dataItem.localY = localPosition[1];
     }
 
-    setCenter(center: number[]) {
-        this.option.center = center;
-    }
-
-    setZoom(zoom: number) {
-        this.option.zoom = zoom;
-    }
-
     /**
      * Return the graphic data structure
      *
@@ -300,6 +295,10 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             params.value = nodeValue;
         }
         return params;
+    }
+
+    __ownRoamView() {
+        return this.coordinateSystem;
     }
 
     static defaultOption: SankeySeriesOption = {

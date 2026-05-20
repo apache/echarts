@@ -27,6 +27,7 @@ import {Payload, ViewRootGroup, ECActionEvent, EventQueryItem, ECElementEvent} f
 import Element from 'zrender/src/Element';
 import SeriesModel from '../model/Series';
 
+
 interface ComponentView {
     /**
      * Implement it if needed.
@@ -62,7 +63,7 @@ interface ComponentView {
 
 class ComponentView {
 
-    // [Caution]: Because this class or desecendants can be used as `XXX.extend(subProto)`,
+    // [Caution]: Because this class or descendants can be used as `XXX.extend(subProto)`,
     // the class members must not be initialized in constructor or declaration place.
     // Otherwise there is bad case:
     //   class A {xxx = 1;}

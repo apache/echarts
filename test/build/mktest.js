@@ -27,7 +27,7 @@ const commander = require('commander');
 const chalk = require('chalk');
 
 const testDir = nodePath.resolve(__dirname, '..');
-const testTplPath = nodePath.resolve(__dirname, 'mktest-tpl.html');
+let testTplPath;
 const tplSegmentDelimiter = '<!-- TPL_SEGMENT_DELIMITER -->';
 const tagDomId = /{{TPL_DOM_ID}}/g;
 const tagDomPlace = '<!-- TPL_DOM_PLACE -->';
@@ -37,16 +37,27 @@ const manualText = `
     ${chalk.cyan.dim('Usage:')}
 
     # Make a file named "bar-action.html" in directory "echarts/test" with 1 initial chart.
-    ${chalk.green('npm run mktest bar-action')}
-    # or
     ${chalk.green('npm run mktest bar-action.html')}
+
+    # or (make test with the most commonly used inputs)
+    ${chalk.green('npm run mktest2 bar-action.html')}
+
+    # or (make test with all inputs)
+    ${chalk.green('npm run mktest3 bar-action.html')}
+
+    # or (make test with canvas debug)
+    ${chalk.green('npm run mktest:canvas:debug tmp-bar.html')}
+
     # or
-    ${chalk.green('node ./test/build/mktest bar-action')}
+    ${chalk.green('node ./test/build/mktest bar-action.html')}
 
     # Make a file named "bar-action.html" in directory "echarts/test" with 5 initial charts.
-    ${chalk.green('npm run mktest bar-action 5')}
+    ${chalk.green('npm run mktest bar-action.html 5')}
     # or
-    ${chalk.green('node ./test/build/mktest bar-action 5')}
+    ${chalk.green('node ./test/build/mktest bar-action.html 5')}
+
+    # Note: ".html" can be ignored:
+    ${chalk.green('npm run mktest bar-action')}
 `;
 
 function run() {
@@ -65,7 +76,9 @@ function run() {
 
     const testTplContent = nodeFS.readFileSync(testTplPath, {encoding: 'utf8'});
 
-    const testFileContent = makeTestFileContent(opt, testTplContent);
+    const testFileContent = opt.withCanvasDebug
+        ? testTplContent
+        : makeTestFileContent(opt, testTplContent);
 
     nodeFS.writeFileSync(opt.testFilePath, testFileContent, {encoding: 'utf8'});
 
@@ -77,9 +90,27 @@ function prepareOpt() {
     commander
         .usage('test-file-name [chart-number]')
         .description(manualText)
+        .option('--with-inputs-common', 'include common inputs')
+        .option('--with-inputs-all', 'include all inputs')
+        .option('--with-canvas-debug', 'canvas debug')
         .parse(process.argv);
 
     let args = commander.args || [];
+
+    const opts = commander.opts();
+
+    if (opts.withInputsCommon) {
+        testTplPath = nodePath.resolve(__dirname, 'mktest-tpl2.html');
+    }
+    else if (opts.withInputsAll) {
+        testTplPath = nodePath.resolve(__dirname, 'mktest-tpl3.html');
+    }
+    else if (opts.withCanvasDebug) {
+        testTplPath = nodePath.resolve(__dirname, 'mktest-tpl-canvas-debug.html');
+    }
+    else {
+        testTplPath = nodePath.resolve(__dirname, 'mktest-tpl.html');
+    }
 
     let testFileName = args[0];
     let testCaseNumber = args[1];
@@ -99,7 +130,8 @@ function prepareOpt() {
     return {
         testFileName: testFileName,
         testFilePath: testFilePath,
-        testCaseNumber: testCaseNumber
+        testCaseNumber: testCaseNumber,
+        withCanvasDebug: opts.withCanvasDebug
     };
 }
 

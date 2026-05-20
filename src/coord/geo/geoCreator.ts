@@ -23,11 +23,12 @@ import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
 import geoSourceManager from './geoSourceManager';
 import GeoModel, { GeoCommonOptionMixin, GeoOption, RegionOption } from './GeoModel';
-import MapSeries, { MapSeriesOption } from '../../chart/map/MapSeries';
+import MapSeries, {
+    buildAllMapSeriesGroups, mapSeriesGroupHasOwnGeo, MapSeriesOption, SERIES_TYPE_MAP
+} from '../../chart/map/MapSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { CoordinateSystemCreator } from '../CoordinateSystem';
 import { NameMap } from './geoTypes';
-import { Dictionary } from 'zrender/src/core/types';
 import type Model from '../../model/Model';
 import type GlobalModel from '../../model/Global';
 import type ComponentModel from '../../model/Component';
@@ -35,14 +36,20 @@ import * as vector from 'zrender/src/core/vector';
 import { injectCoordSysByOption } from '../../core/CoordinateSystem';
 import { SINGLE_REFERRING } from '../../util/model';
 import type { GeoJSONRegion } from './Region';
+import { RoamOptionMixin } from '../../util/types';
+import {
+    viewCoordSysSetBoundingRect, viewCoordSysSetRoamOptionFromModel, viewCoordSysSetViewRect,
+} from '../View';
 
 export type resizeGeoType = typeof resizeGeo;
+export type MapOrGeoModel = (GeoModel | MapSeries) & ComponentModel<GeoOption | MapSeriesOption>;
 
 /**
  * Resize method bound to the geo
  */
-function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOption>, api: ExtensionAPI): void {
+function resizeGeo(this: Geo, geoModel: MapOrGeoModel, api: ExtensionAPI): void {
 
+    const viewCoordSys = this.view;
     const boundingCoords = geoModel.get('boundingCoords');
     if (boundingCoords != null) {
         let leftTop = boundingCoords[0];
@@ -87,17 +94,23 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
                 sampleLine(xMin, yMax, xMax, yMin);
             }
 
-            this.setBoundingRect(leftTop[0], leftTop[1], rightBottom[0] - leftTop[0], rightBottom[1] - leftTop[1]);
+            viewCoordSysSetBoundingRect(
+                viewCoordSys,
+                leftTop[0],
+                leftTop[1],
+                rightBottom[0] - leftTop[0],
+                rightBottom[1] - leftTop[1]
+            );
         }
     }
 
-    const rect = this.getBoundingRect();
+    const rect = viewCoordSys.getBoundingRect();
 
     const centerOption = geoModel.get('layoutCenter');
     const sizeOption = geoModel.get('layoutSize');
 
-    // Laying out geo on `dataCoordSys`, such as cartesian, works theoretically but not supported yet.
-    // Therefore here we only handle cases that laying out on `boxCoordSys`, such as matrix/calendar.
+    // Laying out geo on Cartesian works theoretically but not supported yet.
+    // Currently, we only support to lay out on matrix/calendar.
     const {refContainer} = layout.createBoxLayoutReference(geoModel, api);
 
     const aspect = rect.width / rect.height * this.aspectScale;
@@ -147,10 +160,8 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
         viewRect = layout.applyPreserveAspect(geoModel, viewRect, aspect);
     }
 
-    this.setViewRect(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
-
-    this.setCenter(geoModel.get('center'));
-    this.setZoom(geoModel.get('zoom'));
+    viewCoordSysSetViewRect(viewCoordSys, viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+    viewCoordSysSetRoamOptionFromModel(viewCoordSys, geoModel);
 }
 
 // Back compat for ECharts2, where the coord map is set on map series:
@@ -173,7 +184,8 @@ class GeoCreator implements CoordinateSystemCreator {
             return {
                 nameProperty: model.get('nameProperty'),
                 aspectScale: model.get('aspectScale'),
-                projection: model.get('projection')
+                projection: model.get('projection'),
+                clip: model.getShallow('clip', true),
             };
         }
 
@@ -187,7 +199,6 @@ class GeoCreator implements CoordinateSystemCreator {
                 ecModel,
             }, getCommonGeoProperties(geoModel)));
 
-            geo.zoomLimit = geoModel.get('scaleLimit');
             geoList.push(geo);
 
             // setGeoCoords(geo, geoModel);
@@ -206,7 +217,7 @@ class GeoCreator implements CoordinateSystemCreator {
                 targetModel: seriesModel,
                 coordSysType: 'geo',
                 coordSysProvider() {
-                    const geoModel = seriesModel.subType === 'map'
+                    const geoModel = seriesModel.subType === SERIES_TYPE_MAP
                         ? (seriesModel as MapSeries).getHostGeoModel()
                         : seriesModel.getReferringComponents(
                             'geo', SINGLE_REFERRING
@@ -218,41 +229,43 @@ class GeoCreator implements CoordinateSystemCreator {
         });
 
         // If has map series
-        const mapModelGroupBySeries = {} as Dictionary<MapSeries[]>;
-
-        ecModel.eachSeriesByType('map', function (seriesModel: MapSeries) {
-            if (!seriesModel.getHostGeoModel()) {
-                const mapType = seriesModel.getMapType();
-                mapModelGroupBySeries[mapType] = mapModelGroupBySeries[mapType] || [];
-                mapModelGroupBySeries[mapType].push(seriesModel);
+        zrUtil.each(buildAllMapSeriesGroups(ecModel, true), function (mapSeriesGroup, groupKey) {
+            if (!mapSeriesGroupHasOwnGeo(groupKey)) {
+                return;
             }
-        });
 
-        zrUtil.each(mapModelGroupBySeries, function (mapSeries, mapType) {
-            const nameMapList = zrUtil.map(mapSeries, function (singleMapSeries) {
-                return singleMapSeries.get('nameMap');
+            const firstDeclaredMapSeries = mapSeriesGroup.r[0];
+            const nameMapList: NameMap[] = [];
+
+            zrUtil.each(mapSeriesGroup.r, function (mapSeries) {
+                nameMapList.push(mapSeries.get('nameMap'));
+                // MAP_SERIES_GROUP must not be set here, as series filtering is not performed.
+                // Clear it first, including series to be filtered.
+                mapSeries.seriesGroup = null;
             });
 
+            const mapType = groupKey.slice(1);
             const geo = new Geo(mapType, mapType, zrUtil.extend({
                 nameMap: zrUtil.mergeAll(nameMapList),
                 api,
                 ecModel,
-            }, getCommonGeoProperties(mapSeries[0])));
+            }, getCommonGeoProperties(firstDeclaredMapSeries)));
 
-            geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {
-                return singleMapSeries.get('scaleLimit');
-            }));
+            let scaleLimit: RoamOptionMixin['scaleLimit'];
+            zrUtil.each(mapSeriesGroup.r, function (mapSeries) {
+                scaleLimit = zrUtil.retrieve2(scaleLimit, mapSeries.get('scaleLimit'));
+            });
+
             geoList.push(geo);
 
             // Inject resize method
             geo.resize = resizeGeo;
 
-            geo.resize(mapSeries[0], api);
+            geo.resize(firstDeclaredMapSeries, api);
 
-            zrUtil.each(mapSeries, function (singleMapSeries) {
-                singleMapSeries.coordinateSystem = geo;
-
-                setGeoCoords(geo, singleMapSeries);
+            zrUtil.each(mapSeriesGroup.r, function (mapSeries) {
+                mapSeries.coordinateSystem = geo;
+                setGeoCoords(geo, mapSeries);
             });
         });
 
@@ -295,7 +308,6 @@ class GeoCreator implements CoordinateSystemCreator {
         return regionsArr;
     }
 }
-
 
 const geoCreator = new GeoCreator();
 

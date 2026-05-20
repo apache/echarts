@@ -19,16 +19,19 @@
 
 import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
 import GlobalModel from '../../model/Global';
-import ChordSeriesModel from './ChordSeries';
+import ChordSeriesModel, { SERIES_TYPE_CHORD } from './ChordSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { getCircleLayout } from '../../util/layout';
 import SeriesModel from '../../model/Series';
 import { CircleLayoutOptionMixin, SeriesOption } from '../../util/types';
+import { createSimpleOverallStageHandler } from '../../util/model';
 
 const RADIAN = Math.PI / 180;
 
-export default function chordCircularLayout(ecModel: GlobalModel, api: ExtensionAPI) {
-    ecModel.eachSeriesByType('chord', function (seriesModel: ChordSeriesModel) {
+export const chordCircularLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_CHORD, chordCircularLayout);
+
+function chordCircularLayout(ecModel: GlobalModel, api: ExtensionAPI) {
+    ecModel.eachSeriesByType(SERIES_TYPE_CHORD, function (seriesModel: ChordSeriesModel) {
         chordLayout(seriesModel, api);
     });
 }

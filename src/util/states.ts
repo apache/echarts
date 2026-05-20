@@ -54,7 +54,7 @@ import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSys
 import { queryDataIndex, makeInner } from './model';
 import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import GlobalModel from '../model/Global';
-import ExtensionAPI from '../core/ExtensionAPI';
+import ExtensionAPI, { getViewOfComponentOrSeries } from '../core/ExtensionAPI';
 import ComponentModel from '../model/Component';
 import { error } from './log';
 import type ComponentView from '../view/Component';
@@ -92,6 +92,7 @@ export const SELECT_ACTION_TYPE = 'select';
 export const UNSELECT_ACTION_TYPE = 'unselect';
 export const TOGGLE_SELECT_ACTION_TYPE = 'toggleSelect';
 export const SELECT_CHANGED_EVENT_TYPE = 'selectchanged';
+
 
 type ExtendedProps = {
     __highByOuter: number
@@ -406,9 +407,8 @@ export function allLeaveBlur(api: ExtensionAPI) {
     const allComponentViews: ComponentView[] = [];
     model.eachComponent(function (componentType, componentModel) {
         const componentStates = getComponentStates(componentModel);
+        const view = getViewOfComponentOrSeries(api, componentModel);
         const isSeries = componentType === 'series';
-        const view = isSeries ? api.getViewOfSeriesModel(componentModel as SeriesModel)
-            : api.getViewOfComponentModel(componentModel);
         !isSeries && allComponentViews.push(view as ComponentView);
         if (componentStates.isBlured) {
             // Leave blur anyway

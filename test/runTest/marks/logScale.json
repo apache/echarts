@@ -1,5 +1,13 @@
 [
   {
+    "link": "",
+    "comment": "logScale auto filter non-positive.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775675921041
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/21120",
     "comment": "fix(logScale): Fix incorrect rounding usage, and support data with big negative exponent.",
     "type": "Bug Fixing",

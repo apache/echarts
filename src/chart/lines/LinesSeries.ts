@@ -41,8 +41,8 @@ import {
     CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import type { LineDrawModelOption } from '../helper/LineDraw';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import { LineDrawModelOption } from '../helper/baseDraw';
 
 const Uint32Arr = typeof Uint32Array === 'undefined' ? Array : Uint32Array;
 const Float64Arr = typeof Float64Array === 'undefined' ? Array : Float64Array;
@@ -337,19 +337,31 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         dataType: string
     ) {
         const data = this.getData();
+        const value = this.getRawValue(dataIndex);
         const itemModel = data.getItemModel<LinesDataItemOption>(dataIndex);
-        const name = itemModel.get('name');
-        if (name) {
-            return name;
+        let itemName = itemModel.get('name');
+        if (!itemName) {
+            const fromName = itemModel.get('fromName');
+            const toName = itemModel.get('toName');
+            const nameArr = [];
+            fromName != null && nameArr.push(fromName);
+            toName != null && nameArr.push(toName);
+            itemName = nameArr.join(' > ');
         }
-        const fromName = itemModel.get('fromName');
-        const toName = itemModel.get('toName');
-        const nameArr = [];
-        fromName != null && nameArr.push(fromName);
-        toName != null && nameArr.push(toName);
 
         return createTooltipMarkup('nameValue', {
-            name: nameArr.join(' > ')
+            name: itemName,
+            value,
+            // NOTE: here `value` may be `coords` (an 2D-array) if ec option is like
+            //  series: {
+            //      type: 'lines',
+            //      data: [
+            //          [[2.122232, 100.1133], [5.122232, 104.1133]],
+            //          [[22.122232, 0.1133], [25.122232, 4.1133]],
+            //      ]
+            //  }
+            // Do not display `value` in that case.
+            noValue: value == null || isNaN(value as number)
         });
     }
 
@@ -377,8 +389,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         const effectModel = this.getModel('effect');
         const trailLength = effectModel.get('trailLength');
         return this.getData().count() > this.getProgressiveThreshold()
-            // Each progressive series has individual key.
-            ? this.id
+            ? this.id // PENDING: See `GET_ZLEVEL_KEY_FOR_PROGRESSIVE`
             : (effectModel.get('show') && trailLength > 0 ? trailLength + '' : '');
     }
 

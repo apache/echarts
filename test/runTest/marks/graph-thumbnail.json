@@ -1,5 +1,13 @@
 [
   {
+    "link": "",
+    "comment": "random",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775640604385
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/17471",
     "comment": "Thumbnail is a new feature not yet released to it's fine.",
     "type": "New Feature",

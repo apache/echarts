@@ -34,6 +34,8 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import TreeSeriesModel from './TreeSeries';
 import { createBoxLayoutReference, getLayoutRect } from '../../util/layout';
 
+// NOTE: preserve it as a function rather than StageHandler as a test case of
+// `Scheduler['wrapStageHandler']` and `detectSeriseType`.
 export default function treeLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('tree', function (seriesModel: TreeSeriesModel) {
         commonLayout(seriesModel, api);

@@ -19,28 +19,31 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
-import {makeInner} from '../util/model';
+import {makeInner, removeDuplicates, removeDuplicatesGetKeyFromItemItself} from '../util/model';
 import {
     makeLabelFormatter,
     getOptionCategoryInterval,
-    shouldShowAllLabels
 } from './axisHelper';
-import Axis from './Axis';
+import type Axis from './Axis';
 import Model from '../model/Model';
-import { AxisBaseOption, CategoryAxisBaseOption } from './axisCommonTypes';
+import {
+    AxisBaseOption, AxisTickLabelCustomValuesOption, CategoryAxisBaseOption,
+    CategoryTickLabelSplitBuildingOption,
+    CategoryTickLabelSplitIntervalCb
+} from './axisCommonTypes';
 import OrdinalScale from '../scale/Ordinal';
 import { AxisBaseModel } from './AxisBaseModel';
 import type Axis2D from './cartesian/Axis2D';
-import { NullUndefined, ScaleTick, VisualAxisBreak } from '../util/types';
-import { ScaleGetTicksOpt } from '../scale/Scale';
+import { NullUndefined, ScaleTick } from '../util/types';
+import Scale, { ScaleGetTicksOpt } from '../scale/Scale';
+import { asc } from '../util/number';
+import { ordinalScaleCreateTicks } from '../scale/helper';
 
 
-type AxisLabelInfoDetermined = {
+export type AxisLabelInfoDetermined = {
     formattedLabel: string,
     rawLabel: string,
-    tickValue: number,
-    time: ScaleTick['time'] | NullUndefined,
-    break: VisualAxisBreak | NullUndefined,
+    tick: ScaleTick, // Never be null/undefined.
 };
 
 type AxisCache<TKey, TVal> = {
@@ -50,14 +53,16 @@ type AxisCache<TKey, TVal> = {
 type AxisCategoryTickLabelCacheKey<TTickLabel extends AxisInnerStoreCacheProp> =
     CategoryAxisBaseOption[TTickLabel]['interval'];
 
-interface AxisCategoryLabelCreated {
+interface AxisCategoryLabelsCreated {
     labels: AxisLabelInfoDetermined[]
     labelCategoryInterval: number
 }
-interface AxisCategoryTickCreated {
-    ticks: number[]
+interface AxisCategoryTicksCreated {
+    ticks: ScaleTick[]
     tickCategoryInterval?: number
 }
+
+type AxisTicksCreated = AxisCategoryTicksCreated;
 
 type AxisModelInnerStore = {
     lastAutoInterval: number
@@ -69,8 +74,8 @@ const modelInner = makeInner<AxisModelInnerStore, AxisBaseModel>();
 
 type AxisInnerStoreCacheProp = 'axisTick' | 'axisLabel';
 type AxisInnerStore = {
-    axisTick: AxisCache<AxisCategoryTickLabelCacheKey<'axisTick'>, AxisCategoryTickCreated>
-    axisLabel: AxisCache<AxisCategoryTickLabelCacheKey<'axisLabel'>, AxisCategoryLabelCreated>
+    axisTick: AxisCache<AxisCategoryTickLabelCacheKey<'axisTick'>, AxisCategoryTicksCreated>
+    axisLabel: AxisCache<AxisCategoryTickLabelCacheKey<'axisLabel'>, AxisCategoryLabelsCreated>
     autoInterval: number
 };
 const axisInner = makeInner<AxisInnerStore, Axis>();
@@ -107,37 +112,21 @@ export function createAxisLabelsComputingContext(kind: AxisTickLabelComputingKin
     };
 }
 
-
-function tickValuesToNumbers(axis: Axis, values: (number | string | Date)[]) {
-    const nums = zrUtil.map(values, val => axis.scale.parse(val));
-    if (axis.type === 'time' && nums.length > 0) {
-        // Time axis needs duplicate first/last tick (see TimeScale.getTicks())
-        // The first and last tick/label don't get drawn
-        nums.sort();
-        nums.unshift(nums[0]);
-        nums.push(nums[nums.length - 1]);
-    }
-    return nums;
-}
-
+/**
+ * CAUTION: Do not modify the result.
+ */
 export function createAxisLabels(axis: Axis, ctx: AxisLabelsComputingContext): {
     labels: AxisLabelInfoDetermined[]
 } {
     const custom = axis.getLabelModel().get('customValues');
     if (custom) {
-        const labelFormatter = makeLabelFormatter(axis);
-        const extent = axis.scale.getExtent();
-        const tickNumbers = tickValuesToNumbers(axis, custom);
-        const ticks = zrUtil.filter(tickNumbers, val => val >= extent[0] && val <= extent[1]);
+        const scale = axis.scale;
         return {
-            labels: zrUtil.map(ticks, (numval, index) => {
-                const tick = {value: numval};
+            labels: zrUtil.map(parseTickLabelCustomValues(custom, scale), (tick, index) => {
                 return {
-                    formattedLabel: labelFormatter(tick, index),
-                    rawLabel: axis.scale.getLabel(tick),
-                    tickValue: numval,
-                    time: undefined as ScaleTick['time'] | NullUndefined,
-                    break: undefined as VisualAxisBreak | NullUndefined,
+                    formattedLabel: makeLabelFormatter(axis)(tick, index),
+                    rawLabel: scale.getLabel(tick),
+                    tick: tick,
                 };
             }),
         };
@@ -149,28 +138,45 @@ export function createAxisLabels(axis: Axis, ctx: AxisLabelsComputingContext): {
 }
 
 /**
+ * CAUTION: Do not modify the result.
+ *
  * @param tickModel For example, can be axisTick, splitLine, splitArea.
  */
 export function createAxisTicks(
     axis: Axis,
-    tickModel: AxisBaseModel,
+    tickModel: Model<CategoryTickLabelSplitBuildingOption>,
     opt?: Pick<ScaleGetTicksOpt, 'breakTicks' | 'pruneByBreak'>
-): {
-    ticks: number[],
-    tickCategoryInterval?: number
-} {
+): AxisTicksCreated {
+    const scale = axis.scale;
     const custom = axis.getTickModel().get('customValues');
     if (custom) {
-        const extent = axis.scale.getExtent();
-        const tickNumbers = tickValuesToNumbers(axis, custom);
         return {
-            ticks: zrUtil.filter(tickNumbers, val => val >= extent[0] && val <= extent[1])
+            ticks: parseTickLabelCustomValues(custom, scale)
         };
     }
     // Only ordinal scale support tick interval
     return axis.type === 'category'
         ? makeCategoryTicks(axis, tickModel)
-        : {ticks: zrUtil.map(axis.scale.getTicks(opt), tick => tick.value)};
+        : {ticks: scale.getTicks(opt)};
+}
+
+function parseTickLabelCustomValues(
+    customValues: AxisTickLabelCustomValuesOption,
+    scale: Scale,
+): ScaleTick[] {
+    const extent = scale.getExtent();
+    const tickNumbers: number[] = [];
+    zrUtil.each(customValues, function (val) {
+        val = scale.parse(val);
+        if (val >= extent[0] && val <= extent[1]) {
+            tickNumbers.push(val);
+        }
+    });
+    removeDuplicates(tickNumbers, removeDuplicatesGetKeyFromItemItself, null);
+    asc(tickNumbers);
+    return zrUtil.map(tickNumbers, function (tickVal) {
+        return {value: tickVal};
+    });
 }
 
 function makeCategoryLabels(axis: Axis, ctx: AxisLabelsComputingContext): ReturnType<typeof createAxisLabels> {
@@ -186,10 +192,7 @@ function makeCategoryLabelsActually(
     axis: Axis,
     labelModel: Model<AxisBaseOption['axisLabel']>,
     ctx: AxisLabelsComputingContext
-): {
-    labels: AxisLabelInfoDetermined[]
-    labelCategoryInterval: number
-} {
+): AxisCategoryLabelsCreated {
     const labelsCache = ensureCategoryLabelCache(axis);
     const optionLabelInterval = getOptionCategoryInterval(labelModel);
     const isEstimate = ctx.kind === AxisTickLabelComputingKind.estimate;
@@ -209,12 +212,12 @@ function makeCategoryLabelsActually(
     let numericLabelInterval;
 
     if (zrUtil.isFunction(optionLabelInterval)) {
-        labels = makeLabelsByCustomizedCategoryInterval(axis, optionLabelInterval);
+        labels = makeTicksLabelsByCategoryIntervalNumOrCb(axis, optionLabelInterval, false);
     }
     else {
         numericLabelInterval = optionLabelInterval === 'auto'
             ? makeAutoCategoryInterval(axis, ctx) : optionLabelInterval;
-        labels = makeLabelsByNumericCategoryInterval(axis, numericLabelInterval);
+        labels = makeTicksLabelsByCategoryIntervalNumOrCb(axis, numericLabelInterval, false);
     }
 
     const result = {labels, labelCategoryInterval: numericLabelInterval};
@@ -230,7 +233,10 @@ function makeCategoryLabelsActually(
     return result;
 }
 
-function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
+function makeCategoryTicks(
+    axis: Axis,
+    tickModel: Model<CategoryTickLabelSplitBuildingOption>
+): AxisCategoryTicksCreated {
     const ticksCache = ensureCategoryTickCache(axis);
     const optionTickInterval = getOptionCategoryInterval(tickModel);
     const result = axisCacheGet(ticksCache, optionTickInterval);
@@ -239,7 +245,7 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
         return result;
     }
 
-    let ticks: number[];
+    let ticks: ScaleTick[];
     let tickCategoryInterval;
 
     // Optimize for the case that large category data and no label displayed,
@@ -249,7 +255,7 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
     }
 
     if (zrUtil.isFunction(optionTickInterval)) {
-        ticks = makeLabelsByCustomizedCategoryInterval(axis, optionTickInterval, true);
+        ticks = makeTicksLabelsByCategoryIntervalNumOrCb(axis, optionTickInterval, true);
     }
     // Always use label interval by default despite label show. Consider this
     // scenario, Use multiple grid with the xAxis sync, and only one xAxis shows
@@ -260,12 +266,12 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
         );
         tickCategoryInterval = labelsResult.labelCategoryInterval;
         ticks = zrUtil.map(labelsResult.labels, function (labelItem) {
-            return labelItem.tickValue;
+            return labelItem.tick;
         });
     }
     else {
         tickCategoryInterval = optionTickInterval;
-        ticks = makeLabelsByNumericCategoryInterval(axis, tickCategoryInterval, true);
+        ticks = makeTicksLabelsByCategoryIntervalNumOrCb(axis, tickCategoryInterval, true);
     }
 
     // Cache to avoid calling interval function repeatedly.
@@ -282,9 +288,7 @@ function makeRealNumberLabels(axis: Axis): ReturnType<typeof createAxisLabels> {
             return {
                 formattedLabel: labelFormatter(tick, idx),
                 rawLabel: axis.scale.getLabel(tick),
-                tickValue: tick.value,
-                time: tick.time,
-                break: tick.break,
+                tick: tick,
             };
         })
     };
@@ -340,11 +344,11 @@ function makeAutoCategoryInterval(axis: Axis, ctx: AxisLabelsComputingContext): 
 
 /**
  * Calculate interval for category axis ticks and labels.
- * Use a stretegy to try to avoid overlapping.
+ * Use a strategy to try to avoid overlapping.
  * To get precise result, at least one of `getRotate` and `isHorizontal`
  * should be implemented in axis.
  */
-export function calculateCategoryInterval(axis: Axis, ctx: AxisLabelsComputingContext) {
+export function calculateCategoryInterval(axis: Axis, ctx: AxisLabelsComputingContext): number {
     const kind = ctx.kind;
 
     const params = fetchAutoCategoryIntervalCalculationParams(axis);
@@ -472,115 +476,47 @@ function fetchAutoCategoryIntervalCalculationParams(axis: Axis) {
     };
 }
 
-function makeLabelsByNumericCategoryInterval(
-    axis: Axis, categoryInterval: number
+function makeTicksLabelsByCategoryIntervalNumOrCb(
+    axis: Axis, categoryInterval: number | CategoryTickLabelSplitIntervalCb, onlyTick: false
 ): AxisLabelInfoDetermined[];
-function makeLabelsByNumericCategoryInterval(
-    axis: Axis, categoryInterval: number, onlyTick: false
-): AxisLabelInfoDetermined[];
-function makeLabelsByNumericCategoryInterval(
-    axis: Axis, categoryInterval: number, onlyTick: true
-): number[];
-function makeLabelsByNumericCategoryInterval(
-    axis: Axis, categoryInterval: number, onlyTick?: boolean
+function makeTicksLabelsByCategoryIntervalNumOrCb(
+    axis: Axis, categoryInterval: number | CategoryTickLabelSplitIntervalCb, onlyTick: true
+): ScaleTick[];
+function makeTicksLabelsByCategoryIntervalNumOrCb(
+    axis: Axis, categoryInterval: number | CategoryTickLabelSplitIntervalCb, onlyTick?: boolean
 ) {
     const labelFormatter = makeLabelFormatter(axis);
     const ordinalScale = axis.scale as OrdinalScale;
-    const ordinalExtent = ordinalScale.getExtent();
-    const labelModel = axis.getLabelModel();
-    const result: (AxisLabelInfoDetermined | number)[] = [];
+    const result: (AxisLabelInfoDetermined | ScaleTick)[] = [];
+    const categoryIntervalIsCb = zrUtil.isFunction(categoryInterval);
 
-    // TODO: axisType: ordinalTime, pick the tick from each month/day/year/...
+    ordinalScaleCreateTicks(
+        ordinalScale,
+        categoryIntervalIsCb ? 0 : categoryInterval,
 
-    const step = Math.max((categoryInterval || 0) + 1, 1);
-    let startTick = ordinalExtent[0];
-    const tickCount = ordinalScale.count();
-
-    // Calculate start tick based on zero if possible to keep label consistent
-    // while zooming and moving while interval > 0. Otherwise the selection
-    // of displayable ticks and symbols probably keep changing.
-    // 3 is empirical value.
-    if (startTick !== 0 && step > 1 && tickCount / step > 2) {
-        startTick = Math.round(Math.ceil(startTick / step) * step);
-    }
-
-    // (1) Only add min max label here but leave overlap checking
-    // to render stage, which also ensure the returned list
-    // suitable for splitLine and splitArea rendering.
-    // (2) Scales except category always contain min max label so
-    // do not need to perform this process.
-    const showAllLabel = shouldShowAllLabels(axis);
-    const includeMinLabel = labelModel.get('showMinLabel') || showAllLabel;
-    const includeMaxLabel = labelModel.get('showMaxLabel') || showAllLabel;
-
-    if (includeMinLabel && startTick !== ordinalExtent[0]) {
-        addItem(ordinalExtent[0]);
-    }
-
-    // Optimize: avoid generating large array by `ordinalScale.getTicks()`.
-    let tickValue = startTick;
-    for (; tickValue <= ordinalExtent[1]; tickValue += step) {
-        addItem(tickValue);
-    }
-
-    if (includeMaxLabel && tickValue - step !== ordinalExtent[1]) {
-        addItem(ordinalExtent[1]);
-    }
-
-    function addItem(tickValue: number) {
-        const tickObj = { value: tickValue };
-        result.push(onlyTick
-            ? tickValue
-            : {
-                formattedLabel: labelFormatter(tickObj),
-                rawLabel: ordinalScale.getLabel(tickObj),
-                tickValue: tickValue,
-                time: undefined,
-                break: undefined,
+        function (tickObj, isExtentBoundary) {
+            const tickLabel = ordinalScale.getLabel(tickObj);
+            if (categoryIntervalIsCb) {
+                // When interval is function, a falsy return means ignore the tick.
+                // It is time consuming for large category data.
+                const isOnInterval = !!categoryInterval(tickObj.value, tickLabel);
+                tickObj.offInterval = !isOnInterval;
+                // axis extent min max labels should be always included and the display strategy
+                // is adopted uniformly later in `AxisBuilder`.
+                if (!isOnInterval && !isExtentBoundary) {
+                    return;
+                }
             }
-        );
-    }
-
-    return result;
-}
-
-type CategoryIntervalCb = (tickVal: number, rawLabel: string) => boolean;
-
-// When interval is function, the result `false` means ignore the tick.
-// It is time consuming for large category data.
-function makeLabelsByCustomizedCategoryInterval(
-    axis: Axis, categoryInterval: CategoryIntervalCb
-): AxisLabelInfoDetermined[];
-function makeLabelsByCustomizedCategoryInterval(
-    axis: Axis, categoryInterval: CategoryIntervalCb, onlyTick: false
-): AxisLabelInfoDetermined[];
-function makeLabelsByCustomizedCategoryInterval(
-    axis: Axis, categoryInterval: CategoryIntervalCb, onlyTick: true
-): number[];
-function makeLabelsByCustomizedCategoryInterval(
-    axis: Axis, categoryInterval: CategoryIntervalCb, onlyTick?: boolean
-) {
-    const ordinalScale = axis.scale;
-    const labelFormatter = makeLabelFormatter(axis);
-    const result: (AxisLabelInfoDetermined | number)[] = [];
-
-    zrUtil.each(ordinalScale.getTicks(), function (tick) {
-        const rawLabel = ordinalScale.getLabel(tick);
-        const tickValue = tick.value;
-        if (categoryInterval(tick.value, rawLabel)) {
-            result.push(
-                onlyTick
-                ? tickValue
+            result.push(onlyTick
+                ? tickObj
                 : {
-                    formattedLabel: labelFormatter(tick),
-                    rawLabel: rawLabel,
-                    tickValue: tickValue,
-                    time: undefined,
-                    break: undefined,
+                    formattedLabel: labelFormatter(tickObj),
+                    rawLabel: tickLabel,
+                    tick: tickObj,
                 }
             );
         }
-    });
+    );
 
     return result;
 }

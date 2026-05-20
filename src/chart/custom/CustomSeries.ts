@@ -21,7 +21,10 @@ import Displayable from 'zrender/src/graphic/Displayable';
 import { ImageProps, ImageStyleProps } from 'zrender/src/graphic/Image';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { ZRenderType } from 'zrender/src/zrender';
-import { BarGridLayoutOptionForCustomSeries, BarGridLayoutResult } from '../../layout/barGrid';
+import {
+    BarGridLayoutOptionForCustomSeries,
+    BarGridLayoutResultForCustomSeries
+} from '../../layout/barGrid';
 import {
     AnimationOption,
     BlurScope,
@@ -296,7 +299,7 @@ export interface CustomSeriesRenderItemAPI extends
     ): VT extends NonStyleVisualProps ? DefaultDataVisual[VT]
         : VT extends StyleVisualProps ? PathStyleProps[typeof STYLE_VISUAL_TYPE[VT]]
         : void;
-    barLayout(opt: BarGridLayoutOptionForCustomSeries): BarGridLayoutResult;
+    barLayout(opt: BarGridLayoutOptionForCustomSeries): BarGridLayoutResultForCustomSeries;
     currentSeriesIndices(): number[];
     font(opt: Pick<TextCommonOption, 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>): string;
 }

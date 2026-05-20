@@ -22,7 +22,7 @@
     },
     "include": [
         "src/**/*.ts",
-        "extension-src/**/*.ts",
+        "extension-src/dataTool/**/*.ts",
         "ssr/client/**/*.ts",
         "test/lib/myTransform/src/**/*.ts"
     ]
