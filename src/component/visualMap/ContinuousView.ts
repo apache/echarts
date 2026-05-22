@@ -40,6 +40,7 @@ import ZRImage from 'zrender/src/graphic/Image';
 import { ECData, getECData } from '../../util/innerStore';
 import { createTextStyle } from '../../label/labelStyle';
 import { findEventDispatcher } from '../../util/event';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 
 const linearMap = numberUtil.linearMap;
 const each = zrUtil.each;
@@ -49,6 +50,8 @@ const mathMax = Math.max;
 // Arbitrary value
 const HOVER_LINK_SIZE = 12;
 const HOVER_LINK_OUT = 6;
+/** Pixels to inflate handle label bounds when testing overlap (merge slightly before touching). */
+const HANDLE_LABEL_MERGE_MARGIN = 2;
 
 type Orient = VisualMapModel['option']['orient'];
 
@@ -108,6 +111,9 @@ class ContinuousView extends VisualMapView {
 
     private _firstShowIndicator: boolean;
 
+    /** Whether the two handle value labels are merged into one (overlap). */
+    private _handleLabelsMerged: boolean | undefined;
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         super.init(ecModel, api);
 
@@ -128,6 +134,7 @@ class ContinuousView extends VisualMapView {
 
     private _buildView() {
         this.group.removeAll();
+        this._handleLabelsMerged = undefined;
 
         const visualMapModel = this.visualMapModel;
         const thisGroup = this.group;
@@ -423,7 +430,11 @@ class ContinuousView extends VisualMapView {
             !this._hovering && this._clearHoverLinkToSeries();
         }
         else if (useHoverLinkOnHandle(this.visualMapModel)) {
-            this._doHoverLinkToSeries(this._handleEnds[handleIndex as 0 | 1], false);
+            const hoverPos =
+                handleIndex === 'all'
+                    ? (this._handleEnds[0] + this._handleEnds[1]) / 2
+                    : this._handleEnds[handleIndex as 0 | 1];
+            this._doHoverLinkToSeries(hoverPos, false);
         }
     }
 
@@ -592,6 +603,14 @@ class ContinuousView extends VisualMapView {
         );
     }
 
+    private _getHandleLabelRectInGroup(label: graphic.Text): BoundingRect {
+        const local = label.getBoundingRect();
+        const rect = new BoundingRect(0, 0, 0, 0);
+        const m = graphic.getTransform(label, this.group);
+        BoundingRect.applyTransform(rect, local, m);
+        return rect;
+    }
+
     private _updateHandle(handleEnds: number[], visualInRange: BarVisual) {
         if (!this._useHandle) {
             return;
@@ -604,45 +623,116 @@ class ContinuousView extends VisualMapView {
         const itemSize = visualMapModel.itemSize;
         const dataExtent = visualMapModel.getExtent();
         const align = this._applyTransform('left', shapes.mainGroup);
+        const textPoints: [number, number][] = [];
 
-        each([0, 1], function (handleIndex) {
-            const handleThumb = handleThumbs[handleIndex];
-            handleThumb.setStyle('fill', visualInRange.handlesColor[handleIndex]);
-            handleThumb.y = handleEnds[handleIndex];
+        each(
+            [0, 1],
+            function (handleIndex) {
+                const handleThumb = handleThumbs[handleIndex];
+                handleThumb.setStyle('fill', visualInRange.handlesColor[handleIndex]);
+                handleThumb.y = handleEnds[handleIndex];
 
-            const val = linearMap(handleEnds[handleIndex], [0, itemSize[1]], dataExtent, true);
-            const symbolSize = this.getControllerVisual(val, 'symbolSize') as number;
+                const val = linearMap(
+                    handleEnds[handleIndex],
+                    [0, itemSize[1]],
+                    dataExtent,
+                    true,
+                );
+                const symbolSize = this.getControllerVisual(val, 'symbolSize') as number;
 
-            handleThumb.scaleX = handleThumb.scaleY = symbolSize / itemSize[0];
-            handleThumb.x = itemSize[0] - symbolSize / 2;
+                handleThumb.scaleX = handleThumb.scaleY = symbolSize / itemSize[0];
+                handleThumb.x = itemSize[0] - symbolSize / 2;
 
-            // Update handle label position.
-            const textPoint = graphic.applyTransform(
-                shapes.handleLabelPoints[handleIndex],
-                graphic.getTransform(handleThumb, this.group)
-            );
+                // Update handle label position.
+                const textPoint = graphic.applyTransform(
+                    shapes.handleLabelPoints[handleIndex],
+                    graphic.getTransform(handleThumb, this.group),
+                );
 
-            if (this._orient === 'horizontal') {
-                // If visualMap controls symbol size, an additional offset needs to be added to labels to avoid collision at minimum size.
-                // Offset reaches value of 0 at "maximum" position, so maximum position is not altered at all.
-                const minimumOffset = align === 'left' || align === 'top'
-                    ? (itemSize[0] - symbolSize) / 2
-                    : (itemSize[0] - symbolSize) / -2;
+                if (this._orient === 'horizontal') {
+                    // If visualMap controls symbol size, an additional offset needs to be added to labels to avoid collision at minimum size.
+                    // Offset reaches value of 0 at "maximum" position, so maximum position is not altered at all.
+                    const minimumOffset =
+                        align === 'left' || align === 'top'
+                            ? (itemSize[0] - symbolSize) / 2
+                            : (itemSize[0] - symbolSize) / -2;
 
-                textPoint[1] += minimumOffset;
-            }
+                    textPoint[1] += minimumOffset;
+                }
 
-            handleLabels[handleIndex].setStyle({
-                x: textPoint[0],
-                y: textPoint[1],
-                text: visualMapModel.formatValueText(this._dataInterval[handleIndex]),
+                textPoints[handleIndex] = [textPoint[0], textPoint[1]];
+
+                handleLabels[handleIndex].setStyle({
+                    x: textPoint[0],
+                    y: textPoint[1],
+                    text: visualMapModel.formatValueText(this._dataInterval[handleIndex]),
+                    verticalAlign: 'middle',
+                    align:
+                        this._orient === 'vertical'
+                            ? (this._applyTransform('left', shapes.mainGroup) as TextAlign)
+                            : 'center',
+                });
+            },
+            this,
+        );
+
+        const rect0 = this._getHandleLabelRectInGroup(handleLabels[0]);
+        const rect1 = this._getHandleLabelRectInGroup(handleLabels[1]);
+        const margin = HANDLE_LABEL_MERGE_MARGIN;
+        const inflated0 = {
+            x: rect0.x - margin,
+            y: rect0.y - margin,
+            width: rect0.width + margin * 2,
+            height: rect0.height + margin * 2,
+        };
+        const inflated1 = {
+            x: rect1.x - margin,
+            y: rect1.y - margin,
+            width: rect1.width + margin * 2,
+            height: rect1.height + margin * 2,
+        };
+        const labelsOverlap = BoundingRect.intersect(inflated0, inflated1);
+
+        if (labelsOverlap) {
+            const midX = (textPoints[0][0] + textPoints[1][0]) / 2;
+            const midY = (textPoints[0][1] + textPoints[1][1]) / 2;
+            handleLabels[0].setStyle({
+                x: midX,
+                y: midY,
+                text: visualMapModel.formatValueText(this._dataInterval),
                 verticalAlign: 'middle',
-                align: this._orient === 'vertical' ? this._applyTransform(
-                    'left',
-                    shapes.mainGroup
-                ) as TextAlign : 'center'
+                align:
+                    this._orient === 'vertical'
+                        ? (this._applyTransform('left', shapes.mainGroup) as TextAlign)
+                        : 'center',
             });
-        }, this);
+            handleLabels[1].attr({
+                invisible: true,
+                silent: true,
+                draggable: false,
+            });
+        }
+        else {
+            handleLabels[1].attr({
+                invisible: false,
+                silent: false,
+                draggable: true,
+            });
+        }
+
+        if (labelsOverlap !== this._handleLabelsMerged) {
+            this._handleLabelsMerged = labelsOverlap;
+            if (labelsOverlap) {
+                handleLabels[0].drift = zrUtil.bind(this._dragHandle, this, 'all', false);
+                handleLabels[0].ondragend = zrUtil.bind(this._dragHandle, this, 'all', true);
+            }
+            else {
+                handleLabels[0].drift = zrUtil.bind(this._dragHandle, this, 0, false);
+                handleLabels[0].ondragend = zrUtil.bind(this._dragHandle, this, 0, true);
+                handleLabels[1].drift = zrUtil.bind(this._dragHandle, this, 1, false);
+                handleLabels[1].ondragend = zrUtil.bind(this._dragHandle, this, 1, true);
+            }
+        }
     }
 
     private _showIndicator(
