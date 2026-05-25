@@ -48,8 +48,6 @@ class CandlestickView extends ChartView {
     private _progressiveEls: Element[];
 
     render(seriesModel: CandlestickSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        // If there is clipPath created in large mode. Remove it.
-        this.group.removeClipPath();
         // Clear previously rendered progressive elements.
         this._progressiveEls = null;
 
@@ -164,6 +162,16 @@ class CandlestickView extends ChartView {
             .execute();
 
         this._data = data;
+
+        if (needsClip) {
+            const clipPath = createClipPath(coord, false, seriesModel);
+            if (clipPath) {
+                group.setClipPath(clipPath);
+            }
+        }
+        else {
+            group.removeClipPath();
+        }
     }
 
     _renderLarge(seriesModel: CandlestickSeriesModel) {
