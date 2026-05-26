@@ -114,9 +114,14 @@ const getRangeHandlers: {
             ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
 
         const scale = Math.max(1 / e.scale, 0);
-        range[0] = (range[0] - percentPoint) * scale + percentPoint;
-        range[1] = (range[1] - percentPoint) * scale + percentPoint;
-
+// add logic to pin the dataZoom to 'end' or 'start'
+        var anchor = this.__model?.option?.anchor || null;
+        if (anchor !== 'start') { // pin zoom to left side of the X axis viewBox
+            range[0] = (range[0] - percentPoint) * scale + percentPoint;
+        }
+        if (anchor !== 'end') { // pin zoom to the right side of the X axis viewBox
+            range[1] = (range[1] - percentPoint) * scale + percentPoint;
+        }
         // Restrict range.
         const minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
 
