@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+    <title>Toolbox DataZoom Re-render Fix Test</title>
+</head>
+<body>
+    <style>
+        #main {
+            width: 800px;
+            height: 600px;
+        }
+        .info {
+            margin: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+
+    <div class="info">
+        <h3>Test: Toolbox Box Select Re-render Fix</h3>
+        <p><strong>Issue:</strong> Clicking the "Box Select" (rect) button in the brush toolbox causes the entire chart to re-render with progressive animation.</p>
+        <p><strong>Expected:</strong> Clicking the toolbox button should NOT trigger a re-render; it should only change the cursor mode.</p>
+        <p><strong>Test:</strong> Click the "Box Select" (rect) icon in the toolbox. The chart should NOT animate/re-render.</p>
+    </div>
+
+    <div id="main"></div>
+
+    <script>
+    require([
+        'echarts'
+    ], function (echarts) {
+        var myChart = echarts.init(document.getElementById('main'));
+        var renderCount = 0;
+
+        var data1 = [];
+        for (var i = 0; i < 10000; i++) {
+            data1.push([+(Math.random()*10).toFixed(2), +(Math.random()*10).toFixed(2)]);
+        }
+
+        var option = {
+            xAxis: {},
+            yAxis: {},
+            brush: {
+                toolbox: ['rect', 'keep', 'clear']
+            },
+            series: [
+                {
+                    symbolSize: 1,
+                    data: data1,
+                    type: 'scatter'
+                }
+            ]
+        };
+
+        myChart.setOption(option);
+
+        console.log('Test initialized. Click the Box Select (rect) icon in the toolbox.');
+        console.log('If the fix works, the chart should NOT re-render with progressive animation.');
+    });
+    </script>
+</body>
+</html>
