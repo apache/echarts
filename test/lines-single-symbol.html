@@ -1,0 +1,207 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/facePrint.js"></script>
+</head>
+
+<body>
+    <style>
+        html,
+        body,
+        #main0,
+        #main1,
+        #main2,
+        #main3,
+        #main4 {
+            width: 100%;
+            height: 80%;
+        }
+    </style>
+    <div id="main0"></div>
+    <div id="main1"></div>
+    <div id="main2"></div>
+    <div id="main3"></div>
+    <script>
+        require(["echarts"], function (echarts) {
+            var chart = echarts.init(document.getElementById("main0"));
+
+            chart.setOption({
+                title: {
+                    text: "line series will null symbol",
+                },
+                xAxis: {
+                    type: "category",
+                    data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                },
+                yAxis: {
+                    type: "value",
+                },
+                tooltip: {
+                    trigger: "axis",
+                },
+                series: [
+                    {
+                        showSymbol: 'single',
+                        data: [820, null, 901, null, 1290, 1330, 1320],
+                        type: "line",
+                        smooth: true,
+                    },
+                ],
+            });
+
+            window.onresize = chart.resize;
+        });
+    </script>
+    <script>
+        require(["echarts"], function (echarts) {
+            var chart = echarts.init(document.getElementById("main1"));
+
+            chart.setOption({
+                title: {
+                    text: "line series will null symbol but connectNulls true",
+                },
+                xAxis: {
+                    type: "category",
+                    data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                },
+                yAxis: {
+                    type: "value",
+                },
+                tooltip: {
+                    trigger: "axis",
+                },
+                series: [
+                    {
+                        showSymbol: 'single',
+                        data: [820, null, 901, null, 1290, 1330, 1320],
+                        type: "line",
+                        smooth: true,
+                        connectNulls: true,
+                    },
+                ],
+            });
+
+            window.onresize = chart.resize;
+        });
+    </script>
+    <script>
+        require(["echarts"], function (echarts) {
+            var chart = echarts.init(document.getElementById("main2"));
+
+            chart.setOption({
+                title: {
+                    text: "line series will null symbol but showAllSymbol",
+                },
+                xAxis: {
+                    type: "category",
+                    data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                },
+                yAxis: {
+                    type: "value",
+                },
+                tooltip: {
+                    trigger: "axis",
+                },
+                series: [
+                    {
+                        showSymbol: 'single',
+                        data: [820, null, 901, null, 1290, 1330, 1320],
+                        type: "line",
+                        smooth: true,
+                        showAllSymbol: true,
+                    },
+                ],
+            });
+
+            window.onresize = chart.resize;
+        });
+    </script>
+    <script>
+        require(["echarts"], function (echarts) {
+            var chart = echarts.init(document.getElementById("main3"));
+
+            chart.setOption(option = {
+                title: {
+                    text: "line series will null symbol and time series",
+                },
+                dataset: {
+                    source: [
+                        ['2009/6/12 2:00', 43.3, 433],
+                        ['2009/6/12 3:00', null, null],
+                        ['2009/6/12 4:00', null, null],
+                        ['2009/6/12 5:00', 218, 228],
+                        ['2009/6/12 6:00', null, null],
+                        ['2009/6/12 7:00', 260, 210],
+
+                        ['2009/6/12 8:00', 160, 160],
+                        ['2009/6/12 9:00', 180, 180],
+                        ['2009/6/12 10:00', null, null],
+
+                        ['2009/6/12 11:00', 200, 20],
+                    ],
+                },
+                xAxis: {
+                    type: 'time',
+                },
+                tooltip: {
+                    trigger: "axis",
+                },
+                yAxis: [
+                    {
+                        type: 'value'
+                    },
+                ],
+                series: [
+                    {
+                        showSymbol: 'single',
+                        connectNulls: false,
+                        type: 'line',
+                        name: 'a',
+                        encode: {
+                            x: 0,
+                            y: 1,
+                        },
+
+                    },
+                    {
+                        showSymbol: 'single',
+                        connectNulls: false,
+                        type: 'line',
+                        name: 'b',
+                        encode: {
+                            x: 0,
+                            y: 2,
+                        },
+                    }
+                ]
+            });
+
+            window.onresize = chart.resize;
+        });
+    </script>
+</body>
+
+</html>
