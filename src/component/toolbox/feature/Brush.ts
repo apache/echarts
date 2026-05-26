@@ -54,7 +54,7 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
 
         ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel) {
             brushType = brushModel.brushType;
-            brushMode = brushModel.brushOption.brushMode || 'single';
+            brushMode = brushModel.brushOption.brushMode || 'multiple';
             isBrushed = isBrushed || !!brushModel.areas.length;
         });
         this._brushType = brushType;
@@ -120,9 +120,7 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
                     brushType: type === 'keep'
                         ? brushType
                         : (brushType === type ? false : type),
-                    brushMode: type === 'keep'
-                        ? (brushMode === 'multiple' ? 'single' : 'multiple')
-                        : brushMode
+                    brushMode: 'multiple'
                 }
             });
         }
