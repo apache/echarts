@@ -1,0 +1,169 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <div id="case1"></div>
+        <div id="case2"></div>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                // case.js
+                var optionCase1 = {
+                    title: {
+                      text: 'Line'
+                    },
+                    tooltip: {
+                      trigger: 'axis'
+                    },
+                    legend: {
+                      data: ['Email', 'Union Ads', 'Video Ads', 'Direct', 'Search Engine']
+                    },
+                    label: {
+                      show: true,
+                      backgroundColor: 'transparent',
+                    },
+                    labelLayout: {
+                      hideOverlap: true
+                    },
+                    xAxis: {
+                      type: 'category',
+                      boundaryGap: false,
+                      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                      axisPointer: {
+                        triggerEmphasis: true
+                      }
+                    },
+                    yAxis: {
+                      type: 'value'
+                    },
+                    series: [
+                      {
+                        name: 'Email',
+                        type: 'line',
+                        data: [120, 142, 101, 134, 90, 230, 210]
+                      },
+                      {
+                        name: 'Union Ads',
+                        type: 'line',
+                        data: [220, 145, 191, 234, 290, 330, 310]
+                      },
+                      {
+                        name: 'Video Ads',
+                        type: 'line',
+                        data: [150, 132, 201, 154, 190, 330, 410]
+                      },
+                      {
+                        name: 'Direct',
+                        type: 'line',
+                        data: [320, 135, 301, 334, 390, 330, 320]
+                      }
+                    ]
+                  };
+
+                // case2.js
+                var optionCase2 = {
+                  legend: {
+                    show: true
+                  },
+                  xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun','Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                  },
+                  yAxis: {
+                    type: 'value'
+                  },
+                  tooltip: {
+                    show: true,
+                    trigger: 'axis'
+                  },
+                  axisPointer: {
+                    triggerEmphasis: false
+                  },
+                  series: [
+                    {
+                      name: "A",
+                      data:  [1500, 1600, 1650, 1700, 1705, 1710, 1810,1815, 1800, 1758, 1788, 1816, 1885, 1890,1899, 1903, 1910, 1955, 1935, 1942, 1922,1918, 1902, 1914, 1922, 1930, 1933, 1940,1941, 1948, 1955, 1943, 1955, 1964, 1971,1976, 1981, 1980, 1988, 2003, 2015, 2023, 2034, 2036, 2025, 2041, 2049, 2068, 2081, 2154, 2186, 2266, 2348, 2455, 2586, 2786,2755, 2568, 2843, 2912, 2715, 2955, 3012, 3010, 3005, 3125, 3225, 3102, 3325, 3450],
+                      type: 'line',
+                      label: {
+                        show: true
+                      },
+                      labelLayout: {
+                        hideOverlap: true
+                      },
+                      showSymbol: true,
+                      symbolSize: 0,
+                    },
+                    {
+                      name: "B",
+                      data:  [100, 1600, 1650, 1700, 1705, 1710, 1810,1815, 1800, 1758, 1788, 1816, 1885, 1890,1899, 1903, 1910, 1955, 1935, 1942, 1922,1918, 1902, 1914, 1922, 1930, 1933, 1940,1941, 1948, 1955, 1943, 1955, 1964, 1971,1976, 1981, 1980, 1988, 2003, 2015, 2023, 2034, 2036, 2025, 2041, 2049, 2068, 2081, 2154, 2186, 2266, 2348, 2455, 2586, 2786,2755, 2568, 2843, 2912, 2715, 2955, 3012, 3010, 3005, 3125, 3225, 3102, 3325, 3450],
+                      type: 'line',
+                      label: {
+                        show: true
+                      },
+                      labelLayout: {
+                        hideOverlap: true
+                      },
+                      showSymbol: true,
+                      symbolSize: 0,
+                    }
+                  ]
+                };
+
+                var chart1 = testHelper.create(echarts, 'case1', {
+                    title: [
+                        'hover on each data point at Tue'
+                    ],
+                    option: optionCase1
+                });
+
+                var chart2 = testHelper.create(echarts, 'case2', {
+                    title: [
+                        'hover on legend'
+                    ],
+                    option: optionCase2
+                });
+
+                // keep a few logs for quick inspection
+                if (chart1) {
+                    chart1.on('updateAxisPointer', function (params) {
+                        console.log('[case1] updateAxisPointer', params);
+                    });
+                }
+                if (chart2) {
+                    chart2.on('updateAxisPointer', function (params) {
+                        console.log('[case2] updateAxisPointer', params);
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>

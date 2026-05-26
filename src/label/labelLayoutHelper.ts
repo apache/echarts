@@ -519,25 +519,22 @@ export function restoreIgnore(labelList: LabelLayoutData[]): void {
  *  PENDING: although currently this method is effectively called in other states in `updateLabelLayout` case,
  *      the bad case is not noticeable in the zooming scenario.
  */
-export function hideOverlap(labelList: LabelLayoutData[]): void {
+export function hideOverlap(labelList: LabelLayoutData[], isOrdered?: boolean): void {
     const displayedLabels: LabelLayoutWithGeometry[] = [];
 
     // TODO, render overflow visible first, put in the displayedLabels.
-    labelList.sort(function (a, b) {
-        return ((b.suggestIgnore ? 1 : 0) - (a.suggestIgnore ? 1 : 0))
-            || (b.priority - a.priority);
-    });
+    if (!isOrdered) {
+        labelList.sort(function (a, b) {
+            return ((b.suggestIgnore ? 1 : 0) - (a.suggestIgnore ? 1 : 0))
+                || (b.priority - a.priority);
+        });
+    }
 
     function hideEl(el: Element) {
-        if (!el.ignore) {
-            // Show on emphasis.
-            const emphasisState = el.ensureState('emphasis');
-            if (emphasisState.ignore == null) {
-                emphasisState.ignore = false;
-            }
-        }
-
         el.ignore = true;
+        // Also hide in emphasis state
+        const emphasisState = el.ensureState('emphasis');
+        emphasisState.ignore = true;
     }
 
     for (let i = 0; i < labelList.length; i++) {
