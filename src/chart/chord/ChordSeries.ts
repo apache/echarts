@@ -97,9 +97,10 @@ export interface ChordEdgeLineStyleOption extends LineStyleOption {
     curveness?: number
 }
 
-export interface ChordNodeLabelOption extends Omit<SeriesLabelOption<CallbackDataParams>, 'position'> {
+export interface ChordNodeLabelOption extends Omit<SeriesLabelOption<CallbackDataParams>, 'position' | 'rotate'> {
     silent?: boolean
     position?: SeriesLabelOption['position'] | 'outside'
+    rotate?: number | 'radial'
 }
 
 export interface ChordEdgeStateOption {
@@ -151,21 +152,21 @@ export interface ChordSeriesOption
     emphasis?: {
         focus?: Exclude<ChordNodeItemOption['emphasis'], undefined>['focus']
         scale?: boolean | number
-        label?: SeriesLabelOption
+        label?: ChordNodeLabelOption
         edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }
 
     blur?: {
-        label?: SeriesLabelOption
+        label?: ChordNodeLabelOption
         edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
     }
 
     select?: {
-        label?: SeriesLabelOption
+        label?: ChordNodeLabelOption
         edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
         lineStyle?: LineStyleOption
