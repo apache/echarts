@@ -168,6 +168,7 @@ class SunburstPiece extends graphic.Sector {
 
         const layout = this.node.getLayout();
         const angle = layout.endAngle - layout.startAngle;
+        const isViewRoot = this.node === seriesModel.getViewRoot();
 
         const midAngle = (layout.startAngle + layout.endAngle) / 2;
         const dx = Math.cos(midAngle);
@@ -220,6 +221,8 @@ class SunburstPiece extends graphic.Sector {
             const flipStartAngle = Math.PI * 0.5;
             const flipEndAngle = Math.PI * 1.5;
             const midAngleNormal = normalizeRadian(rotateType === 'tangential' ? Math.PI / 2 - midAngle : midAngle);
+            const isFullCircle = isRadianAroundZero(Math.abs(angle) - 2 * Math.PI);
+            let isLabelAtCenter = false;
 
             // For text that is up-side down, rotate 180 degrees to make sure
             // it's readable
@@ -233,9 +236,10 @@ class SunburstPiece extends graphic.Sector {
             }
             else {
                 if (!textAlign || textAlign === 'center') {
-                    // Put label in the center if it's a circle
-                    if (layout.r0 === 0 && isRadianAroundZero(angle - 2 * Math.PI)) {
+                    // Put root/view-root labels in the center if it's a full circle.
+                    if (isFullCircle && (layout.r0 === 0 || isViewRoot)) {
                         r = 0;
+                        isLabelAtCenter = true;
                     }
                     else {
                         r = (layout.r + layout.r0) / 2;
@@ -259,7 +263,10 @@ class SunburstPiece extends graphic.Sector {
             state.y = r * dy + layout.cy;
 
             let rotate = 0;
-            if (rotateType === 'radial') {
+            if (isLabelAtCenter) {
+                rotate = 0;
+            }
+            else if (rotateType === 'radial') {
                 rotate = normalizeRadian(-midAngle)
                     + (needsFlip ? Math.PI : 0);
             }
