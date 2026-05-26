@@ -1,0 +1,241 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+      #main {
+        width: 100%;
+        height: 50%;
+      }
+      #main-single {
+        width: 100%;
+        height: 50%;
+      }
+      .case-title {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        margin: 8px 0 0 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="case-title">多 grid 折线图 label overlap</div>
+    <div id="main"></div>
+    <div class="case-title">单 grid 折线图 label overlap</div>
+    <div id="main-single"></div>
+    <script>
+      require(['echarts'], function (echarts) {
+        // 用例一：多 grid
+        var chart = echarts.init(document.getElementById('main'));
+        chart.setOption({
+          grid: [
+            { left: 50, right: 50, top: 40, height: 120 },     // 第一个 grid
+            { left: 50, right: 50, top: 220, height: 120 }     // 第二个 grid
+          ],
+          xAxis: [
+            {
+              type: 'category',
+              data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+              gridIndex: 0
+            },
+            {
+              type: 'category',
+              data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+              gridIndex: 1
+            }
+          ],
+          yAxis: [
+            { type: 'value', gridIndex: 0 },
+            { type: 'value', gridIndex: 1 }
+          ],
+          series: [
+            // 第1个grid的多条折线
+            {
+              type: 'line',
+              xAxisIndex: 0,
+              yAxisIndex: 0,
+              data: [150, 230, 224, 218, 135, 147, 260],
+              label: {
+                show: true,
+                position: 'top'
+              },
+              labelLayout: ({labelRect}) => ({
+                x: labelRect.x,
+                y: labelRect.y,
+                moveOverlap: 'shiftY',
+                draggable: true
+              })
+            },
+            {
+              type: 'line',
+              xAxisIndex: 0,
+              yAxisIndex: 0,
+              data: [170, 200, 200, 196, 115, 157, 210],
+              label: {
+                show: true,
+                position: 'top'
+              },
+              labelLayout: ({labelRect}) => ({
+                x: labelRect.x,
+                y: labelRect.y,
+                moveOverlap: 'shiftY',
+                draggable: true
+              })
+            },
+            {
+              type: 'line',
+              xAxisIndex: 0,
+              yAxisIndex: 0,
+              data: [160, 210, 210, 205, 120, 150, 230],
+              label: {
+                show: true,
+                position: 'top'
+              },
+              labelLayout: ({labelRect}) => ({
+                x: labelRect.x,
+                y: labelRect.y,
+                moveOverlap: 'shiftY',
+                draggable: true
+              })
+            },
+            // 第2个grid的多条折线
+            {
+              type: 'line',
+              xAxisIndex: 1,
+              yAxisIndex: 1,
+              data: [320, 120, 210, 180, 320, 200, 180],
+              label: {
+                show: true,
+                position: 'top'
+              },
+              labelLayout: ({labelRect}) => ({
+                x: labelRect.x,
+                y: labelRect.y,
+                moveOverlap: 'shiftY',
+                draggable: true
+              })
+            },
+            {
+              type: 'line',
+              xAxisIndex: 1,
+              yAxisIndex: 1,
+              data: [300, 140, 230, 190, 310, 230, 140],
+              label: {
+                show: true,
+                position: 'top'
+              },
+              labelLayout: ({labelRect}) => ({
+                x: labelRect.x,
+                y: labelRect.y,
+                moveOverlap: 'shiftY',
+                draggable: true
+              })
+            },
+            {
+              type: 'line',
+              xAxisIndex: 1,
+              yAxisIndex: 1,
+              data: [330, 110, 220, 210, 330, 214, 170],
+              label: {
+                show: true,
+                position: 'top'
+              },
+              labelLayout: ({labelRect}) => ({
+                x: labelRect.x,
+                y: labelRect.y,
+                moveOverlap: 'shiftY',
+                draggable: true
+              })
+            }
+          ]
+        });
+
+        // 用例二：单 grid
+        var chartSingle = echarts.init(document.getElementById('main-single'));
+        chartSingle.setOption({
+          grid: {
+            left: 50, right: 50, top: 40, bottom: 40
+          },
+          xAxis: {
+            type: 'category',
+            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          },
+          yAxis: {
+            type: 'value'
+          },
+          series: [
+            {
+              type: 'line',
+              data: [150, 230, 224, 218, 135, 147, 260],
+              label: {
+                show: true,
+                position: 'top'
+              },
+              labelLayout: ({labelRect}) => ({
+                x: labelRect.x,
+                y: labelRect.y,
+                moveOverlap: 'shiftY',
+                draggable: true
+              })
+            },
+            {
+              type: 'line',
+              data: [140, 220, 215, 210, 120, 160, 240],
+              label: {
+                show: true,
+                position: 'top'
+              },
+              labelLayout: ({labelRect}) => ({
+                x: labelRect.x,
+                y: labelRect.y,
+                moveOverlap: 'shiftY',
+                draggable: true
+              })
+            },
+            {
+              type: 'line',
+              data: [130, 210, 205, 200, 110, 150, 220],
+              label: {
+                show: true,
+                position: 'top'
+              },
+              labelLayout: ({labelRect}) => ({
+                x: labelRect.x,
+                y: labelRect.y,
+                moveOverlap: 'shiftY',
+                draggable: true
+              })
+            }
+          ]
+        });
+      });
+    </script>
+  </body>
+</html>
