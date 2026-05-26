@@ -890,7 +890,12 @@ function renderNode(
             const blurStyle = getStateItemStyle(itemStyleBlurModel);
             blurStyle.fill = itemStyleBlurModel.get('borderColor');
             const selectStyle = getStateItemStyle(itemStyleSelectModel);
-            selectStyle.fill = itemStyleSelectModel.get('borderColor');
+            const selectFill = itemStyleSelectModel.get('color');
+            selectStyle.fill = selectFill != null
+                ? selectFill
+                : itemStyleSelectModel.get('borderColor') != null
+                    ? itemStyleSelectModel.get('borderColor')
+                    : visualBorderColor;
 
             if (useUpperLabel) {
                 const upperLabelWidth = thisWidth - 2 * borderWidth;
