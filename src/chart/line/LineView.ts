@@ -337,6 +337,13 @@ function getVisualGradient(
             ? (outerColors[1] ? outerColors[1] : colorStops[stopLen - 1].color)
             : (outerColors[0] ? outerColors[0] : colorStops[0].color);
     }
+    if (!inRangeStopLen) {
+        // No color stops at all (e.g. when all visualMap pieces produce
+        // [-Infinity, Infinity] intervals, like `pieces: [{ lte: null }]`).
+        // Fall back to a single outer color or transparent so that we
+        // don't crash on `colorStopsInRange[0].coord` below. See #18066.
+        return outerColors[0] || outerColors[1] || 'transparent';
+    }
 
     const tinyExtent = 10; // Arbitrary value: 10px
     const minCoord = colorStopsInRange[0].coord - tinyExtent;
