@@ -47,6 +47,7 @@ export class ChordPathShape {
     cy: number = 0;
     // series.r0 of ChordSeries
     r: number = 0;
+    value: number = 0;
 
     clockwise: boolean = true;
 }
@@ -70,6 +71,9 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
     }
 
     buildPath(ctx: PathProxy | CanvasRenderingContext2D, shape: ChordPathShape): void {
+        if (shape.value <= 0) {
+            return;
+        }
         // Start from n11
         ctx.moveTo(shape.s1[0], shape.s1[1]);
 
