@@ -39,6 +39,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
         <div class="chart" id="b"></div>
 
 
@@ -289,6 +290,54 @@ under the License.
         </script>
 
 
+
+        <script>
+
+            require(['echarts'], function (echarts) {
+                var option = {
+                    color: ["#3398DB"],
+                    tooltip: {
+                        trigger: "axis"
+                    },
+                    grid: {
+                        left: 0,
+                        right: 0
+                    },
+                    xAxis: {
+                        data: ["2015-02-23", "2015-02-24"]
+                    },
+                    yAxis: {
+                        show: false,
+                    },
+                    dataZoom: [{
+                        showDetail: false,
+                        left: 0,
+                        right: 0,
+                        moveHandleStyle: {
+                            color: "rgba(215, 59, 59, 1)"
+                        },
+                        fillerColor:"rgba(0,0,0,0)",
+                        moveHandleSize: 7,
+                        handleSize: "100%",
+                        borderRadius:100,
+                        borderWidth:0
+                    }],
+                    series: {
+                        name: "Beijing AQI",
+                        type: "bar",
+                        data: [86, 207]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'HandleIcon and dataZoomBar should be complete on default with **dataZoom.left = 0 and dataZoom.right = 0**',
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
 
 
 
