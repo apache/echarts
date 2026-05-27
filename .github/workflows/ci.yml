@@ -54,6 +54,9 @@ jobs:
       - name: Lint
         run: npx eslint $(cat ~/tmp/changed_files)
 
+      - name: Build generated types
+        run: npm run build:lib
+
       - name: Check types
         run: npm run checktype
 
