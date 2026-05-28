@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css">
+</head>
+<body>
+    <div id="main0"></div>
+    <div id="main1"></div>
+    <div id="main2"></div>
+    <div id="main3"></div>
+    <div id="main4"></div>
+
+    <script>
+        require(['echarts'], function (echarts) {
+
+            // Test 1: Basic time axis stacking with different order
+            testHelper.create(echarts, 'main0', {
+                title: 'Time axis stacking - different order (B reversed)',
+                option: {
+                    tooltip: { trigger: 'axis' },
+                    legend: {},
+                    xAxis: { type: 'time' },
+                    yAxis: { type: 'value' },
+                    series: [
+                        {
+                            name: 'A',
+                            type: 'bar',
+                            data: [['2025-01-01', 4], ['2025-02-01', 8]],
+                            stack: 'stack1'
+                        },
+                        {
+                            name: 'B',
+                            type: 'bar',
+                            data: [['2025-02-01', 3], ['2025-01-01', 9]],
+                            stack: 'stack1'
+                        }
+                    ]
+                }
+            });
+
+            // Test 2: Null value in first series
+            testHelper.create(echarts, 'main1', {
+                title: 'Null value in first series (A Jan = null)',
+                option: {
+                    tooltip: { trigger: 'axis' },
+                    legend: {},
+                    xAxis: { type: 'time' },
+                    yAxis: { type: 'value' },
+                    series: [
+                        {
+                            name: 'A',
+                            type: 'bar',
+                            data: [['2025-01-01', null], ['2025-02-01', 8]],
+                            stack: 'stack1'
+                        },
+                        {
+                            name: 'B',
+                            type: 'bar',
+                            data: [['2025-01-01', 5], ['2025-02-01', 3]],
+                            stack: 'stack1'
+                        }
+                    ]
+                }
+            });
+
+            // Test 3: Sparse data with gaps
+            testHelper.create(echarts, 'main2', {
+                title: 'Sparse data - A missing Feb',
+                option: {
+                    tooltip: { trigger: 'axis' },
+                    legend: {},
+                    xAxis: { type: 'time' },
+                    yAxis: { type: 'value' },
+                    series: [
+                        {
+                            name: 'A',
+                            type: 'bar',
+                            data: [['2025-01-01', 10], ['2025-03-01', 30]],
+                            stack: 'stack1'
+                        },
+                        {
+                            name: 'B',
+                            type: 'bar',
+                            data: [['2025-01-01', 1], ['2025-02-01', 2], ['2025-03-01', 3]],
+                            stack: 'stack1'
+                        }
+                    ]
+                }
+            });
+
+            // Test 4: Mixed null values across multiple series
+            testHelper.create(echarts, 'main3', {
+                title: 'Mixed null values - 3 series',
+                option: {
+                    tooltip: { trigger: 'axis' },
+                    legend: {},
+                    xAxis: { type: 'time' },
+                    yAxis: { type: 'value' },
+                    series: [
+                        {
+                            name: 'A',
+                            type: 'bar',
+                            data: [['2025-01-01', null], ['2025-02-01', 10], ['2025-03-01', 20]],
+                            stack: 'stack1'
+                        },
+                        {
+                            name: 'B',
+                            type: 'bar',
+                            data: [['2025-01-01', 5], ['2025-02-01', null], ['2025-03-01', 15]],
+                            stack: 'stack1'
+                        },
+                        {
+                            name: 'C',
+                            type: 'bar',
+                            data: [['2025-01-01', 3], ['2025-02-01', 7], ['2025-03-01', null]],
+                            stack: 'stack1'
+                        }
+                    ]
+                }
+            });
+
+            // Test 5: Many datapoints in reverse order
+            var seriesDataA = [];
+            var seriesDataB = [];
+            for (var i = 0; i < 20; i++) {
+                var date = new Date(2025, 0, i + 1);
+                var dateStr = date.toISOString().split('T')[0];
+                seriesDataA.push([dateStr, i + 1]);
+            }
+            for (var i = 19; i >= 0; i--) {
+                var date = new Date(2025, 0, i + 1);
+                var dateStr = date.toISOString().split('T')[0];
+                seriesDataB.push([dateStr, (i + 1) * 2]);
+            }
+
+            testHelper.create(echarts, 'main4', {
+                title: 'Many datapoints - B in reverse order',
+                option: {
+                    tooltip: { trigger: 'axis' },
+                    legend: {},
+                    xAxis: { type: 'time' },
+                    yAxis: { type: 'value' },
+                    series: [
+                        { name: 'A', type: 'bar', data: seriesDataA, stack: 'stack1' },
+                        { name: 'B', type: 'bar', data: seriesDataB, stack: 'stack1' }
+                    ]
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
