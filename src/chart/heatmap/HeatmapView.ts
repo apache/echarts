@@ -332,9 +332,9 @@ class HeatmapView extends ChartView {
 
             toggleHoverEmphasis(rect, focus, blurScope, emphasisDisabled);
 
-            rect.incremental = getIncrementalId(seriesModel, useIncremental);
             // PENDING
             if (useIncremental) {
+                rect.incremental = getIncrementalId(seriesModel, useIncremental);
                 // Rect must use hover layer if it's incremental.
                 rect.states.emphasis.hoverLayer = graphic.HOVER_LAYER_FOR_INCREMENTAL;
             }
