@@ -21,21 +21,21 @@ import * as zrUtil from 'zrender/src/core/util';
 import {retrieveRawValue} from '../../data/helper/dataProvider';
 import {formatTpl} from '../../util/format';
 import {
-    DataHost,
-    DisplayState,
     CallbackDataParams,
     ColorString,
-    ZRColor,
-    OptionDataValue,
-    SeriesDataType,
     ComponentMainType,
     ComponentSubType,
+    DataHost,
     DimensionLoose,
-    InterpolatableValue
+    DisplayState,
+    InterpolatableValue,
+    OptionDataValue,
+    SeriesDataType,
+    ZRColor
 } from '../../util/types';
 import GlobalModel from '../Global';
-import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
-import { error, makePrintable } from '../../util/log';
+import {TooltipMarkupBlockFragment} from '../../component/tooltip/tooltipMarkup';
+import {error, makePrintable} from '../../util/log';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
@@ -140,6 +140,12 @@ export class DataFormatMixin {
         if (zrUtil.isFunction(formatter)) {
             params.status = status;
             params.dimensionIndex = labelDimIndex;
+            if (params.seriesType === 'pie') {
+                const sectorShape = data.getItemLayout(dataIndex);
+                const midAngle = (sectorShape.startAngle + sectorShape.endAngle) / 2;
+                const nx = Math.cos(midAngle);
+                params.labelSide = nx > 0 ? 'right' : 'left';
+            }
             return formatter(params);
         }
         else if (zrUtil.isString(formatter)) {
