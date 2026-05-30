@@ -71,6 +71,22 @@ interface ChartView {
     /**
      * Update transform directly.
      * Implement it if needed.
+     *
+     * [NOTICE]: It may be called after normal rendering (via `ChartView['render']`)
+     * or progressive rendering (via `ChartView['incrementalPrepareRender']` and
+     * `ChartView['incrementalRender']`).
+     * For example, echarts-gl `linesGL` supports `updateTransform` to run in
+     * progressive rendering.
+     * If a series opts out of supporting `updateTransform` in progressive rendering,
+     * it can fall back to the normal update path using
+     *  ```js
+     *  updateTransform(seriesModel) {
+     *      if (isInProgressiveRendering(seriesModel)) {
+     *          return {update: true} as const;
+     *      }
+     *      // ...
+     *  }
+     *  ```
      */
     updateTransform(
         seriesModel: SeriesModel,
