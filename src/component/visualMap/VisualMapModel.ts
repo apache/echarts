@@ -331,6 +331,11 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     }
 
     /**
+     * [CAVEAT]
+     *  For `visualMap.type: 'continuous'`, the input `value` can only be an `number[]`.
+     *  For `visualMap.type: 'piecewise'`, the input `value` can only be an `number | string`.
+     *  Otherwise a breaking change will be introduced to `visualMap.formatter: function() {}`.
+     *
      * @example
      * this.formatValueText(someVal); // format single numeric value to text.
      * this.formatValueText(someVal, true); // format single category value to text.
