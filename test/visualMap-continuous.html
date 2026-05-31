@@ -703,7 +703,7 @@ under the License.
                     });
                 });
 
-                createCase("Color HueRange handles: merge on overlap", 6, (chart) => {
+                createCase("Merge handles on overlap (default formatter)", 6, (chart) => {
                     const data0 = [];
                     const MAX_DIM1 = 100;
 
@@ -784,7 +784,7 @@ under the License.
                     });
                 });
 
-                createCase("Color HueRange handles: dual drag when apart", 7, (chart) => {
+                createCase("Merge handles on overlap (user-provided formatter: xxx%)", 7, (chart) => {
                     const data0 = [];
                     const MAX_DIM1 = 100;
 
@@ -834,7 +834,10 @@ under the License.
                                 min: 0,
                                 max: MAX_DIM1,
                                 calculable: true,
-                                range: [50, 95],
+                                range: [90, 95],
+                                formatter: function (value) {
+                                    return value + '%';
+                                },
                                 dimension: 0,
                                 inRange: {
                                     colorHue: [0, 300],

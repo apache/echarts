@@ -22,7 +22,7 @@ import LinearGradient, { LinearGradientObject } from 'zrender/src/graphic/Linear
 import * as eventTool from 'zrender/src/core/event';
 import VisualMapView from './VisualMapView';
 import * as graphic from '../../util/graphic';
-import * as numberUtil from '../../util/number';
+import {linearMap, mathMax, mathMin, mathPI} from '../../util/number';
 import sliderMove from '../helper/sliderMove';
 import * as helper from './helper';
 import * as modelUtil from '../../util/model';
@@ -42,16 +42,18 @@ import { createTextStyle } from '../../label/labelStyle';
 import { findEventDispatcher } from '../../util/event';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 
-const linearMap = numberUtil.linearMap;
-const each = zrUtil.each;
-const mathMin = Math.min;
-const mathMax = Math.max;
 
 // Arbitrary value
 const HOVER_LINK_SIZE = 12;
 const HOVER_LINK_OUT = 6;
 /** Pixels to inflate handle label bounds when testing overlap (merge slightly before touching). */
 const HANDLE_LABEL_MERGE_MARGIN = 2;
+
+const elInner = modelUtil.makeInner<{
+    hdlIdx: ContinuousVisualMapHandleIndex
+}, Element>();
+
+type ContinuousVisualMapHandleIndex = 0 | 1 | 'all';
 
 type Orient = VisualMapModel['option']['orient'];
 
@@ -111,8 +113,6 @@ class ContinuousView extends VisualMapView {
 
     private _firstShowIndicator: boolean;
 
-    /** Whether the two handle value labels are merged into one (overlap). */
-    private _handleLabelsMerged: boolean | undefined;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         super.init(ecModel, api);
@@ -134,7 +134,6 @@ class ContinuousView extends VisualMapView {
 
     private _buildView() {
         this.group.removeAll();
-        this._handleLabelsMerged = undefined;
 
         const visualMapModel = this.visualMapModel;
         const thisGroup = this.group;
@@ -223,10 +222,9 @@ class ContinuousView extends VisualMapView {
         gradientBarGroup.add(shapes.outOfRange = createPolygon());
         gradientBarGroup.add(shapes.inRange = createPolygon(
             null,
-            useHandle ? getCursor(this._orient) : null,
-            zrUtil.bind(this._dragHandle, this, 'all', false),
-            zrUtil.bind(this._dragHandle, this, 'all', true)
+            useHandle ? getCursor(this._orient) : null
         ));
+        this._mountDrag(shapes.inRange, 'all');
 
         // A border radius clip.
         gradientBarGroup.setClipPath(new graphic.Rect({
@@ -265,8 +263,6 @@ class ContinuousView extends VisualMapView {
         textSize: number,
         orient: Orient
     ) {
-        const onDrift = zrUtil.bind(this._dragHandle, this, handleIndex, false);
-        const onDragEnd = zrUtil.bind(this._dragHandle, this, handleIndex, true);
         const handleSize = parsePercent(visualMapModel.get('handleSize'), itemSize[0]);
         const handleThumb = createSymbol(
             visualMapModel.get('handleIcon'),
@@ -276,13 +272,11 @@ class ContinuousView extends VisualMapView {
         const cursor = getCursor(this._orient);
         handleThumb.attr({
             cursor: cursor,
-            draggable: true,
-            drift: onDrift,
-            ondragend: onDragEnd,
             onmousemove(e) {
                 eventTool.stop(e.event);
             }
         });
+        this._mountDrag(handleThumb, handleIndex);
         handleThumb.x = itemSize[0] / 2;
 
         handleThumb.useStyle(visualMapModel.getModel('handleStyle').getItemStyle());
@@ -304,19 +298,17 @@ class ContinuousView extends VisualMapView {
         const textStyleModel = this.visualMapModel.textStyleModel;
         const handleLabel = new graphic.Text({
             cursor: cursor,
-            draggable: true,
-            drift: onDrift,
             onmousemove(e) {
                 // For mobile device, prevent screen slider on the button.
                 eventTool.stop(e.event);
             },
-            ondragend: onDragEnd,
             style: createTextStyle(textStyleModel, {
                 x: 0,
                 y: 0,
                 text: ''
             })
         });
+        this._mountDrag(handleLabel, handleIndex);
         handleLabel.ensureState('blur').style = {
             opacity: 0.1
         };
@@ -324,11 +316,9 @@ class ContinuousView extends VisualMapView {
 
         this.group.add(handleLabel);
 
-        const handleLabelPoint = [handleSize, 0];
-
         const shapes = this._shapes;
         shapes.handleThumbs[handleIndex] = handleThumb;
-        shapes.handleLabelPoints[handleIndex] = handleLabelPoint;
+        shapes.handleLabelPoints[handleIndex] = [handleSize, 0];
         shapes.handleLabels[handleIndex] = handleLabel;
     }
 
@@ -392,8 +382,17 @@ class ContinuousView extends VisualMapView {
         this._firstShowIndicator = true;
     }
 
+    private _mountDrag(el: Element, handleIndex: ContinuousVisualMapHandleIndex): void {
+        el.attr({
+            draggable: true,
+            drift: zrUtil.bind(this._dragHandle, this, el, false),
+            ondragend: zrUtil.bind(this._dragHandle, this, el, true),
+        });
+        elInner(el).hdlIdx = handleIndex;
+    }
+
     private _dragHandle(
-        handleIndex: 0 | 1 | 'all',
+        sourceEl: Element,
         isEnd?: boolean,
         // dx is event from ondragend if isEnd is true. It's not used
         dx?: number | ElementEvent,
@@ -403,6 +402,10 @@ class ContinuousView extends VisualMapView {
             return;
         }
 
+        const handleIndex = elInner(sourceEl).hdlIdx;
+        if (__DEV__) {
+            zrUtil.assert(handleIndex != null);
+        }
         this._dragging = !isEnd;
 
         if (!isEnd) {
@@ -457,7 +460,7 @@ class ContinuousView extends VisualMapView {
      * @param {number} dx
      * @param {number} dy
      */
-    private _updateInterval(handleIndex: 0 | 1 | 'all', delta: number) {
+    private _updateInterval(handleIndex: ContinuousVisualMapHandleIndex, delta: number) {
         delta = delta || 0;
         const visualMapModel = this.visualMapModel;
         const handleEnds = this._handleEnds;
@@ -589,26 +592,21 @@ class ContinuousView extends VisualMapView {
     }
 
     private _createBarGroup(itemAlign: helper.ItemAlign) {
-        const orient = this._orient;
+        const isVertical = this._orient === 'vertical';
+        const isItemAlignButtom = itemAlign === 'bottom';
+        const isItemAlignLeft = itemAlign === 'left';
         const inverse = this.visualMapModel.get('inverse');
 
         return new graphic.Group(
-            (orient === 'horizontal' && !inverse)
-            ? {scaleX: itemAlign === 'bottom' ? 1 : -1, rotation: Math.PI / 2}
-            : (orient === 'horizontal' && inverse)
-            ? {scaleX: itemAlign === 'bottom' ? -1 : 1, rotation: -Math.PI / 2}
-            : (orient === 'vertical' && !inverse)
-            ? {scaleX: itemAlign === 'left' ? 1 : -1, scaleY: -1}
-            : {scaleX: itemAlign === 'left' ? 1 : -1}
+            (!isVertical && !inverse)
+            ? {scaleX: isItemAlignButtom ? 1 : -1, rotation: mathPI / 2}
+            : (!isVertical && inverse)
+            ? {scaleX: isItemAlignButtom ? -1 : 1, rotation: -mathPI / 2}
+            : (isVertical && !inverse)
+            ? {scaleX: isItemAlignLeft ? 1 : -1, scaleY: -1}
+            // isVertical && inverse
+            : {scaleX: isItemAlignLeft ? 1 : -1}
         );
-    }
-
-    private _getHandleLabelRectInGroup(label: graphic.Text): BoundingRect {
-        const local = label.getBoundingRect();
-        const rect = new BoundingRect(0, 0, 0, 0);
-        const m = graphic.getTransform(label, this.group);
-        BoundingRect.applyTransform(rect, local, m);
-        return rect;
     }
 
     private _updateHandle(handleEnds: number[], visualInRange: BarVisual) {
@@ -622,11 +620,14 @@ class ContinuousView extends VisualMapView {
         const handleLabels = shapes.handleLabels;
         const itemSize = visualMapModel.itemSize;
         const dataExtent = visualMapModel.getExtent();
-        const align = this._applyTransform('left', shapes.mainGroup);
-        const textPoints: [number, number][] = [];
+        const barGroup = shapes.mainGroup;
+        const align = this._applyTransform('left', barGroup);
+        const isVertical = this._orient === 'vertical';
+        const textPosPair: graphic.Point[] = [];
+        const textRectPair: BoundingRect[] = [];
 
-        each(
-            [0, 1],
+        zrUtil.each(
+            [0, 1] as const,
             function (handleIndex) {
                 const handleThumb = handleThumbs[handleIndex];
                 handleThumb.setStyle('fill', visualInRange.handlesColor[handleIndex]);
@@ -649,7 +650,7 @@ class ContinuousView extends VisualMapView {
                     graphic.getTransform(handleThumb, this.group),
                 );
 
-                if (this._orient === 'horizontal') {
+                if (!isVertical) {
                     // If visualMap controls symbol size, an additional offset needs to be added to labels to avoid collision at minimum size.
                     // Offset reaches value of 0 at "maximum" position, so maximum position is not altered at all.
                     const minimumOffset =
@@ -660,78 +661,45 @@ class ContinuousView extends VisualMapView {
                     textPoint[1] += minimumOffset;
                 }
 
-                textPoints[handleIndex] = [textPoint[0], textPoint[1]];
-
                 handleLabels[handleIndex].setStyle({
                     x: textPoint[0],
                     y: textPoint[1],
                     text: visualMapModel.formatValueText(this._dataInterval[handleIndex]),
                     verticalAlign: 'middle',
                     align:
-                        this._orient === 'vertical'
-                            ? (this._applyTransform('left', shapes.mainGroup) as TextAlign)
+                        isVertical
+                            ? (this._applyTransform('left', barGroup) as TextAlign)
                             : 'center',
                 });
+                elInner(handleLabels[handleIndex]).hdlIdx = handleIndex; // May be updated if previously overlapped.
+
+                textPosPair[handleIndex] = new graphic.Point(textPoint[0], textPoint[1]);
+                textRectPair[handleIndex] = handleLabels[handleIndex].getBoundingRect().clone();
+                graphic.expandOrShrinkRect(textRectPair[handleIndex], HANDLE_LABEL_MERGE_MARGIN, false, true);
             },
             this,
         );
 
-        const rect0 = this._getHandleLabelRectInGroup(handleLabels[0]);
-        const rect1 = this._getHandleLabelRectInGroup(handleLabels[1]);
-        const margin = HANDLE_LABEL_MERGE_MARGIN;
-        const inflated0 = {
-            x: rect0.x - margin,
-            y: rect0.y - margin,
-            width: rect0.width + margin * 2,
-            height: rect0.height + margin * 2,
-        };
-        const inflated1 = {
-            x: rect1.x - margin,
-            y: rect1.y - margin,
-            width: rect1.width + margin * 2,
-            height: rect1.height + margin * 2,
-        };
-        const labelsOverlap = BoundingRect.intersect(inflated0, inflated1);
-
+        const mtv = new graphic.Point();
+        const directionVec = this._applyTransform([0, 1], barGroup);
+        const labelsOverlap = BoundingRect.intersect(
+            textRectPair[0],
+            textRectPair[1],
+            mtv,
+            {
+                direction: Math.atan2(directionVec[1], directionVec[0]),
+                bidirectional: false,
+            }
+        );
         if (labelsOverlap) {
-            const midX = (textPoints[0][0] + textPoints[1][0]) / 2;
-            const midY = (textPoints[0][1] + textPoints[1][1]) / 2;
-            handleLabels[0].setStyle({
-                x: midX,
-                y: midY,
-                text: visualMapModel.formatValueText(this._dataInterval),
-                verticalAlign: 'middle',
-                align:
-                    this._orient === 'vertical'
-                        ? (this._applyTransform('left', shapes.mainGroup) as TextAlign)
-                        : 'center',
-            });
-            handleLabels[1].attr({
-                invisible: true,
-                silent: true,
-                draggable: false,
-            });
-        }
-        else {
-            handleLabels[1].attr({
-                invisible: false,
-                silent: false,
-                draggable: true,
-            });
-        }
-
-        if (labelsOverlap !== this._handleLabelsMerged) {
-            this._handleLabelsMerged = labelsOverlap;
-            if (labelsOverlap) {
-                handleLabels[0].drift = zrUtil.bind(this._dragHandle, this, 'all', false);
-                handleLabels[0].ondragend = zrUtil.bind(this._dragHandle, this, 'all', true);
-            }
-            else {
-                handleLabels[0].drift = zrUtil.bind(this._dragHandle, this, 0, false);
-                handleLabels[0].ondragend = zrUtil.bind(this._dragHandle, this, 0, true);
-                handleLabels[1].drift = zrUtil.bind(this._dragHandle, this, 1, false);
-                handleLabels[1].ondragend = zrUtil.bind(this._dragHandle, this, 1, true);
-            }
+            textPosPair[0].scaleAndAdd(mtv, -0.5);
+            textPosPair[1].scaleAndAdd(mtv, 0.5);
+            handleLabels[0].setStyle(textPosPair[0]);
+            handleLabels[1].setStyle(textPosPair[1]);
+            // When two handles are too close, the bar is difficult to hit, so dragging in
+            // 'all' mode becomes hard to trigger. Therefore, we provide another way for
+            // that -- switch labels dragging to 'all' mode.
+            elInner(handleLabels[0]).hdlIdx = elInner(handleLabels[1]).hdlIdx = 'all';
         }
     }
 
@@ -1020,19 +988,14 @@ class ContinuousView extends VisualMapView {
 function createPolygon(
     points?: number[][],
     cursor?: string,
-    onDrift?: (x: number, y: number) => void,
-    onDragEnd?: () => void
 ) {
     return new graphic.Polygon({
-        shape: {points: points},
-        draggable: !!onDrift,
+        shape: {points},
         cursor: cursor,
-        drift: onDrift,
         onmousemove(e) {
             // For mobile device, prevent screen slider on the button.
             eventTool.stop(e.event);
         },
-        ondragend: onDragEnd
     });
 }
 
