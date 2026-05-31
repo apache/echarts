@@ -161,9 +161,5 @@ function calculateBoundingRect(regions: GeoJSONRegion[]): BoundingRect {
 }
 
 function parseInput(source: GeoJSONSourceInput): GeoJSON | GeoJSONCompressed {
-    return !isString(source)
-        ? source
-        : (typeof JSON !== 'undefined' && JSON.parse)
-        ? JSON.parse(source)
-        : (new Function('return (' + source + ');'))();
+    return !isString(source) ? source : JSON.parse(source);
 }
