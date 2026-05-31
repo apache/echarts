@@ -115,7 +115,7 @@ export class GeoJSONResource implements GeoResource {
             fixTextCoord(mapName, region);
             fixDiaoyuIsland(mapName, region);
 
-            // Some area like Alaska in USA map needs to be tansformed
+            // Some area like Alaska in USA map needs to be transformed
             // to look better
             const specialArea = this._specialAreas && this._specialAreas[regionName];
             if (specialArea) {
@@ -141,7 +141,7 @@ export class GeoJSONResource implements GeoResource {
         return {
             // For backward compatibility, use geoJson
             // PENDING: it has been returning them without clone.
-            // do we need to avoid outsite modification?
+            // do we need to avoid outside modification?
             geoJson: this._geoJSON,
             geoJSON: this._geoJSON,
             specialAreas: this._specialAreas
