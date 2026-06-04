@@ -74,7 +74,7 @@ describe('pie', function () {
 
         const seriesModel = getECModel(chart).getComponent('series', 0) as SeriesModel;
         const data = seriesModel.getData();
-        const cx = data.getLayout('cx') as number;
+        const cx = (data.getItemLayout(0) as {cx: number}).cx;
         const layouts: LabelLineLayout[] = [];
 
         data.each(function (idx) {
