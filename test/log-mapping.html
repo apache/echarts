@@ -1,0 +1,255 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+
+        <!-- Scenario 1: standard log, positive-only (regression baseline) -->
+        <div id='s1_standard_log'></div>
+
+        <!-- Scenario 2: asinh, positive-only -->
+        <div id='s2_asinh_positive'></div>
+
+        <!-- Scenario 3: asinh, mixed [-1000, 1000] (primary use case) -->
+        <div id='s3_asinh_mixed'></div>
+
+        <!-- Scenario 4: asinh, all negative -->
+        <div id='s4_asinh_negative'></div>
+
+        <!-- Scenario 5: asinh, base 2 -->
+        <div id='s5_asinh_base2'></div>
+
+        <!-- Scenario 6: asinh, scatter with mixed-sign data -->
+        <div id='s6_asinh_scatter'></div>
+
+        <!-- Scenario 7: symlog, mixed [-1000, 1000] -->
+        <div id='s7_symlog_mixed'></div>
+
+        <!-- Scenario 8: symlog with explicit logLinearWidth: 1 -->
+        <div id='s8_symlog_linearwidth'></div>
+
+
+        <!-- 1. Standard log, positive-only (regression baseline) -->
+        <script>
+            require(['echarts'], function (echarts) {
+                testHelper.create(echarts, 's1_standard_log', {
+                    title: [
+                        'Scenario 1 — Standard log (regression baseline)',
+                        'type: log, logBase: 10. Positive-only data.',
+                        'Verify: ticks at 1, 10, 100, 1000. Identical to existing behaviour.',
+                    ],
+                    option: {
+                        tooltip: { trigger: 'axis' },
+                        xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E'] },
+                        yAxis: { type: 'log', logBase: 10 },
+                        series: [{ type: 'line', data: [1, 10, 100, 500, 1000] }]
+                    }
+                });
+            });
+        </script>
+
+
+        <!-- 2. asinh, positive-only -->
+        <script>
+            require(['echarts'], function (echarts) {
+                testHelper.create(echarts, 's2_asinh_positive', {
+                    title: [
+                        'Scenario 2 — logMapping: asinh, positive-only',
+                        'Same data as Scenario 1. Curve shape should be close to standard log.',
+                        'Verify: ticks at 1, 10, 100, 1000. No throw, no blank chart.',
+                    ],
+                    option: {
+                        tooltip: { trigger: 'axis' },
+                        xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E'] },
+                        yAxis: { type: 'log', logBase: 10, logMapping: 'asinh' },
+                        series: [{ type: 'line', data: [1, 10, 100, 500, 1000] }]
+                    }
+                });
+            });
+        </script>
+
+
+        <!-- 3. asinh, mixed [-1000, 1000] — primary use case -->
+        <script>
+            require(['echarts'], function (echarts) {
+                testHelper.create(echarts, 's3_asinh_mixed', {
+                    title: [
+                        'Scenario 3 — logMapping: asinh, mixed [-1000, 1000] (primary use case)',
+                        'Verify: zero tick visible. Negatives render below zero.',
+                        'Region near zero is visually compressed. Labels: -1000,-100,-10,-1,0,1,10,100,1000.',
+                    ],
+                    option: {
+                        tooltip: { trigger: 'axis' },
+                        xAxis: {
+                            type: 'category',
+                            data: ['-1000', '-100', '-10', '-1', '0', '1', '10', '100', '1000']
+                        },
+                        yAxis: { type: 'log', logBase: 10, logMapping: 'asinh' },
+                        series: [{
+                            type: 'line',
+                            data: [-1000, -100, -10, -1, 0, 1, 10, 100, 1000]
+                        }]
+                    }
+                });
+            });
+        </script>
+
+
+        <!-- 4. asinh, all negative -->
+        <script>
+            require(['echarts'], function (echarts) {
+                testHelper.create(echarts, 's4_asinh_negative', {
+                    title: [
+                        'Scenario 4 — logMapping: asinh, all negative',
+                        'Verify: ticks at -1000, -100, -10, -1. No zero tick (out of range).',
+                        'Chart mirrors the positive half from Scenario 2.',
+                    ],
+                    option: {
+                        tooltip: { trigger: 'axis' },
+                        xAxis: { type: 'category', data: ['A', 'B', 'C', 'D'] },
+                        yAxis: { type: 'log', logBase: 10, logMapping: 'asinh' },
+                        series: [{ type: 'line', data: [-1000, -100, -10, -1] }]
+                    }
+                });
+            });
+        </script>
+
+
+        <!-- 5. asinh, base 2 -->
+        <script>
+            require(['echarts'], function (echarts) {
+                testHelper.create(echarts, 's5_asinh_base2', {
+                    title: [
+                        'Scenario 5 — logMapping: asinh, logBase: 2',
+                        'Verify: ticks at powers of 2 (e.g. -8,-4,-2,-1,0,1,2,4,8,...).',
+                        'Quasi-linear region is centred around +-1 (logLinearWidth defaults to 1).',
+                    ],
+                    option: {
+                        tooltip: { trigger: 'axis' },
+                        xAxis: {
+                            type: 'category',
+                            data: ['-64', '-32', '-16', '-8', '-4', '-2', '-1', '0', '1', '2', '4', '8', '16', '32', '64']
+                        },
+                        yAxis: { type: 'log', logBase: 2, logMapping: 'asinh' },
+                        series: [{
+                            type: 'line',
+                            data: [-64, -32, -16, -8, -4, -2, -1, 0, 1, 2, 4, 8, 16, 32, 64]
+                        }]
+                    }
+                });
+            });
+        </script>
+
+
+        <!-- 6. asinh, scatter with mixed-sign data (real-world pattern) -->
+        <script>
+            require(['echarts'], function (echarts) {
+                testHelper.create(echarts, 's6_asinh_scatter', {
+                    title: [
+                        'Scenario 6 — logMapping: asinh, scatter with mixed-sign data',
+                        'Simulates a P&L-style dataset: zero in the middle, large outliers at both ends.',
+                        'Verify: all points render. Hover tooltips show raw values (not transformed).',
+                    ],
+                    option: {
+                        tooltip: { trigger: 'item' },
+                        xAxis: { type: 'value' },
+                        yAxis: { type: 'log', logBase: 10, logMapping: 'asinh' },
+                        series: [{
+                            type: 'scatter',
+                            symbolSize: 8,
+                            data: [
+                                [1, -500], [2, -50], [3, -5], [4, -0.5], [5, 0],
+                                [6, 0.5],  [7, 5],  [8, 50], [9, 500],  [10, 5000]
+                            ]
+                        }]
+                    }
+                });
+            });
+        </script>
+
+
+        <!-- 7. symlog, mixed [-1000, 1000] -->
+        <script>
+            require(['echarts'], function (echarts) {
+                testHelper.create(echarts, 's7_symlog_mixed', {
+                    title: [
+                        'Scenario 7 — logMapping: symlog, mixed [-1000, 1000]',
+                        'Same data as Scenario 3. Compare line shape: symlog has a harder',
+                        'transition than asinh. Tick labels should match Scenario 3.',
+                    ],
+                    option: {
+                        tooltip: { trigger: 'axis' },
+                        xAxis: {
+                            type: 'category',
+                            data: ['-1000', '-100', '-10', '-1', '0', '1', '10', '100', '1000']
+                        },
+                        yAxis: { type: 'log', logBase: 10, logMapping: 'symlog' },
+                        series: [{
+                            type: 'line',
+                            data: [-1000, -100, -10, -1, 0, 1, 10, 100, 1000]
+                        }]
+                    }
+                });
+            });
+        </script>
+
+
+        <!-- 8. symlog with explicit logLinearWidth: 1 -->
+        <script>
+            require(['echarts'], function (echarts) {
+                testHelper.create(echarts, 's8_symlog_linearwidth', {
+                    title: [
+                        'Scenario 8 — logMapping: symlog, logLinearWidth: 1',
+                        'Verify: the segment from -1 to 1 is visually linear (equal pixel spacing).',
+                        'Beyond +-1 the axis compresses logarithmically.',
+                    ],
+                    option: {
+                        tooltip: { trigger: 'axis' },
+                        xAxis: {
+                            type: 'category',
+                            data: ['-1000', '-100', '-10', '-1', '-0.5', '0', '0.5', '1', '10', '100', '1000']
+                        },
+                        yAxis: {
+                            type: 'log',
+                            logBase: 10,
+                            logMapping: 'symlog',
+                            logLinearWidth: 1
+                        },
+                        series: [{
+                            type: 'line',
+                            data: [-1000, -100, -10, -1, -0.5, 0, 0.5, 1, 10, 100, 1000]
+                        }]
+                    }
+                });
+            });
+        </script>
+
+
+    </body>
+</html>
