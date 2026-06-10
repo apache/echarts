@@ -25,6 +25,7 @@ import {
     symlogScaleInverseTick,
 } from '@/src/scale/helper';
 import LogScale from '@/src/scale/Log';
+import { logMappingCalcNiceTicks } from '@/src/coord/axisNiceTicks';
 
 // Relative tolerance used by `approxEqual` in round-trip tests:
 // `|a - b| <= tolerance * (1 + |b|)`.
@@ -426,5 +427,141 @@ describe('LogScale — logMapping: symlog', () => {
                 expect(s.scale(s.normalize(x))).toBeCloseTo(expected.scale(expected.normalize(x)), 10);
             }
         }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// logMappingCalcNiceTicks — tick candidate tests
+// ---------------------------------------------------------------------------
+
+describe('LogScale — asinh tick candidates', () => {
+    function makeAndNice(min: number, max: number, logBase = 10, logLinearWidth = 1) {
+        const s = new LogScale({
+            logBase,
+            logMapping: 'asinh',
+            logLinearWidth,
+            breakOption: undefined,
+        });
+        s.setExtent(min, max);
+        logMappingCalcNiceTicks(s);
+        return s.getTicks().map(t => t.value);
+    }
+
+    it('[-100, 100] base 10, a0=1 → [-100,-10,-1,0,1,10,100]', () => {
+        expect(makeAndNice(-100, 100)).toEqual([-100, -10, -1, 0, 1, 10, 100]);
+    });
+
+    it('[0, 100] base 10, a0=1 → [0,1,10,100]', () => {
+        expect(makeAndNice(0, 100)).toEqual([0, 1, 10, 100]);
+    });
+
+    it('[-1000, 1000] includes 0, ±1000', () => {
+        const ticks = makeAndNice(-1000, 1000);
+        expect(ticks).toContain(0);
+        expect(ticks).toContain(1000);
+        expect(ticks).toContain(-1000);
+    });
+
+    it('[1, 1000] positive-only → [1,10,100,1000]', () => {
+        expect(makeAndNice(1, 1000)).toEqual([1, 10, 100, 1000]);
+    });
+
+    it('tick values are raw (not asinh-transformed)', () => {
+        for (const v of makeAndNice(-100, 100)) {
+            expect(Number.isInteger(v)).toBe(true);
+        }
+    });
+
+    it('normalize / scale round-trip after logMappingCalcNiceTicks', () => {
+        const s = new LogScale({
+            logBase: 10, logMapping: 'asinh', logLinearWidth: 1, breakOption: undefined
+        });
+        s.setExtent(-100, 100);
+        logMappingCalcNiceTicks(s);
+        for (const v of [-100, -10, -1, 0, 1, 10, 100]) {
+            expect(s.scale(s.normalize(v))).toBeCloseTo(v, 5);
+        }
+    });
+
+    it('intervalStub extent equals transformed data min/max', () => {
+        const s = new LogScale({
+            logBase: 10, logMapping: 'asinh', logLinearWidth: 1, breakOption: undefined
+        });
+        s.setExtent(-100, 100);
+        logMappingCalcNiceTicks(s);
+        const [lo, hi] = s.intervalStub.getExtent();
+        expect(lo).toBeCloseTo(asinhScaleForwardTick(-100, 1), 10);
+        expect(hi).toBeCloseTo(asinhScaleForwardTick(100, 1), 10);
+    });
+
+    it('extent entirely between candidates falls back to midpoint tick', () => {
+        // base=10, a0=1: candidates are 0, ±1, ±10 — none fall inside [2, 9]
+        const s = new LogScale({
+            logBase: 10, logMapping: 'asinh', logLinearWidth: 1, breakOption: undefined
+        });
+        s.setExtent(2, 9);
+        logMappingCalcNiceTicks(s);
+        expect(s.getTicks()).toEqual([{ value: 5.5 }]);
+    });
+
+    it('[1, 8] base=2, a0=1 → [1,2,4,8]', () => {
+        expect(makeAndNice(1, 8, 2, 1)).toEqual([1, 2, 4, 8]);
+    });
+
+    it('[-100, 100] base=10, a0=10 → [-100,-10,0,10,100]', () => {
+        expect(makeAndNice(-100, 100, 10, 10)).toEqual([-100, -10, 0, 10, 100]);
+    });
+});
+
+describe('LogScale — symlog tick candidates', () => {
+    function makeAndNice(min: number, max: number, logBase = 10, logLinearWidth = 1) {  // eslint-disable-line @typescript-eslint/no-shadow
+        const s = new LogScale({
+            logBase,
+            logMapping: 'symlog',
+            logLinearWidth,
+            breakOption: undefined,
+        });
+        s.setExtent(min, max);
+        logMappingCalcNiceTicks(s);
+        return s.getTicks().map(t => t.value);
+    }
+
+    it('[-100, 100] → [-100,-10,-1,0,1,10,100]', () => {
+        expect(makeAndNice(-100, 100)).toEqual([-100, -10, -1, 0, 1, 10, 100]);
+    });
+
+    it('tick list contains 0', () => {
+        expect(makeAndNice(-100, 100)).toContain(0);
+    });
+
+    it('getFilter returns no positivity guard after ticks are set', () => {
+        const s = new LogScale({
+            logBase: 10, logMapping: 'symlog', logLinearWidth: 1, breakOption: undefined
+        });
+        s.setExtent(-100, 100);
+        logMappingCalcNiceTicks(s);
+        expect(s.getFilter!()).not.toHaveProperty('g');
+    });
+
+    it('intervalStub extent equals transformed data min/max', () => {
+        const s = new LogScale({
+            logBase: 10, logMapping: 'symlog', logLinearWidth: 1, breakOption: undefined
+        });
+        s.setExtent(-100, 100);
+        logMappingCalcNiceTicks(s);
+        const [lo, hi] = s.intervalStub.getExtent();
+        expect(lo).toBeCloseTo(symlogScaleForwardTick(-100, 1), 10);
+        expect(hi).toBeCloseTo(symlogScaleForwardTick(100, 1), 10);
+    });
+});
+
+describe('LogScale — alignTicks guard', () => {
+    it('logMappingCalcNiceTicks does not throw and produces ticks', () => {
+        const s = new LogScale({
+            logBase: 10, logMapping: 'asinh', logLinearWidth: 1, breakOption: undefined
+        });
+        s.setExtent(-100, 100);
+        expect(() => logMappingCalcNiceTicks(s)).not.toThrow();
+        expect(s.getTicks().length).toBeGreaterThan(0);
     });
 });
