@@ -227,7 +227,9 @@ const timeAxis: AxisBaseOption = zrUtil.merge({
 }, valueAxis);
 
 const logAxis: AxisBaseOption = zrUtil.defaults({
-    logBase: 10
+    logBase: 10,
+    logMapping: 'none',
+    logLinearWidth: 1,
 }, valueAxis);
 
 

@@ -44,6 +44,8 @@ import { isNullableNumberFinite } from '../util/number';
 
 type LogScaleSetting = {
     logBase: number | NullUndefined;
+    logMapping: 'none' | 'asinh' | 'symlog' | NullUndefined;
+    logLinearWidth: number | NullUndefined;
     breakOption: AxisBreakOption[] | NullUndefined;
 };
 
@@ -60,6 +62,34 @@ class LogScale extends Scale<LogScale> {
     readonly type = 'log' as const;
 
     readonly base: number;
+
+    /**
+     * The mapping method applied to this log scale.
+     * `'none'` is the standard log (positive values only).
+     * `'asinh'` and `'symlog'` extend support to zero and negative values —
+     * they also relax the positivity guards in `setExtent`, `sanitize`, and `getFilter`.
+     *
+     * NOTE: `NullUndefined` is treated as `'none'`.
+     *
+     * @see `linearWidth`
+     */
+    readonly logMapping: 'none' | 'asinh' | 'symlog' | NullUndefined;
+
+    /**
+     * The quasi-linear region half-width used by `'asinh'` and `'symlog'` mappings
+     * (`logLinearWidth` option, default `1`).
+     * Controls how wide the near-zero linear band is before the log-like curve kicks in.
+     * Ignored when `logMapping` is `'none'`.
+     *
+     * @see `logMapping`
+     */
+    readonly linearWidth: number | NullUndefined;
+
+    /**
+     * Cached ticks for `'asinh'`/`'symlog'` mappings, computed in `getTicks` and
+     * reused by `getMinorTicks`. `null` when `logMapping` is `'none'`.
+     */
+    _mappedLogTicks: ScaleTick[] | null;
 
     /**
      * `powStub` is used to save original values, i.e., values before logarithm
@@ -84,6 +114,12 @@ class LogScale extends Scale<LogScale> {
         super();
         this.parse = IntervalScale.parse;
         this.base = setting.logBase || 10;
+
+        this.logMapping = (setting.logMapping === 'asinh' || setting.logMapping === 'symlog')
+            ? setting.logMapping
+            : undefined;
+        this.linearWidth = setting.logLinearWidth || 1;
+        this._mappedLogTicks = null;
 
         const lookupFrom: number[] = [];
         const lookupTo: number[] = [];

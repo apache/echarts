@@ -238,6 +238,8 @@ export interface LogAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'log';
     axisLabel?: AxisLabelOption<'log'>;
     logBase?: number;
+    logMapping?: 'none' | 'asinh' | 'symlog';
+    logLinearWidth?: number;
 }
 export interface TimeAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'time';
