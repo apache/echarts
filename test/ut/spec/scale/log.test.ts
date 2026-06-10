@@ -435,7 +435,7 @@ describe('LogScale — logMapping: symlog', () => {
 // ---------------------------------------------------------------------------
 
 describe('LogScale — asinh tick candidates', () => {
-    function makeAndNice(min: number, max: number, logBase = 10, logLinearWidth = 1) {
+    function makeAndNice(min: number, max: number, logBase = 10, logLinearWidth = 1, splitNumber?: number) {
         const s = new LogScale({
             logBase,
             logMapping: 'asinh',
@@ -443,7 +443,7 @@ describe('LogScale — asinh tick candidates', () => {
             breakOption: undefined,
         });
         s.setExtent(min, max);
-        logMappingCalcNiceTicks(s);
+        logMappingCalcNiceTicks(s, splitNumber);
         return s.getTicks().map(t => t.value);
     }
 
@@ -455,11 +455,20 @@ describe('LogScale — asinh tick candidates', () => {
         expect(makeAndNice(0, 100)).toEqual([0, 1, 10, 100]);
     });
 
-    it('[-1000, 1000] includes 0, ±1000', () => {
-        const ticks = makeAndNice(-1000, 1000);
+    it('[-1000, 1000] includes 0, ±1000 when splitNumber is large enough', () => {
+        const ticks = makeAndNice(-1000, 1000, 10, 1, 10);
         expect(ticks).toContain(0);
         expect(ticks).toContain(1000);
         expect(ticks).toContain(-1000);
+    });
+
+    it('splitNumber thins ticks by raising the effective base', () => {
+        // base=2, range [0, 1024]: without thinning would give
+        // 0,1,2,4,8,16,32,64,128,256,512,1024 (12 ticks).
+        // splitNumber=4 should produce at most 5 ticks.
+        const ticks = makeAndNice(0, 1024, 2, 1, 4);
+        expect(ticks.length).toBeLessThanOrEqual(5);
+        expect(ticks).toContain(0);
     });
 
     it('[1, 1000] positive-only → [1,10,100,1000]', () => {
@@ -514,7 +523,7 @@ describe('LogScale — asinh tick candidates', () => {
 });
 
 describe('LogScale — symlog tick candidates', () => {
-    function makeAndNice(min: number, max: number, logBase = 10, logLinearWidth = 1) {  // eslint-disable-line @typescript-eslint/no-shadow
+    function makeSymlog(min: number, max: number, logBase = 10, logLinearWidth = 1, splitNumber?: number) {
         const s = new LogScale({
             logBase,
             logMapping: 'symlog',
@@ -522,16 +531,16 @@ describe('LogScale — symlog tick candidates', () => {
             breakOption: undefined,
         });
         s.setExtent(min, max);
-        logMappingCalcNiceTicks(s);
+        logMappingCalcNiceTicks(s, splitNumber);
         return s.getTicks().map(t => t.value);
     }
 
     it('[-100, 100] → [-100,-10,-1,0,1,10,100]', () => {
-        expect(makeAndNice(-100, 100)).toEqual([-100, -10, -1, 0, 1, 10, 100]);
+        expect(makeSymlog(-100, 100)).toEqual([-100, -10, -1, 0, 1, 10, 100]);
     });
 
     it('tick list contains 0', () => {
-        expect(makeAndNice(-100, 100)).toContain(0);
+        expect(makeSymlog(-100, 100)).toContain(0);
     });
 
     it('getFilter returns no positivity guard after ticks are set', () => {

@@ -59,7 +59,7 @@ function calcNiceForIntervalOrLogScale(
 
     // For mapped-log axes (asinh/symlog), use the raw-space tick strategy.
     if (isTargetLogScale && (scale as LogScale).logMapping) {
-        logMappingCalcNiceTicks(scale as LogScale);
+        logMappingCalcNiceTicks(scale as LogScale, opt.splitNumber);
         return;
     }
 
@@ -219,22 +219,41 @@ function logScaleCalcNiceTicks(
  * then set `intervalStub` extent to the transformed range so that
  * `normalize`/`scale` pixel mapping remains correct.
  */
-export function logMappingCalcNiceTicks(scale: LogScale): void {
+export function logMappingCalcNiceTicks(
+    scale: LogScale, splitNumber?: number | NullUndefined
+): void {
     const base = scale.base;
     const a0 = scale.linearWidth || 1;
     const [rawMin, rawMax] = scale.getExtent();
+    const maxTicks = ensureValidSplitNumber(splitNumber, 5) + 1;
 
     const forward = scale.logMapping === 'asinh'
         ? (v: number) => asinhScaleForwardTick(v, a0)
         : (v: number) => symlogScaleForwardTick(v, a0);
 
-    // Candidates: 0, ±a0, ±b*a0, ±b^2*a0, ...
+    // Count how many powers of `base` span the extent so we can decide
+    // whether to step by base^1, base^2, … to stay within `splitNumber`.
     const absMax = Math.max(Math.abs(rawMin), Math.abs(rawMax));
+    const totalSteps = absMax > a0 ? Math.ceil(Math.log(absMax / a0) / Math.log(base)) : 0;
+    // Account for both positive and negative sides plus zero.
+    const hasNeg = rawMin < 0;
+    const hasPos = rawMax > 0;
+    const sidesMultiplier = (hasNeg && hasPos) ? 2 : 1;
+    const estimatedTicks = totalSteps * sidesMultiplier + 1; // +1 for zero
+
+    // Raise the effective base so tick count stays within splitNumber.
+    let stride = 1;
+    if (estimatedTicks > maxTicks && totalSteps > 0) {
+        stride = Math.ceil(totalSteps * sidesMultiplier / (maxTicks - 1));
+    }
+    const effectiveBase = Math.pow(base, stride);
+
+    // Candidates: 0, ±a0, ±a0·effectiveBase, ±a0·effectiveBase², ...
     const candidates: number[] = [0];
     let v = a0;
     while (v <= absMax * 1.0001) {
         candidates.push(v, -v);
-        v *= base;
+        v *= effectiveBase;
     }
 
     // Filter to data extent and sort ascending.
