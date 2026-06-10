@@ -24,6 +24,7 @@ import {
     symlogScaleForwardTick,
     symlogScaleInverseTick,
 } from '@/src/scale/helper';
+import LogScale from '@/src/scale/Log';
 
 // Relative tolerance used by `approxEqual` in round-trip tests:
 // `|a - b| <= tolerance * (1 + |b|)`.
@@ -246,6 +247,184 @@ describe('asinh vs symlog comparison', () => {
                 .toBeGreaterThan(asinhScaleForwardTick(xs[i - 1], 1));
             expect(symlogScaleForwardTick(xs[i], 1))
                 .toBeGreaterThan(symlogScaleForwardTick(xs[i - 1], 1));
+        }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// LogScale — scale-level tests
+// ---------------------------------------------------------------------------
+
+describe('LogScale — standard log (regression)', () => {
+    function makeLogScale(base = 10) {
+        return new LogScale({
+            logBase: base,
+            logMapping: undefined,
+            logLinearWidth: undefined,
+            breakOption: undefined,
+        });
+    }
+
+    it('accepts positive extent', () => {
+        const s = makeLogScale();
+        s.setExtent(1, 1000);
+        expect(s.getExtent()).toEqual([1, 1000]);
+    });
+
+    it('silently rejects zero in setExtent (no-op)', () => {
+        const s = makeLogScale();
+        s.setExtent(1, 1000);
+        s.setExtent(0, 1000);
+        expect(s.getExtent()).toEqual([1, 1000]);
+    });
+
+    it('silently rejects negative in setExtent (no-op)', () => {
+        const s = makeLogScale();
+        s.setExtent(1, 1000);
+        s.setExtent(-10, 1000);
+        expect(s.getExtent()).toEqual([1, 1000]);
+    });
+
+    it('getFilter returns positivity guard', () => {
+        const s = makeLogScale();
+        s.setExtent(1, 1000);
+        const filter = s.getFilter!();
+        expect(filter).toHaveProperty('g');
+        expect((filter as any).g).toBeGreaterThanOrEqual(0);
+    });
+
+    it('getDefaultStartValue returns 1', () => {
+        const s = makeLogScale();
+        expect(s.getDefaultStartValue!()).toBe(1);
+    });
+});
+
+describe('LogScale — logMapping: asinh', () => {
+    function makeAsinhScale(logBase = 10, logLinearWidth = 1) {
+        return new LogScale({
+            logBase,
+            logMapping: 'asinh',
+            logLinearWidth,
+            breakOption: undefined,
+        });
+    }
+
+    it('setExtent accepts zero (start=0)', () => {
+        const s = makeAsinhScale();
+        expect(() => s.setExtent(0, 100)).not.toThrow();
+    });
+
+    it('setExtent accepts negative extent', () => {
+        const s = makeAsinhScale();
+        s.setExtent(-100, 100);
+        expect(s.getExtent()).toEqual([-100, 100]);
+    });
+
+    it('getFilter returns no positivity guard', () => {
+        const s = makeAsinhScale();
+        s.setExtent(-100, 100);
+        expect(s.getFilter!()).not.toHaveProperty('g');
+    });
+
+    it('sanitize does not clamp negative values', () => {
+        const s = makeAsinhScale();
+        s.setExtent(-100, 100);
+        expect(s.sanitize!(-50, [-100, 100])).toBe(-50);
+        expect(s.sanitize!(0, [-100, 100])).toBe(0);
+    });
+
+    it('getDefaultStartValue returns 0', () => {
+        expect(makeAsinhScale().getDefaultStartValue!()).toBe(0);
+    });
+
+    it('normalize / scale round-trip', () => {
+        const s = makeAsinhScale();
+        s.setExtent(-100, 100);
+        for (const x of [-100, -10, -1, 0, 1, 10, 100]) {
+            const norm = s.normalize(x);
+            const back = s.scale(norm);
+            expect(back).toBeCloseTo(x, 5);
+        }
+    });
+
+    it('uses pre-computed mapped ticks when `_mappedLogTicks` is set', () => {
+        const s = makeAsinhScale();
+        const mappedTicks = [{ value: -1 }, { value: 0 }, { value: 1 }];
+        s._mappedLogTicks = mappedTicks;
+        expect(s.getTicks()).toBe(mappedTicks);
+    });
+
+    it('invalid logLinearWidth values fall back to 1', () => {
+        const expected = makeAsinhScale(10, 1);
+        expected.setExtent(-100, 100);
+
+        for (const invalidLw of [0, -1, Infinity, NaN]) {
+            const s = makeAsinhScale(10, invalidLw);
+            expect(s.linearWidth).toBe(1);
+
+            s.setExtent(-100, 100);
+            for (const x of [-100, -10, -1, 0, 1, 10, 100]) {
+                expect(s.normalize(x)).toBeCloseTo(expected.normalize(x), 10);
+                expect(s.scale(s.normalize(x))).toBeCloseTo(expected.scale(expected.normalize(x)), 10);
+            }
+        }
+    });
+});
+
+describe('LogScale — logMapping: symlog', () => {
+    function makeSymlogScale(logBase = 10, logLinearWidth = 1) {
+        return new LogScale({
+            logBase,
+            logMapping: 'symlog',
+            logLinearWidth,
+            breakOption: undefined,
+        });
+    }
+
+    it('setExtent accepts zero and negative', () => {
+        const s = makeSymlogScale();
+        s.setExtent(-100, 100);
+        expect(s.getExtent()).toEqual([-100, 100]);
+    });
+
+    it('getFilter returns no positivity guard', () => {
+        const s = makeSymlogScale();
+        s.setExtent(-100, 100);
+        expect(s.getFilter!()).not.toHaveProperty('g');
+    });
+
+    it('sanitize does not clamp negative values', () => {
+        const s = makeSymlogScale();
+        s.setExtent(-100, 100);
+        expect(s.sanitize!(-50, [-100, 100])).toBe(-50);
+    });
+
+    it('getDefaultStartValue returns 0', () => {
+        expect(makeSymlogScale().getDefaultStartValue!()).toBe(0);
+    });
+
+    it('normalize / scale round-trip', () => {
+        const s = makeSymlogScale();
+        s.setExtent(-100, 100);
+        for (const x of [-100, -10, -1, 0, 1, 10, 100]) {
+            const back = s.scale(s.normalize(x));
+            expect(back).toBeCloseTo(x, 5);
+        }
+    });
+
+    it('invalid logLinearWidth values fall back to 1', () => {
+        const expected = makeSymlogScale(10, 1);
+        expected.setExtent(-100, 100);
+
+        for (const invalidLw of [0, -1, Infinity, NaN]) {
+            const s = makeSymlogScale(10, invalidLw);
+            expect(s.linearWidth).toBe(1);
+
+            s.setExtent(-100, 100);
+            for (const x of [-100, -10, -1, 0, 1, 10, 100]) {
+                expect(s.normalize(x)).toBeCloseTo(expected.normalize(x), 10);
+                expect(s.scale(s.normalize(x))).toBeCloseTo(expected.scale(expected.normalize(x)), 10);
+            }
         }
     });
 });
