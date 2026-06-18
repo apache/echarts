@@ -94,7 +94,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
         return createSeriesData(null, this, {useEncodeDefaulter: true});
     }
 
-    getMarkerPosition(
+       getMarkerPosition(
         value: ScaleDataValue[],
         dims?: typeof dimPermutations[number],
         startingAtTick?: boolean
@@ -108,72 +108,23 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
                 each(coordSys.getAxes(), function (axis: Axis2D, idx: number) {
                     // If axis type is category, use tick coords instead
                     if (axis.type === 'category' && dims != null) {
-                        const tickCoords = axis.getTicksCoords();
                         const alignTicksWithLabel = (axis.getTickModel() as Model<CategoryAxisBaseOption['axisTick']>)
                             .get('alignWithLabel');
 
                         let targetTickId = clampData[idx];
-                        // The index of rightmost tick of markArea is 1 larger than x1/y1 index
                         const isEnd = dims[idx] === 'x1' || dims[idx] === 'y1';
+
                         if (isEnd && !alignTicksWithLabel) {
                             targetTickId += 1;
                         }
 
-                        // The only contains one tick, tickCoords is
-                        // like [{coord: 0, tickValue: 0}, {coord: 0}]
-                        // to the length should always be larger than 1
-                        if (tickCoords.length < 2) {
-                            return;
-                        }
-                        else if (tickCoords.length === 2) {
-                            // The left value and right value of the axis are
-                            // the same. coord is 0 in both items. Use the max
-                            // value of the axis as the coord
-                            pt[idx] = axis.toGlobalCoord(
-                                axis.getExtent()[isEnd ? 1 : 0]
-                            );
-                            return;
-                        }
+                        // Direct dataToCoord handles inverse: true automatically
+                        const ticks = axis.scale.getTicks();
+                        const tickVal = ticks[targetTickId]
+                            ? ticks[targetTickId].value
+                            : targetTickId;
+                        const coord = axis.dataToCoord(tickVal);
 
-                        let leftCoord;
-                        let coord;
-                        let stepTickValue = 1;
-                        for (let i = 0; i < tickCoords.length; i++) {
-                            const tickCoord = tickCoords[i].coord;
-                            // The last item of tickCoords doesn't contain
-                            // tickValue
-                            const tickValue = i === tickCoords.length - 1
-                                ? tickCoords[i - 1].tickValue + stepTickValue
-                                : tickCoords[i].tickValue;
-                            if (tickValue === targetTickId) {
-                                coord = tickCoord;
-                                break;
-                            }
-                            else if (tickValue < targetTickId) {
-                                leftCoord = tickCoord;
-                            }
-                            else if (leftCoord != null && tickValue > targetTickId) {
-                                coord = (tickCoord + leftCoord) / 2;
-                                break;
-                            }
-                            if (i === 1) {
-                                // Here we assume the step of category axes is
-                                // the same
-                                stepTickValue = tickValue - tickCoords[0].tickValue;
-                            }
-                        }
-                        if (coord == null) {
-                            if (!leftCoord) {
-                                // targetTickId is smaller than all tick ids in the
-                                // visible area, use the leftmost tick coord
-                                coord = tickCoords[0].coord;
-                            }
-                            else if (leftCoord) {
-                                // targetTickId is larger than all tick ids in the
-                                // visible area, use the rightmost tick coord
-                                coord = tickCoords[tickCoords.length - 1].coord;
-                            }
-                        }
                         pt[idx] = axis.toGlobalCoord(coord);
                     }
                 });
