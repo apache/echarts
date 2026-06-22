@@ -38,13 +38,16 @@ under the License.
                    causing visual test failures. Some clients may not support fractional px. */
                 line-height: 18px;
             }
-            #main0 {
+            #main0, #main1, #main2, #main3 {
                 width: 800px;
                 margin: 0 auto;
             }
         </style>
 
         <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
 
         <script>
             require(['echarts'], function (echarts /*, data */) {
@@ -86,6 +89,95 @@ under the License.
                         'Position of dataZoom when there is only one data point',
                     ],
                     option: option,
+                });
+
+                function makeDataShadowOption(axisType, data) {
+                    return {
+                        animation: false,
+                        grid: {
+                            left: 60,
+                            right: 30,
+                            top: 25,
+                            bottom: 65
+                        },
+                        xAxis: {
+                            type: axisType
+                        },
+                        yAxis: {
+                            type: 'value',
+                            min: 0,
+                            max: 100
+                        },
+                        dataZoom: [{
+                            type: 'slider',
+                            showDataShadow: true,
+                            showDetail: false,
+                            start: 0,
+                            end: 100,
+                            height: 30,
+                            bottom: 15,
+                            dataBackground: {
+                                lineStyle: {
+                                    color: '#c23531',
+                                    width: 2
+                                },
+                                areaStyle: {
+                                    color: '#c23531',
+                                    opacity: 0.4
+                                }
+                            },
+                            selectedDataBackground: {
+                                lineStyle: {
+                                    color: '#c23531',
+                                    width: 2
+                                },
+                                areaStyle: {
+                                    color: '#c23531',
+                                    opacity: 0.4
+                                }
+                            }
+                        }],
+                        series: [{
+                            type: 'line',
+                            symbolSize: 8,
+                            data: data
+                        }]
+                    };
+                }
+
+                testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Single-point series on a time axis with showDataShadow',
+                        'The slider shadow must render at the left edge (no blank/NaN shadow).'
+                    ],
+                    height: 220,
+                    option: makeDataShadowOption('time', [
+                        [+new Date('2024-01-01'), 42]
+                    ])
+                });
+
+                testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Multi-point series on a time axis with showDataShadow',
+                        'The slider shadow should still render across the slider.'
+                    ],
+                    height: 220,
+                    option: makeDataShadowOption('time', [
+                        [+new Date('2024-01-01'), 30],
+                        [+new Date('2024-01-02'), 70],
+                        [+new Date('2024-01-03'), 45]
+                    ])
+                });
+
+                testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Single-point series on a value axis with showDataShadow',
+                        'The slider shadow should keep rendering at the left edge.'
+                    ],
+                    height: 220,
+                    option: makeDataShadowOption('value', [
+                        [0, 42]
+                    ])
                 });
             });
         </script>
