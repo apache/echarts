@@ -78,7 +78,7 @@
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",
-    "@babel/core": "7.3.4",
+    "@babel/core": "7.29.6",
     "@babel/types": "7.10.5",
     "@definitelytyped/typescript-versions": "^0.1.9",
     "@definitelytyped/utils": "0.0.188",
