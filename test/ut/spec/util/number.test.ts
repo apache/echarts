@@ -958,6 +958,12 @@ describe('util/number', function () {
             expect(nice(3900000000000000000021)).toEqual(5000000000000000000000);
             expect(nice(0.00000000000000000656939, true)).toEqual(0.000000000000000005);
             expect(nice(0.00000000000000000656939)).toEqual(0.00000000000000001);
+            const niceTiny3 = nice(2.648195266948144e-21, true);
+            const niceTiny5 = nice(4.648195266948144e-21, true);
+            expect(niceTiny3).toBeGreaterThan(0);
+            expect(niceTiny3).toBeLessThan(1e-20);
+            expect(niceTiny5).toBeGreaterThan(0);
+            expect(niceTiny5).toBeLessThan(1e-20);
             expect(nice(0.10000000000000000656939, true)).toEqual(0.1);
             expect(nice(0.10000000000000000656939)).toEqual(0.2);
         });
