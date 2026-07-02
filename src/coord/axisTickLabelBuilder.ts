@@ -501,9 +501,10 @@ function makeTicksLabelsByCategoryIntervalNumOrCb(
                 // It is time consuming for large category data.
                 const isOnInterval = !!categoryInterval(tickObj.value, tickLabel);
                 tickObj.offInterval = !isOnInterval;
-                // axis extent min max labels should be always included and the display strategy
-                // is adopted uniformly later in `AxisBuilder`.
-                if (!isOnInterval && !isExtentBoundary) {
+                // Axis extent min max labels should be always included and the display strategy
+                // is adopted uniformly later in `AxisBuilder`. For ticks, keep strictly to the
+                // callback result.
+                if (!isOnInterval && (onlyTick || !isExtentBoundary)) {
                     return;
                 }
             }
