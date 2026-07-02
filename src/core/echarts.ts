@@ -774,7 +774,15 @@ class ECharts extends Eventful<ECEventDefinition> {
             ecModel.init(null, null, null, theme, this._locale, optionManager);
         }
 
-        this._model.setOption(option as ECBasicOption, { replaceMerge }, optionPreprocessorFuncs);
+        try {
+            this._model.setOption(option as ECBasicOption, { replaceMerge }, optionPreprocessorFuncs);
+        }
+        catch (e) {
+            this[PENDING_UPDATE] = null;
+            this[IN_EC_CYCLE_KEY] = false;
+
+            throw e;
+        }
 
         const updateParams = {
             seriesTransition: transitionOpt,
