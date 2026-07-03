@@ -41,6 +41,12 @@ import { getPaddingFromTooltipModel } from './tooltipMarkup';
 
 /* global document, window */
 
+function sanitizeTooltipHtml(html: string): string {
+    return html
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script\s*>/gi, '')
+        .replace(/\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '');
+}
+
 const CSS_TRANSITION_VENDOR = toCSSVendorPrefix(TRANSITION_VENDOR, 'transition');
 const CSS_TRANSFORM_VENDOR = toCSSVendorPrefix(TRANSFORM_VENDOR, 'transform');
 
@@ -450,7 +456,7 @@ class TooltipHTMLContent {
             arrow = assembleArrow(tooltipModel, borderColor, arrowPosition);
         }
         if (isString(content)) {
-            el.innerHTML = content + arrow;
+            el.innerHTML = sanitizeTooltipHtml(content) + arrow;
         }
         else if (content) {
             // Clear previous

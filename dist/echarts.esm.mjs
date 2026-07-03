@@ -82313,6 +82313,11 @@ function mirrorPos(pos) {
   pos = pos === 'left' ? 'right' : pos === 'right' ? 'left' : pos === 'top' ? 'bottom' : 'top';
   return pos;
 }
+function sanitizeTooltipHtml(html) {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script\s*>/gi, '')
+    .replace(/\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '');
+}
 function assembleArrow(tooltipModel, borderColor, arrowPosition) {
   if (!isString(arrowPosition) || arrowPosition === 'inside') {
     return '';
@@ -82569,7 +82574,7 @@ var TooltipHTMLContent = /** @class */function () {
       arrow = assembleArrow(tooltipModel, borderColor, arrowPosition);
     }
     if (isString(content)) {
-      el.innerHTML = content + arrow;
+      el.innerHTML = sanitizeTooltipHtml(content) + arrow;
     } else if (content) {
       // Clear previous
       el.innerHTML = '';
