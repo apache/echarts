@@ -74,7 +74,6 @@ describe('pie', function () {
 
         const seriesModel = getECModel(chart).getComponent('series', 0) as SeriesModel;
         const data = seriesModel.getData();
-        const cx = (data.getItemLayout(0) as {cx: number}).cx;
         const layouts: LabelLineLayout[] = [];
 
         data.each(function (idx) {
@@ -82,7 +81,7 @@ describe('pie', function () {
             const label = sector.getTextContent();
             const labelLine = sector.getTextGuideLine();
             layouts.push({
-                side: label.x < cx ? 'left' : 'right',
+                side: label.x < sector.shape.cx ? 'left' : 'right',
                 labelX: label.x,
                 linePoints: (labelLine.shape.points as number[][]).map(function (point) {
                     return [point[0], point[1]];
