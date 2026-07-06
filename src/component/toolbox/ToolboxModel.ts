@@ -102,8 +102,8 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
         //  An initial ec option
         //       chart.setOption( {toolbox: {feature: { featureA: {}, featureB: {}, }} } )
         //  indicates the declared toolbox features need to be enabled regardless of whether property
-        //  "show" is explicity specified. But the subsequent `setOption` in merge mode requires property
-        //  "show: false" to be explicity specified if intending to remove features, for example:
+        //  "show" is explicitly specified. But the subsequent `setOption` in merge mode requires property
+        //  "show: false" to be explicitly specified if intending to remove features, for example:
         //       chart.setOption( {toolbox: {feature: { featureA: {show: false}, featureC: {} } )
         // We keep backward compatibility and perform specific processing to prevent theme
         // settings from breaking it.
