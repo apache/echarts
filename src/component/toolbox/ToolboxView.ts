@@ -377,7 +377,9 @@ class ToolboxView extends ComponentView {
         api: ExtensionAPI,
         payload: unknown
     ) {
-        each(this._features, function (feature) {
+        // `_features` is a `HashMap` rather than a plain object, so it has to be
+        // iterated with its own `each` method - `zrUtil.each` cannot traverse it.
+        this._features && this._features.each(function (feature) {
             feature
                 && feature instanceof ToolboxFeature
                 && feature.updateView
@@ -386,7 +388,7 @@ class ToolboxView extends ComponentView {
     }
 
     dispose(ecModel: GlobalModel, api: ExtensionAPI) {
-        each(this._features, function (feature) {
+        this._features && this._features.each(function (feature) {
             feature
                 && feature instanceof ToolboxFeature
                 && feature.dispose
