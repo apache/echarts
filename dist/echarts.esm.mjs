@@ -20122,9 +20122,7 @@ function filterBySubType(components, condition) {
 function normalizeSetOptionInput(opts) {
   var replaceMergeMainTypeMap = createHashMap();
   opts && each(normalizeToArray(opts.replaceMerge), function (mainType) {
-    if ("development" !== 'production') {
-      assert(ComponentModel.hasClass(mainType), '"' + mainType + '" is not valid component main type in "replaceMerge"');
-    }
+    assert(ComponentModel.hasClass(mainType), '"' + mainType + '" is not valid component main type in "replaceMerge"');
     replaceMergeMainTypeMap.set(mainType, true);
   });
   return {
