@@ -1081,7 +1081,7 @@ function filterBySubType(
 function normalizeSetOptionInput(opts: GlobalModelSetOptionOpts): InnerSetOptionOpts {
     const replaceMergeMainTypeMap = createHashMap<boolean, string>();
     opts && each(modelUtil.normalizeToArray(opts.replaceMerge), function (mainType) {
-        if (__DEV__) {
+        if (true) {
             assert(
                 ComponentModel.hasClass(mainType),
                 '"' + mainType + '" is not valid component main type in "replaceMerge"'
