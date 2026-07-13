@@ -46,6 +46,16 @@ export {
     ToggleAxisBreakPayload,
 } from '../component/axis/axisAction';
 
+// Types of the `params` argument passed to formatter callbacks
+// (for example `tooltip.formatter` and `label.formatter`), so that
+// these callbacks can be typed without importing from internal paths.
+export {
+    CallbackDataParams,
+} from '../util/types';
+export {
+    TopLevelFormatterParams,
+} from '../component/tooltip/TooltipModel';
+
 
 export { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
 export { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
