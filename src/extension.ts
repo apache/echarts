@@ -43,6 +43,7 @@ import { registerImpl } from './core/impl';
 import { registerPainter } from 'zrender/src/zrender';
 import { CustomSeriesRenderItem } from './chart/custom/CustomSeries';
 import { registerCustomSeries } from './chart/custom/customSeriesRegister';
+import { registerFeature as registerToolboxFeature } from './component/toolbox/featureManager';
 
 const extensions: (EChartsExtensionInstaller | EChartsExtension)[] = [];
 
@@ -60,6 +61,7 @@ const extensionRegisters = {
     registerLoading,
     registerMap,
     registerImpl,
+    registerToolboxFeature,
 
     PRIORITY,
 
