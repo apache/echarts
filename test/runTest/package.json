@@ -10,7 +10,7 @@
     "puppeteer": "^23.10.0",
     "serve-handler": "^6.1.6",
     "slugify": "^1.6.6",
-    "socket.io": "^2.5.1"
+    "socket.io": "^4.8.3"
   },
   "scripts": {
     "start": "npm run test:visual",
