@@ -115,7 +115,7 @@ export function enableDataStack(
     each(dimensionDefineList, function (dimensionInfo: SeriesDimensionDefine, index) {
         if (mayStack && !dimensionInfo.isExtraCoord) {
             // Find the first ordinal dimension as the stackedByDimInfo.
-            if (!byIndex && !stackedByDimInfo && dimensionInfo.ordinalMeta) {
+            if (!byIndex && !stackedByDimInfo && (dimensionInfo.ordinalMeta || dimensionInfo.type === 'time')) {
                 stackedByDimInfo = dimensionInfo;
             }
             // Find the first stackable dimension as the stackedDimInfo.
