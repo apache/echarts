@@ -117,8 +117,40 @@ const getRangeHandlers: {
         range[0] = (range[0] - percentPoint) * scale + percentPoint;
         range[1] = (range[1] - percentPoint) * scale + percentPoint;
 
+        // Correlate zoom ratio if there are more than one axis. It is to prevent zooming disproportion
+        if ((e as any).context.batch?.length) {
+            const x = (e as any).context.batch[0];
+            const xSpan = x.end - x.start;
+            if (Math.round(range[1] - range[0]) !== Math.round(xSpan)) {
+                // Disproportion happens and needs to be fixed
+                const centerPoint = (range[1] - range[0]) / 2;
+                const xSpanHalf = xSpan / 2;
+                if (xSpanHalf > centerPoint && xSpanHalf > 100 - centerPoint) {
+                    range[0] = 0;
+                    range[1] = 100;
+                }
+                else if (xSpanHalf > centerPoint) {
+                    range[0] = 0;
+                    range[1] = Math.min(100, xSpan);
+                }
+                else if (xSpanHalf > 100 - centerPoint) {
+                    range[0] = Math.max(0, 100 - xSpan);
+                    range[1] = 100;
+                }
+                else {
+                    range[0] = centerPoint - xSpanHalf;
+                    range[1] = centerPoint + xSpanHalf;
+                }
+            }
+        }
+
         // Restrict range.
         const minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+
+        // Stop moving when reaching max or min span
+        if (minMaxSpan.minSpan >= range[1] - range[0] || minMaxSpan.maxSpan <= range[1] - range[0]) {
+            return;
+        }
 
         sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
 
