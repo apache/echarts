@@ -26,6 +26,7 @@ import Model from '../../model/Model';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
 import { TooltipMarkupStyleCreator, getPaddingFromTooltipModel } from './tooltipMarkup';
 import { throwError } from '../../util/log';
+import { createTextStyle } from '../../label/labelStyle';
 
 class TooltipRichContent {
 
@@ -92,18 +93,14 @@ class TooltipRichContent {
         const textStyleModel = tooltipModel.getModel('textStyle');
 
         this.el = new ZRText({
-            style: {
-                rich: markupStyleCreator.richTextStyles,
+            style: createTextStyle(textStyleModel, {
                 text: content as string,
-                lineHeight: 22,
-                borderWidth: 1,
-                borderColor: borderColor as string,
                 textShadowColor: textStyleModel.get('textShadowColor'),
                 fill: tooltipModel.get(['textStyle', 'color']),
                 padding: getPaddingFromTooltipModel(tooltipModel, 'richText'),
                 verticalAlign: 'top',
                 align: 'left'
-            },
+            }),
             z: tooltipModel.get('z')
         });
         zrUtil.each([
