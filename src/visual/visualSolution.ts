@@ -165,28 +165,36 @@ export function applyVisual<VisualState extends string, Scope>(
     }
 
     function eachItem(valueOrIndex: ParsedValue | number, index?: number) {
-        dataIndex = dimension == null
-            ? valueOrIndex as number    // First argument is index
-            : index;
+    dataIndex = dimension == null
+        ? valueOrIndex as number    // First argument is index
+        : index;
 
-        const rawDataItem = data.getRawDataItem(dataIndex);
-        // Consider performance
-        // @ts-ignore
-        if (rawDataItem && rawDataItem.visualMap === false) {
-            return;
-        }
+    const rawDataItem = data.getRawDataItem(dataIndex);
+    // Consider performance
+    // @ts-ignore
+    if (rawDataItem && rawDataItem.visualMap === false) {
+        return;
+    }
 
-        const valueState = getValueState.call(scope, valueOrIndex);
-        const mappings = visualMappings[valueState];
-        const visualTypes = visualTypesMap[valueState];
-
-        for (let i = 0, len = visualTypes.length; i < len; i++) {
-            const type = visualTypes[i];
-            mappings[type] && mappings[type].applyVisual(
-                valueOrIndex, getVisual, setVisual
-            );
+    let val = valueOrIndex;
+    if (dimension != null && zrUtil.isArray(rawDataItem)) {
+        const rawVal = (rawDataItem as any[])[+dimension];
+        if (typeof rawVal === 'string') {
+        val = rawVal;
         }
     }
+
+    const valueState = getValueState.call(scope, val);
+    const mappings = visualMappings[valueState];
+    const visualTypes = visualTypesMap[valueState];
+
+    for (let i = 0, len = visualTypes.length; i < len; i++) {
+        const type = visualTypes[i];
+        mappings[type] && mappings[type].applyVisual(
+            val, getVisual, setVisual
+        );
+    }
+}
 }
 
 /**
@@ -234,9 +242,16 @@ export function incrementalApplyVisual<VisualState extends string>(
                     continue;
                 }
 
-                const value = dim != null
+                let value = dim != null
                     ? store.get(dimIndex, dataIndex)
                     : dataIndex;
+
+                if (dim != null && zrUtil.isArray(rawDataItem)) {
+                    const rawVal = (rawDataItem as any[])[dimIndex as number];
+                    if (typeof rawVal === 'string') {
+                        value = rawVal;
+                    }
+                }
 
                 const valueState = getValueState(value);
                 const mappings = visualMappings[valueState];

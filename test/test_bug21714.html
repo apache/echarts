@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>VisualMap Bug #21714</title>
+    <!-- test फ़ोल्डर के अंदर होने के कारण ../dist/echarts.js लगेगा -->
+    <script src="../dist/echarts.js"></script>
+</head>
+<body>
+    <h2 style="text-align: center;">VisualMap Large String Bug (#21714)</h2>
+    <div id="main" style="width: 800px; height: 500px; margin: 0 auto; border: 1px solid #ccc;"></div>
+
+    <script type="text/javascript">
+        var chartDom = document.getElementById('main');
+        var myChart = echarts.init(chartDom);
+
+        var option = {
+            xAxis: [{ type: 'category', data: ['Point A'] }],
+            yAxis: [{ type: 'value' }],
+            series: [{
+                type: 'scatter',
+                symbolSize: 30,
+                data: [['Point A', 10, '6053822903760037657']]
+            }],
+            visualMap: [{
+                type: 'piecewise',
+                dimension: 2,
+                inRange: {
+                    color: ['#ff0000', '#00ff00'] // Red & Green
+                },
+                categories: ['6053822903760037657', '6053822903760037658']
+            }]
+        };
+
+        myChart.setOption(option);
+    </script>
+</body>
+</html>
