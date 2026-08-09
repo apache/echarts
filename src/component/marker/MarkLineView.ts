@@ -175,6 +175,10 @@ function markLineFilter(
     coordSys: CoordinateSystem,
     item: MarkLine2DDataItemOption
 ) {
+    // Skip invalid items where markLineTransform returned undefined (e.g. empty data entry)
+    if (!item[0] || !item[1]) {
+        return false;
+    }
     if (coordSys.type === 'cartesian2d') {
         const fromCoord = item[0].coord;
         const toCoord = item[1].coord;
