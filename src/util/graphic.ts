@@ -843,8 +843,9 @@ export function traverseUpdateZ(
     el: Element,
     z: number,
     zlevel: number,
+    modelZ2?: number,
 ): void {
-    doUpdateZ(el, z, zlevel, -Infinity);
+    doUpdateZ(el, z, zlevel, modelZ2 != null ? modelZ2 : -Infinity);
 }
 
 function doUpdateZ(
