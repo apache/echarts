@@ -928,7 +928,7 @@ class SliderZoomView extends DataZoomView {
 
     private _onActualMoveZoneDragEnd(event: ZRElementEvent) {
         (event.target as Displayable).attr('cursor', 'grab');
-        this._onDragEnd();
+        this._onDragEnd(event);
     }
 
     private _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {
@@ -952,12 +952,23 @@ class SliderZoomView extends DataZoomView {
         changed && realtime && this._dispatchZoomAction(true);
     }
 
-    private _onDragEnd() {
+    private _onDragEnd(e?: ZRElementEvent) {
         this._dragging = false;
 
         if (!this._isOverDataInfoTriggerArea) {
             // Drag end may occur on draggable bars, where data info should be still shown.
-            this._showDataInfo(false);
+            // When the drag ends, if the mouse is still over a handle or the move zone
+            // (e.g. the user releases without moving the mouse away), keep the label visible.
+            // This prevents the label from disappearing after a drag-and-release where
+            // the mouse stays over the handle (mouseout may have fired during drag).
+            const target = e && e.target;
+            const displayables = this._displayables;
+            const isOverDraggable = target === displayables.handles[0]
+                || target === displayables.handles[1]
+                || target === displayables.moveZone;
+            if (!isOverDraggable) {
+                this._showDataInfo(false);
+            }
         }
 
         // While in realtime mode and stream mode, dispatch action when
