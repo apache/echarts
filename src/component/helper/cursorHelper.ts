@@ -46,7 +46,7 @@ export function onIrrelevantElement(
     }
 
     // At present the `true` return is conservative. That is, the caller, such as a RoamController,
-    // is more likely to get a `false` return and start a roam behavior, becuase even if the
+    // is more likely to get a `false` return and start a roam behavior, because even if the
     // `model.coordinateSystem` does not exist, the `e.topTarget` may be also a relevant element,
     // such as axis split line/area or series elements, where roam should be available. Otherwise,
     // if a dataZoom-served cartesian is full of series elements, the dataZoom-roaming can hardly
