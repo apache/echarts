@@ -185,7 +185,7 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
             clamp?: MatrixClampOption | NullUndefined;
             // Expand if cell merging is encountered.
             //  - `false`: If intersecting with a rect of merged cells, expand the result to cover it.
-            //      This is the default option, becuase `series.data` do not support the format
+            //      This is the default option, because `series.data` do not support the format
             //      `MatrixCoordRangeOption` (e.g., `[[3,5], [5,8]]`), thus merged cells can only
             //      be located by single cell locators (e.g., `[3, 5]`).
             //  - `true`: regardless of cell merging, even if the resulting rect spans accorss the merged cells.
