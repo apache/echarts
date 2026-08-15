@@ -130,7 +130,9 @@ export class WhiskerBoxCommonMixin<Opts extends CommonOption> {
                     // Modify current using data.
                     item.unshift(index);
                 }
-                else if (zrUtil.isArray(item.value)) {
+                // `item` may be an empty value (`null`/`undefined`, which are documented
+                // as equivalent to `'-'`), so it must not be dereferenced directly.
+                else if (item != null && zrUtil.isArray(item.value)) {
                     newItem = zrUtil.extend({}, item);
                     newItem.value = newItem.value.slice();
                     // Modify current using data.
