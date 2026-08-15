@@ -1023,6 +1023,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             return;
         }
 
+        // `opts` is optional, as the `opts && ...` reads below and `getDataURL` assume.
+        opts = opts || {};
+
         const isSvg = opts.type === 'svg';
         const groupId = this.group;
         const mathMin = Math.min;
