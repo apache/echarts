@@ -1046,6 +1046,13 @@ class TooltipView extends ComponentView {
     }
 
     dispose(ecModel: GlobalModel, api: ExtensionAPI) {
+        // The pending timers must be cleared before the early return below, and
+        // before the members they rely on are reset to null. Otherwise a delayed
+        // callback (scheduled by `tooltip.showDelay` or by a refresh) would run
+        // against a disposed view and throw.
+        clearTimeout(this._showTimout);
+        clearTimeout(this._refreshUpdateTimeout);
+
         if (env.node || !api.getDom()) {
             return;
         }
