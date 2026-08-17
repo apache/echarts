@@ -32,6 +32,7 @@ import {NullUndefined, ScaleTick} from './types';
 import { getDefaultLocaleModel, getLocaleModel, SYSTEM_LANG, LocaleOption } from '../core/locale';
 import Model from '../model/Model';
 import { getScaleBreakHelper } from '../scale/break';
+import { deprecateReplaceLog } from './log';
 
 export const ONE_SECOND = 1000;
 export const ONE_MINUTE = ONE_SECOND * 60;
@@ -275,23 +276,41 @@ export function getDefaultFormatPrecisionOfInterval(timeUnit: PrimaryTimeUnit): 
 }
 
 export function format(
+    // Note: The result based on `timeZone` can be totally different, which can not be just simply
+    // substituted by the result without `timeZone`. So we make the param `timeZone` mandatory.
+    time: unknown, template: string, timeZone: string, lang?: string | Model<LocaleOption>
+): string;
+/**
+ * @deprecated Pass a time zone string instead of the legacy `isUTC` boolean.
+ */
+export function format(
     // Note: The result based on `isUTC` are totally different, which can not be just simply
     // substituted by the result without `isUTC`. So we make the param `isUTC` mandatory.
     time: unknown, template: string, isUTC: boolean, lang?: string | Model<LocaleOption>
+): string;
+export function format(
+    time: unknown, template: string, timeZoneOrUTC: string | boolean, lang?: string | Model<LocaleOption>
 ): string {
+    if (__DEV__ && typeof timeZoneOrUTC === 'boolean') {
+        deprecateReplaceLog('isUTC boolean parameter', 'timeZone string parameter', 'echarts.time.format');
+    }
     const date = numberUtil.parseDate(time);
-    const y = date[fullYearGetterName(isUTC)]();
-    const M = date[monthGetterName(isUTC)]() + 1;
+    const timeZone = normalizeTimeZone(timeZoneOrUTC);
+    const parts = getTimeZoneParts(date.getTime(), timeZone);
+    const y = parts.year;
+    const M = parts.month;
     const q = Math.floor((M - 1) / 3) + 1;
-    const d = date[dateGetterName(isUTC)]();
-    const e = date['get' + (isUTC ? 'UTC' : '') + 'Day' as 'getDay' | 'getUTCDay']();
-    const H = date[hoursGetterName(isUTC)]();
+    const d = parts.day;
+    const e = parts.dayOfWeek;
+    const H = parts.hours;
     const h = (H - 1) % 12 + 1;
-    const m = date[minutesGetterName(isUTC)]();
-    const s = date[secondsGetterName(isUTC)]();
-    const S = date[millisecondsGetterName(isUTC)]();
+    const m = parts.minutes;
+    const s = parts.seconds;
+    const S = parts.milliseconds;
     const a = H >= 12 ? 'pm' : 'am';
     const A = a.toUpperCase();
+    const Z = formatTimeZoneOffset(parts.offsetMinutes, false);
+    const ZZ = formatTimeZoneOffset(parts.offsetMinutes, true);
 
     const localeModel = lang instanceof Model ? lang
         : getLocaleModel(lang || SYSTEM_LANG) || getDefaultLocaleModel();
@@ -325,7 +344,23 @@ export function format(
         .replace(/{ss}/g, pad(s, 2))
         .replace(/{s}/g, s + '')
         .replace(/{SSS}/g, pad(S, 3))
-        .replace(/{S}/g, S + '');
+        .replace(/{S}/g, S + '')
+        .replace(/{ZZ}/g, ZZ)
+        .replace(/{Z}/g, Z);
+}
+
+function formatTimeZoneOffset(offsetMinutes: number, padded: boolean): string {
+    if (!offsetMinutes) {
+        return 'Z';
+    }
+
+    const sign = offsetMinutes < 0 ? '-' : '+';
+    const absoluteOffset = Math.abs(offsetMinutes);
+    const hours = Math.floor(absoluteOffset / 60);
+    const minutes = absoluteOffset % 60;
+    return sign
+        + (padded ? pad(hours, 2) : hours)
+        + (padded || minutes ? ':' + pad(minutes, 2) : '');
 }
 
 export function leveledFormat(
@@ -333,8 +368,29 @@ export function leveledFormat(
     idx: number,
     formatter: TimeAxisLabelFormatterParsed,
     lang: string | Model<LocaleOption>,
+    timeZone: string
+): string;
+/**
+ * @deprecated Pass a time zone string instead of the legacy `isUTC` boolean.
+ */
+export function leveledFormat(
+    tick: ScaleTick,
+    idx: number,
+    formatter: TimeAxisLabelFormatterParsed,
+    lang: string | Model<LocaleOption>,
     isUTC: boolean
-) {
+): string;
+export function leveledFormat(
+    tick: ScaleTick,
+    idx: number,
+    formatter: TimeAxisLabelFormatterParsed,
+    lang: string | Model<LocaleOption>,
+    timeZoneOrUTC: string | boolean
+): string {
+    if (__DEV__ && typeof timeZoneOrUTC === 'boolean') {
+        deprecateReplaceLog('isUTC boolean parameter', 'timeZone string parameter', 'leveledFormat');
+    }
+    const timeZone = normalizeTimeZone(timeZoneOrUTC);
     let template = null;
     if (zrUtil.isString(formatter)) {
         // Single formatter for all units at all levels
@@ -359,25 +415,40 @@ export function leveledFormat(
         }
         else {
             // tick may be from customTicks or timeline therefore no tick.time.
-            const unit = getUnitFromValue(tick.value, isUTC);
+            const unit = getUnitFromValue(tick.value, timeZone);
             template = formatter[unit][unit][0];
         }
     }
 
-    return format(new Date(tick.value), template, isUTC, lang);
+    return format(new Date(tick.value), template, timeZone, lang);
 }
 
 export function getUnitFromValue(
     value: number | string | Date,
+    timeZone: string
+): PrimaryTimeUnit;
+/**
+ * @deprecated Pass a time zone string instead of the legacy `isUTC` boolean.
+ */
+export function getUnitFromValue(
+    value: number | string | Date,
     isUTC: boolean
+): PrimaryTimeUnit;
+export function getUnitFromValue(
+    value: number | string | Date,
+    timeZoneOrUTC: string | boolean
 ): PrimaryTimeUnit {
+    if (__DEV__ && typeof timeZoneOrUTC === 'boolean') {
+        deprecateReplaceLog('isUTC boolean parameter', 'timeZone string parameter', 'getUnitFromValue');
+    }
     const date = numberUtil.parseDate(value);
-    const M = (date as any)[monthGetterName(isUTC)]() + 1;
-    const d = (date as any)[dateGetterName(isUTC)]();
-    const h = (date as any)[hoursGetterName(isUTC)]();
-    const m = (date as any)[minutesGetterName(isUTC)]();
-    const s = (date as any)[secondsGetterName(isUTC)]();
-    const S = (date as any)[millisecondsGetterName(isUTC)]();
+    const parts = getTimeZoneParts(date.getTime(), normalizeTimeZone(timeZoneOrUTC));
+    const M = parts.month;
+    const d = parts.day;
+    const h = parts.hours;
+    const m = parts.minutes;
+    const s = parts.seconds;
+    const S = parts.milliseconds;
 
     const isSecond = S === 0;
     const isMinute = isSecond && s === 0;
@@ -409,40 +480,6 @@ export function getUnitFromValue(
     }
 }
 
-// export function getUnitValue(
-//     value: number | Date,
-//     unit: TimeUnit,
-//     isUTC: boolean
-// ) : number {
-//     const date = zrUtil.isNumber(value)
-//         ? numberUtil.parseDate(value)
-//         : value;
-//     unit = unit || getUnitFromValue(value, isUTC);
-
-//     switch (unit) {
-//         case 'year':
-//             return date[fullYearGetterName(isUTC)]();
-//         case 'half-year':
-//             return date[monthGetterName(isUTC)]() >= 6 ? 1 : 0;
-//         case 'quarter':
-//             return Math.floor((date[monthGetterName(isUTC)]() + 1) / 4);
-//         case 'month':
-//             return date[monthGetterName(isUTC)]();
-//         case 'day':
-//             return date[dateGetterName(isUTC)]();
-//         case 'half-day':
-//             return date[hoursGetterName(isUTC)]() / 24;
-//         case 'hour':
-//             return date[hoursGetterName(isUTC)]();
-//         case 'minute':
-//             return date[minutesGetterName(isUTC)]();
-//         case 'second':
-//             return date[secondsGetterName(isUTC)]();
-//         case 'millisecond':
-//             return date[millisecondsGetterName(isUTC)]();
-//     }
-// }
-
 /**
  * e.g.,
  * If timeUnit is 'year', return the Jan 1st 00:00:00 000 of that year.
@@ -450,76 +487,538 @@ export function getUnitFromValue(
  *
  * @return The input date.
  */
-export function roundTime(date: Date, timeUnit: PrimaryTimeUnit, isUTC: boolean): Date {
-    switch (timeUnit) {
-        case 'year':
-            date[monthSetterName(isUTC)](0);
-        case 'month':
-            date[dateSetterName(isUTC)](1);
-        case 'day':
-            date[hoursSetterName(isUTC)](0);
-        case 'hour':
-            date[minutesSetterName(isUTC)](0);
-        case 'minute':
-            date[secondsSetterName(isUTC)](0);
-        case 'second':
-            date[millisecondsSetterName(isUTC)](0);
+export function roundTime(
+    date: Date,
+    timeUnit: PrimaryTimeUnit,
+    timeZone: string
+): Date;
+/**
+ * @deprecated Pass a time zone string instead of the legacy `isUTC` boolean.
+ */
+export function roundTime(
+    date: Date,
+    timeUnit: PrimaryTimeUnit,
+    isUTC: boolean
+): Date;
+export function roundTime(
+    date: Date,
+    timeUnit: PrimaryTimeUnit,
+    timeZoneOrUTC: string | boolean
+): Date {
+    if (__DEV__ && typeof timeZoneOrUTC === 'boolean') {
+        deprecateReplaceLog('isUTC boolean parameter', 'timeZone string parameter', 'echarts.time.roundTime');
     }
+    date.setTime(roundTimeInTimeZone(
+        date.getTime(), timeUnit, normalizeTimeZone(timeZoneOrUTC)
+    ));
     return date;
 }
 
+function normalizeTimeZone(timeZoneOrUTC: string | boolean): string {
+    return typeof timeZoneOrUTC === 'string'
+        ? timeZoneOrUTC
+        : timeZoneOrUTC ? 'UTC' : getSystemTimeZone();
+}
+
+/**
+ * @deprecated Use `getTimeZoneParts` to read values in a specific time zone.
+ */
 export function fullYearGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCFullYear' : 'getFullYear';
 }
 
+/**
+ * @deprecated Use `getTimeZoneParts` to read values in a specific time zone.
+ */
 export function monthGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCMonth' : 'getMonth';
 }
 
+/**
+ * @deprecated Use `getTimeZoneParts` to read values in a specific time zone.
+ */
 export function dateGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCDate' : 'getDate';
 }
 
+/**
+ * @deprecated Use `getTimeZoneParts` to read values in a specific time zone.
+ */
 export function hoursGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCHours' : 'getHours';
 }
 
+/**
+ * @deprecated Use `getTimeZoneParts` to read values in a specific time zone.
+ */
 export function minutesGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCMinutes' : 'getMinutes';
 }
 
+/**
+ * @deprecated Use `getTimeZoneParts` to read values in a specific time zone.
+ */
 export function secondsGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCSeconds' : 'getSeconds';
 }
 
+/**
+ * @deprecated Use `getTimeZoneParts` to read values in a specific time zone.
+ */
 export function millisecondsGetterName(isUTC: boolean) {
     return isUTC ? 'getUTCMilliseconds' : 'getMilliseconds';
 }
 
+/**
+ * @deprecated Use time-zone-aware utilities instead of selecting a local/UTC `Date` setter.
+ */
 export function fullYearSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCFullYear' : 'setFullYear';
 }
 
+/**
+ * @deprecated Use time-zone-aware utilities instead of selecting a local/UTC `Date` setter.
+ */
 export function monthSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCMonth' : 'setMonth';
 }
 
+/**
+ * @deprecated Use time-zone-aware utilities instead of selecting a local/UTC `Date` setter.
+ */
 export function dateSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCDate' : 'setDate';
 }
 
+/**
+ * @deprecated Use time-zone-aware utilities instead of selecting a local/UTC `Date` setter.
+ */
 export function hoursSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCHours' : 'setHours';
 }
 
+/**
+ * @deprecated Use time-zone-aware utilities instead of selecting a local/UTC `Date` setter.
+ */
 export function minutesSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCMinutes' : 'setMinutes';
 }
 
+/**
+ * @deprecated Use time-zone-aware utilities instead of selecting a local/UTC `Date` setter.
+ */
 export function secondsSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCSeconds' : 'setSeconds';
 }
 
+/**
+ * @deprecated Use time-zone-aware utilities instead of selecting a local/UTC `Date` setter.
+ */
 export function millisecondsSetterName(isUTC: boolean) {
     return isUTC ? 'setUTCMilliseconds' : 'setMilliseconds';
+}
+
+interface TimeZoneDateParts {
+    year: number;
+    // Calendar month, from 1 (January) to 12 (December), matching Intl/Temporal.
+    month: number;
+    day: number;
+    dayOfWeek: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    milliseconds: number;
+    // Same sign as an ISO offset: UTC-05:00 is -300 and UTC+05:30 is 330.
+    offsetMinutes: number;
+}
+
+type TimeZoneWallTimeParts = Omit<TimeZoneDateParts, 'dayOfWeek' | 'offsetMinutes'>;
+
+interface TimeZoneDayInfo {
+    offsetBefore: number;
+    transitionTimestamp?: number;
+    offsetAfter: number;
+}
+
+interface TimeZoneDayCache {
+    dayStartOffsets: zrUtil.HashMap<number, number>;
+    days: zrUtil.HashMap<TimeZoneDayInfo, number>;
+}
+
+// Required for IANA time zones. Legacy environments can provide an Intl polyfill.
+// eslint-disable-next-line no-restricted-globals
+const intl = Intl;
+type TimeZoneFormatter = ReturnType<typeof intl.DateTimeFormat>;
+type TimeZoneFormatterOptions = NonNullable<Parameters<typeof intl.DateTimeFormat>[1]>;
+
+const MINUTES_PER_DAY = ONE_DAY / ONE_MINUTE;
+const formatterCache = zrUtil.createHashMap<TimeZoneFormatter, string>();
+const timeZoneDayCaches = zrUtil.createHashMap<TimeZoneDayCache, string>();
+let systemTimeZone: string;
+
+function getFormatter(timeZone: string): TimeZoneFormatter {
+    let formatter = formatterCache.get(timeZone);
+    if (!formatter) {
+        formatter = new intl.DateTimeFormat(
+            'en-US-u-ca-gregory-nu-latn',
+            {
+                timeZone: timeZone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+                // `hourCycle` is intentionally used together with `hour12` because
+                // some engines otherwise represent midnight as hour 24.
+                hourCycle: 'h23'
+            } as TimeZoneFormatterOptions
+        );
+        formatterCache.set(timeZone, formatter);
+    }
+    return formatter;
+}
+
+function makeUTCTimestamp(parts: TimeZoneWallTimeParts): number {
+    const date = new Date(0);
+    date.setUTCFullYear(parts.year, parts.month - 1, parts.day);
+    date.setUTCHours(parts.hours, parts.minutes, parts.seconds, parts.milliseconds);
+    return date.getTime();
+}
+
+function getUTCParts(timestamp: number): TimeZoneDateParts {
+    const date = new Date(timestamp);
+    return {
+        year: date.getUTCFullYear(),
+        month: date.getUTCMonth() + 1,
+        day: date.getUTCDate(),
+        dayOfWeek: date.getUTCDay(),
+        hours: date.getUTCHours(),
+        minutes: date.getUTCMinutes(),
+        seconds: date.getUTCSeconds(),
+        milliseconds: date.getUTCMilliseconds(),
+        offsetMinutes: 0
+    };
+}
+
+function getLocalParts(timestamp: number): TimeZoneDateParts {
+    const date = new Date(timestamp);
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        day: date.getDate(),
+        dayOfWeek: date.getDay(),
+        hours: date.getHours(),
+        minutes: date.getMinutes(),
+        seconds: date.getSeconds(),
+        milliseconds: date.getMilliseconds(),
+        offsetMinutes: -date.getTimezoneOffset()
+    };
+}
+
+function getFormattedTimeZoneParts(
+    timestamp: number,
+    timeZone: string
+): TimeZoneWallTimeParts {
+    const values: {[type: string]: number} = {};
+    const parts = getFormatter(timeZone).formatToParts(timestamp);
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        if (part.type !== 'literal') {
+            values[part.type] = +part.value;
+        }
+    }
+
+    let hours = values.hour;
+    if (hours === 24) {
+        hours = 0;
+    }
+    return {
+        year: values.year,
+        month: values.month,
+        day: values.day,
+        hours: hours,
+        minutes: values.minute,
+        seconds: values.second,
+        // Offset probes and transition searches deliberately use minute precision.
+        milliseconds: 0
+    };
+}
+
+function getRawTimeZoneOffset(timestamp: number, timeZone: string): number {
+    const offset = makeUTCTimestamp(getFormattedTimeZoneParts(timestamp, timeZone)) - timestamp;
+    return Math.round(offset / ONE_MINUTE) * ONE_MINUTE;
+}
+
+function getTimeZoneDayCache(timeZone: string): TimeZoneDayCache {
+    let cache = timeZoneDayCaches.get(timeZone);
+    if (!cache) {
+        cache = {
+            dayStartOffsets: zrUtil.createHashMap<number, number>(),
+            days: zrUtil.createHashMap<TimeZoneDayInfo, number>()
+        };
+        timeZoneDayCaches.set(timeZone, cache);
+    }
+    return cache;
+}
+
+function getDayStartOffset(
+    dayIndex: number,
+    timeZone: string,
+    cache: TimeZoneDayCache
+): number {
+    if (cache.dayStartOffsets.hasKey(dayIndex)) {
+        return cache.dayStartOffsets.get(dayIndex);
+    }
+    const offset = getRawTimeZoneOffset(dayIndex * ONE_DAY, timeZone);
+    cache.dayStartOffsets.set(dayIndex, offset);
+    return offset;
+}
+
+function findTransitionTimestamp(
+    dayStart: number,
+    timeZone: string,
+    offsetBefore: number
+): number {
+    // Time-zone offsets and modern IANA transitions use minute precision.
+    let leftMinute = 0;
+    let rightMinute = MINUTES_PER_DAY;
+    while (rightMinute - leftMinute > 1) {
+        const middleMinute = Math.floor((leftMinute + rightMinute) / 2);
+        if (getRawTimeZoneOffset(
+            dayStart + middleMinute * ONE_MINUTE, timeZone
+        ) === offsetBefore) {
+            leftMinute = middleMinute;
+        }
+        else {
+            rightMinute = middleMinute;
+        }
+    }
+    return dayStart + rightMinute * ONE_MINUTE;
+}
+
+function getTimeZoneDayInfo(timestamp: number, timeZone: string): TimeZoneDayInfo {
+    const dayIndex = Math.floor(timestamp / ONE_DAY);
+    const cache = getTimeZoneDayCache(timeZone);
+    let dayInfo = cache.days.get(dayIndex);
+    if (!dayInfo) {
+        const offsetBefore = getDayStartOffset(dayIndex, timeZone, cache);
+        const offsetAfter = getDayStartOffset(dayIndex + 1, timeZone, cache);
+        dayInfo = {
+            offsetBefore: offsetBefore,
+            offsetAfter: offsetAfter
+        };
+        // IANA transitions are separated by more than one day. Comparing UTC
+        // day boundaries therefore identifies the only possible transition in
+        // this day, without scanning every minute.
+        if (offsetBefore !== offsetAfter) {
+            dayInfo.transitionTimestamp = findTransitionTimestamp(
+                dayIndex * ONE_DAY, timeZone, offsetBefore
+            );
+        }
+        cache.days.set(dayIndex, dayInfo);
+    }
+    return dayInfo;
+}
+
+export function getSystemTimeZone(): string {
+    return systemTimeZone || (systemTimeZone = new intl.DateTimeFormat().resolvedOptions().timeZone);
+}
+
+export function validateTimeZone(timeZone: string): string {
+    try {
+        return getFormatter(timeZone).resolvedOptions().timeZone;
+    }
+    catch (err) {
+        throw new Error(`Invalid time zone: ${timeZone}`);
+    }
+}
+
+export function getTimeZoneParts(timestamp: number, timeZone: string): TimeZoneDateParts {
+    if (timeZone === 'UTC') {
+        return getUTCParts(timestamp);
+    }
+    if (timeZone === getSystemTimeZone()) {
+        return getLocalParts(timestamp);
+    }
+
+    const offset = getTimeZoneOffset(timestamp, timeZone);
+    const parts = getUTCParts(timestamp + offset);
+    parts.offsetMinutes = offset / ONE_MINUTE;
+    return parts;
+}
+
+function getTimeZoneOffset(timestamp: number, timeZone: string): number {
+    if (timeZone === 'UTC') {
+        return 0;
+    }
+    if (timeZone === getSystemTimeZone()) {
+        return -new Date(timestamp).getTimezoneOffset() * ONE_MINUTE;
+    }
+
+    const dayInfo = getTimeZoneDayInfo(timestamp, timeZone);
+    return dayInfo.transitionTimestamp == null || timestamp < dayInfo.transitionTimestamp
+        ? dayInfo.offsetBefore
+        : dayInfo.offsetAfter;
+}
+
+function makeTimeZoneDate(
+    parts: TimeZoneWallTimeParts,
+    timeZone: string,
+    preferredOffsetMinutes?: number
+): number {
+    if (timeZone === 'UTC') {
+        return makeUTCTimestamp(parts);
+    }
+
+    const isSystemTimeZone = timeZone === getSystemTimeZone();
+    let timestamp: number;
+    if (preferredOffsetMinutes != null) {
+        timestamp = makeUTCTimestamp(parts);
+        const preferredOffset = preferredOffsetMinutes * ONE_MINUTE;
+        const preferredTimestamp = timestamp - preferredOffset;
+        if (getTimeZoneOffset(preferredTimestamp, timeZone) === preferredOffset) {
+            return preferredTimestamp;
+        }
+    }
+
+    if (isSystemTimeZone) {
+        const date = new Date(0);
+        date.setFullYear(parts.year, parts.month - 1, parts.day);
+        date.setHours(parts.hours, parts.minutes, parts.seconds, parts.milliseconds);
+        return date.getTime();
+    }
+
+    if (preferredOffsetMinutes == null) {
+        timestamp = makeUTCTimestamp(parts);
+    }
+    const probeDistance = 3 * ONE_DAY;
+    const offsets = [
+        getTimeZoneOffset(timestamp - probeDistance, timeZone),
+        getTimeZoneOffset(timestamp, timeZone),
+        getTimeZoneOffset(timestamp + probeDistance, timeZone)
+    ];
+    const uniqueOffsets: number[] = [];
+    for (let i = 0; i < offsets.length; i++) {
+        if (zrUtil.indexOf(uniqueOffsets, offsets[i]) < 0) {
+            uniqueOffsets.push(offsets[i]);
+        }
+    }
+
+    let validTimestamp = Infinity;
+    let laterTimestamp = Infinity;
+    let laterDifference = Infinity;
+    let earlierTimestamp = -Infinity;
+    let earlierDifference = -Infinity;
+
+    for (let i = 0; i < uniqueOffsets.length; i++) {
+        const assumedOffset = uniqueOffsets[i];
+        const candidate = timestamp - assumedOffset;
+        const candidateOffset = getTimeZoneOffset(candidate, timeZone);
+        if (candidateOffset === assumedOffset) {
+            // Compatible disambiguation chooses the earlier instant in a fold.
+            validTimestamp = Math.min(validTimestamp, candidate);
+            continue;
+        }
+
+        const difference = candidateOffset - assumedOffset;
+        if (difference > 0 && difference < laterDifference) {
+            laterDifference = difference;
+            laterTimestamp = candidate;
+        }
+        else if (difference < 0 && difference > earlierDifference) {
+            earlierDifference = difference;
+            earlierTimestamp = candidate;
+        }
+    }
+
+    if (validTimestamp !== Infinity) {
+        return validTimestamp;
+    }
+    // Compatible disambiguation moves a nonexistent wall time forward by the gap.
+    if (laterTimestamp !== Infinity) {
+        return laterTimestamp;
+    }
+    if (earlierTimestamp !== -Infinity) {
+        return earlierTimestamp;
+    }
+
+    throw new Error(`Unable to resolve time in time zone ${timeZone}.`);
+}
+
+function roundTimeInTimeZone(
+    timestamp: number,
+    timeUnit: PrimaryTimeUnit,
+    timeZone: string
+): number {
+    if (timeZone === 'UTC') {
+        const date = new Date(timestamp);
+        switch (timeUnit) {
+            case 'year':
+                date.setUTCMonth(0);
+            case 'month':
+                date.setUTCDate(1);
+            case 'day':
+                date.setUTCHours(0);
+            case 'hour':
+                date.setUTCMinutes(0);
+            case 'minute':
+                date.setUTCSeconds(0);
+            case 'second':
+                date.setUTCMilliseconds(0);
+        }
+        return date.getTime();
+    }
+
+    const parts = getTimeZoneParts(timestamp, timeZone);
+    switch (timeUnit) {
+        case 'year':
+            parts.month = 1;
+        case 'month':
+            parts.day = 1;
+        case 'day':
+            parts.hours = 0;
+        case 'hour':
+            parts.minutes = 0;
+        case 'minute':
+            parts.seconds = 0;
+        case 'second':
+            parts.milliseconds = 0;
+    }
+    return makeTimeZoneDate(parts, timeZone, parts.offsetMinutes);
+}
+
+export function addTimeInTimeZone(
+    timestamp: number,
+    timeUnit: PrimaryTimeUnit,
+    amount: number,
+    timeZone: string
+): number {
+    switch (timeUnit) {
+        case 'hour':
+            return timestamp + amount * ONE_HOUR;
+        case 'minute':
+            return timestamp + amount * ONE_MINUTE;
+        case 'second':
+            return timestamp + amount * ONE_SECOND;
+        case 'millisecond':
+            return timestamp + amount;
+    }
+
+    const parts = getTimeZoneParts(timestamp, timeZone);
+    const date = new Date(makeUTCTimestamp(parts));
+    switch (timeUnit) {
+        case 'year':
+            date.setUTCFullYear(date.getUTCFullYear() + amount);
+            break;
+        case 'month':
+            date.setUTCMonth(date.getUTCMonth() + amount);
+            break;
+        case 'day':
+            date.setUTCDate(date.getUTCDate() + amount);
+            break;
+    }
+    const normalized = getUTCParts(date.getTime());
+    return makeTimeZoneDate(normalized, timeZone, parts.offsetMinutes);
 }

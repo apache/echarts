@@ -800,7 +800,15 @@ export type ECUnitOption = {
     backgroundColor?: ZRColor
     darkMode?: boolean | 'auto'
     textStyle?: GlobalTextStyleOption
+    /**
+     * @deprecated Use `timeZone` instead.
+     */
     useUTC?: boolean
+    /**
+     * IANA time zone used by temporal components unless overridden locally.
+     * Takes precedence over the legacy `useUTC` option when both are specified.
+     */
+    timeZone?: string
     hoverLayerThreshold?: number
 
     legacyViewCoordSysCenterBase?: boolean

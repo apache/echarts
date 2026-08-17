@@ -169,6 +169,9 @@ export interface TooltipMarkupNameValueBlock extends TooltipMarkupBlock {
     // If needs to display original string with numeric guessing, set as 'ordinal'.
     // If both `value` and `valueType` are array, each valueType[i] cooresponds to value[i].
     valueType?: DimensionType | DimensionType[];
+    // Time zone for a temporal value. If both are arrays, each timeZone[i]
+    // corresponds to value[i].
+    timeZone?: string | string[];
     // If `noName` or `noValue` is `true`, do not display name or value.
     // Otherwise, always display them even if they are
     // null/undefined/NaN/''... (displayed as '-').
@@ -293,7 +296,7 @@ function buildSection(
         return subMarkupText;
     }
 
-    const displayableHeader = makeValueReadable(fragment.header, 'ordinal', ctx.useUTC);
+    const displayableHeader = makeValueReadable(fragment.header, 'ordinal', ctx.timeZone);
     const {nameStyle} = getTooltipTextStyle(toolTipTextStyle, ctx.renderMode);
     const tooltipLineHeight = getTooltipLineHeight(toolTipTextStyle);
     if (ctx.renderMode === 'richText') {
@@ -323,11 +326,14 @@ function buildNameValue(
     const noValue = fragment.noValue;
     const noMarker = !fragment.markerType;
     const name = fragment.name;
-    const useUTC = ctx.useUTC;
+    const timeZone = ctx.timeZone;
+    const valueTimeZone = fragment.timeZone;
     const valueFormatter = fragment.valueFormatter || ctx.valueFormatter || ((value) => {
         value = isArray(value) ? value : [value];
         return map(value as unknown[], (val, idx) => makeValueReadable(
-            val, isArray(valueTypeOption) ? valueTypeOption[idx] : valueTypeOption, useUTC
+            val,
+            isArray(valueTypeOption) ? valueTypeOption[idx] : valueTypeOption,
+            (isArray(valueTimeZone) ? valueTimeZone[idx] : valueTimeZone) || timeZone
         ));
     });
 
@@ -344,7 +350,7 @@ function buildNameValue(
         );
     const readableName = noName
         ? ''
-        : makeValueReadable(name, 'ordinal', useUTC);
+        : makeValueReadable(name, 'ordinal', timeZone);
     const valueTypeOption = fragment.valueType;
     const readableValueList = noValue
         ? []
@@ -376,7 +382,7 @@ function buildNameValue(
 }
 
 interface TooltipMarkupBuildContext {
-    useUTC: boolean;
+    timeZone: string;
     renderMode: TooltipRenderMode;
     orderMode: TooltipOrderMode;
     markupStyleCreator: TooltipMarkupStyleCreator;
@@ -392,7 +398,7 @@ export function buildTooltipMarkup(
     markupStyleCreator: TooltipMarkupStyleCreator,
     renderMode: TooltipRenderMode,
     orderMode: TooltipOrderMode,
-    useUTC: boolean,
+    timeZone: string,
     toolTipTextStyle: TooltipOption['textStyle']
 ): MarkupText {
     if (!fragment) {
@@ -401,7 +407,7 @@ export function buildTooltipMarkup(
 
     const builder = getBuilder(fragment);
     const ctx: TooltipMarkupBuildContext = {
-        useUTC: useUTC,
+        timeZone: timeZone,
         renderMode: renderMode,
         orderMode: orderMode,
         markupStyleCreator: markupStyleCreator,

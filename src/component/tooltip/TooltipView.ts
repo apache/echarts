@@ -57,6 +57,7 @@ import { normalizeTooltipFormatResult } from '../../model/mixin/dataFormat';
 import { createTooltipMarkup, buildTooltipMarkup, TooltipMarkupStyleCreator } from './tooltipMarkup';
 import { findEventDispatcher } from '../../util/event';
 import { clear, createOrUpdate } from '../../util/throttle';
+import { isTimeScale } from '../../scale/helper';
 
 const proxyRect = new Rect({
     shape: { x: -1, y: -1, width: 2, height: 2 }
@@ -132,6 +133,7 @@ type TooltipCallbackDataParams = CallbackDataParams & {
     // TODO: TYPE Value type
     axisValue?: string | number
     axisValueLabel?: string
+    axisTimeZone?: string
     marker?: TooltipMarker
 };
 
@@ -568,6 +570,9 @@ class TooltipView extends ComponentView {
                     axisItem.seriesDataIndices,
                     axisItem.valueLabelOpt
                 );
+                const axisTimeZone = isTimeScale(axis.scale)
+                    ? axis.scale.getTimeZone()
+                    : ecModel.getTimeZone();
                 const axisSectionMarkup = createTooltipMarkup('section', {
                     header: axisValueLabel,
                     noHeader: !trim(axisValueLabel),
@@ -593,6 +598,7 @@ class TooltipView extends ComponentView {
                         axisModel.axis, { value: axisValueParsed }
                     );
                     cbParams.axisValueLabel = axisValueLabel;
+                    cbParams.axisTimeZone = axisTimeZone;
                     // Pre-create marker style for makers. Users can assemble richText
                     // text in `formatter` callback and use those markers style.
                     cbParams.marker = markupStyleCreator.makeTooltipMarker(
@@ -627,7 +633,7 @@ class TooltipView extends ComponentView {
         const orderMode = singleTooltipModel.get('order');
 
         const builtMarkupText = buildTooltipMarkup(
-            articleMarkup, markupStyleCreator, renderMode, orderMode, ecModel.get('useUTC'),
+            articleMarkup, markupStyleCreator, renderMode, orderMode, ecModel.getTimeZone(),
             singleTooltipModel.get('textStyle')
         );
         builtMarkupText && markupTextArrLegacy.unshift(builtMarkupText);
@@ -711,7 +717,7 @@ class TooltipView extends ComponentView {
                 markupStyleCreator,
                 renderMode,
                 orderMode,
-                ecModel.get('useUTC'),
+                ecModel.getTimeZone(),
                 tooltipModel.get('textStyle')
             )
             : seriesTooltipResult.text;
@@ -846,12 +852,15 @@ class TooltipView extends ComponentView {
 
         if (formatter) {
             if (isString(formatter)) {
-                const useUTC = tooltipModel.ecModel.get('useUTC');
                 const params0 = isArray(params) ? params[0] : params;
                 const isTimeAxis = params0 && params0.axisType && params0.axisType.indexOf('time') >= 0;
                 html = formatter;
                 if (isTimeAxis) {
-                    html = timeFormat(params0.axisValue, html, useUTC);
+                    html = timeFormat(
+                        params0.axisValue,
+                        html,
+                        params0.axisTimeZone || tooltipModel.ecModel.getTimeZone()
+                    );
                 }
                 html = formatTpl(html, params, true);
             }
