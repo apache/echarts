@@ -174,6 +174,7 @@ describe('util/time', function () {
             const time = Date.parse('2024-01-15T12:00:00.000Z');
 
             expect(format(time, '{Z} {ZZ}', 'UTC')).toEqual('Z Z');
+            expect(format(time, '{Z} {ZZ}', 'Africa/Abidjan')).toEqual('+0 +00:00');
             expect(format(time, '{Z} {ZZ}', 'America/New_York')).toEqual('-5 -05:00');
             expect(format(time, '{Z} {ZZ}', 'America/St_Johns')).toEqual('-3:30 -03:30');
             expect(format(time, '{Z} {ZZ}', 'Asia/Kathmandu')).toEqual('+5:45 +05:45');
@@ -261,6 +262,21 @@ describe('util/time', function () {
         it('validates time zones', function () {
             expect(validateTimeZone('Europe/Paris')).toBe('Europe/Paris');
             expect(() => validateTimeZone('Not/A_Time_Zone')).toThrow(/Invalid time zone/);
+        });
+
+        it('rejects invalid time zones consistently in public helpers', function () {
+            const value = Date.parse('2024-01-01T00:00:00.000Z');
+            const timeZone = 'Not/A_Time_Zone';
+            const error = `Invalid time zone: ${timeZone}`;
+
+            expect(() => format(value, '{yyyy}', timeZone)).toThrow(error);
+            expect(() => leveledFormat(
+                { value: value }, 0, '{yyyy}', getDefaultLocaleModel(), timeZone
+            )).toThrow(error);
+            expect(() => getUnitFromValue(value, timeZone)).toThrow(error);
+            expect(() => roundTime(new Date(value), 'year', timeZone)).toThrow(error);
+            expect(() => format(value, '{yyyy}', '__proto__'))
+                .toThrow('Invalid time zone: __proto__');
         });
 
         it('extracts civil parts and offsets in IANA time zones', function () {

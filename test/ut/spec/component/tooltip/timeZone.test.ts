@@ -115,6 +115,37 @@ describe('tooltip_timeZone', function () {
         expect(tooltipText).toContain('2024-07-15 15:00:00');
     });
 
+    it('uses the global time zone for a tooltip dimension without a coordinate axis', function () {
+        const value = Date.parse('2024-07-15T14:00:00.000+02:00');
+        chart.setOption({
+            timeZone: 'Europe/Paris',
+            xAxis: {},
+            yAxis: {},
+            series: [{
+                type: 'line',
+                dimensions: ['x', 'y', { name: 'eventTime', type: 'time' }],
+                encode: {
+                    x: 'x',
+                    y: 'y',
+                    tooltip: ['eventTime']
+                },
+                data: [[0, 1, value]]
+            }]
+        });
+
+        const series = getECModel(chart).getSeriesByIndex(0);
+        const dimInfo = series.getData().getDimensionInfo('eventTime');
+        dimInfo.coordDim = undefined;
+        const getAxis = jest.spyOn(series.coordinateSystem, 'getAxis');
+        const fragment = normalizeTooltipFormatResult(
+            series.formatTooltip(0, false, null)
+        ).frag as TooltipMarkupSection;
+        const valueBlock = fragment.blocks[0] as TooltipMarkupNameValueBlock;
+
+        expect(getAxis).not.toHaveBeenCalled();
+        expect(valueBlock.timeZone).toBe('Europe/Paris');
+    });
+
     it('uses scalar and fallback time zones when building markup', function () {
         const value = Date.parse('2024-07-15T12:00:00.000Z');
         const styleCreator = new TooltipMarkupStyleCreator();

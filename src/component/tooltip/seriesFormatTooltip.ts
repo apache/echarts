@@ -164,7 +164,9 @@ function formatTooltipArrayValue(
 }
 
 function getDimensionTimeZone(series: SeriesModel, dimInfo: {coordDim?: string}): string {
-    const axis = series.coordinateSystem?.getAxis?.(dimInfo.coordDim);
+    const axis = dimInfo.coordDim != null
+        ? series.coordinateSystem?.getAxis?.(dimInfo.coordDim)
+        : null;
     return axis && isTimeScale(axis.scale)
         ? axis.scale.getTimeZone()
         : series.ecModel.getTimeZone();

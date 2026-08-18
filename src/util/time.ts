@@ -18,6 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
+import LRU from 'zrender/src/core/LRU';
 import {
     TimeAxisLabelFormatterDictionary,
     TimeAxisLabelFormatterDictionaryOption,
@@ -309,8 +310,8 @@ export function format(
     const S = parts.milliseconds;
     const a = H >= 12 ? 'pm' : 'am';
     const A = a.toUpperCase();
-    const Z = formatTimeZoneOffset(parts.offsetMinutes, false);
-    const ZZ = formatTimeZoneOffset(parts.offsetMinutes, true);
+    const Z = timeZone === 'UTC' ? 'Z' : formatTimeZoneOffset(parts.offsetMinutes, false);
+    const ZZ = timeZone === 'UTC' ? 'Z' : formatTimeZoneOffset(parts.offsetMinutes, true);
 
     const localeModel = lang instanceof Model ? lang
         : getLocaleModel(lang || SYSTEM_LANG) || getDefaultLocaleModel();
@@ -351,7 +352,7 @@ export function format(
 
 function formatTimeZoneOffset(offsetMinutes: number, padded: boolean): string {
     if (!offsetMinutes) {
-        return 'Z';
+        return padded ? '+00:00' : '+0';
     }
 
     const sign = offsetMinutes < 0 ? '-' : '+';
@@ -640,11 +641,6 @@ interface TimeZoneDayInfo {
     offsetAfter: number;
 }
 
-interface TimeZoneDayCache {
-    dayStartOffsets: zrUtil.HashMap<number, number>;
-    days: zrUtil.HashMap<TimeZoneDayInfo, number>;
-}
-
 // Required for IANA time zones. Legacy environments can provide an Intl polyfill.
 // eslint-disable-next-line no-restricted-globals
 const intl = Intl;
@@ -652,30 +648,36 @@ type TimeZoneFormatter = ReturnType<typeof intl.DateTimeFormat>;
 type TimeZoneFormatterOptions = NonNullable<Parameters<typeof intl.DateTimeFormat>[1]>;
 
 const MINUTES_PER_DAY = ONE_DAY / ONE_MINUTE;
-const formatterCache = zrUtil.createHashMap<TimeZoneFormatter, string>();
-const timeZoneDayCaches = zrUtil.createHashMap<TimeZoneDayCache, string>();
+const TIME_ZONE_FORMATTER_CACHE_SIZE = 32;
+const TIME_ZONE_DAY_CACHE_SIZE = 4 * 1024;
+const formatterCache = new LRU<TimeZoneFormatter>(TIME_ZONE_FORMATTER_CACHE_SIZE);
+const timeZoneDayCache = new LRU<TimeZoneDayInfo>(TIME_ZONE_DAY_CACHE_SIZE);
 let systemTimeZone: string;
 
 function getFormatter(timeZone: string): TimeZoneFormatter {
-    let formatter = formatterCache.get(timeZone);
+    const cacheKey = 'timeZone:' + timeZone;
+    let formatter = formatterCache.get(cacheKey);
     if (!formatter) {
-        formatter = new intl.DateTimeFormat(
-            'en-US-u-ca-gregory-nu-latn',
-            {
-                timeZone: timeZone,
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false,
-                // `hourCycle` is intentionally used together with `hour12` because
-                // some engines otherwise represent midnight as hour 24.
-                hourCycle: 'h23'
-            } as TimeZoneFormatterOptions
-        );
-        formatterCache.set(timeZone, formatter);
+        try {
+            formatter = new intl.DateTimeFormat(
+                'en-US-u-ca-gregory-nu-latn',
+                {
+                    timeZone: timeZone,
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    // Use 00-23 so midnight is represented as hour 00.
+                    hourCycle: 'h23'
+                } as TimeZoneFormatterOptions
+            );
+        }
+        catch (err) {
+            throw new Error(`Invalid time zone: ${timeZone}`);
+        }
+        formatterCache.put(cacheKey, formatter);
     }
     return formatter;
 }
@@ -751,29 +753,8 @@ function getRawTimeZoneOffset(timestamp: number, timeZone: string): number {
     return Math.round(offset / ONE_MINUTE) * ONE_MINUTE;
 }
 
-function getTimeZoneDayCache(timeZone: string): TimeZoneDayCache {
-    let cache = timeZoneDayCaches.get(timeZone);
-    if (!cache) {
-        cache = {
-            dayStartOffsets: zrUtil.createHashMap<number, number>(),
-            days: zrUtil.createHashMap<TimeZoneDayInfo, number>()
-        };
-        timeZoneDayCaches.set(timeZone, cache);
-    }
-    return cache;
-}
-
-function getDayStartOffset(
-    dayIndex: number,
-    timeZone: string,
-    cache: TimeZoneDayCache
-): number {
-    if (cache.dayStartOffsets.hasKey(dayIndex)) {
-        return cache.dayStartOffsets.get(dayIndex);
-    }
-    const offset = getRawTimeZoneOffset(dayIndex * ONE_DAY, timeZone);
-    cache.dayStartOffsets.set(dayIndex, offset);
-    return offset;
+function getTimeZoneDayCacheKey(timeZone: string, dayIndex: number): string {
+    return timeZone + '\0' + dayIndex;
 }
 
 function findTransitionTimestamp(
@@ -800,11 +781,21 @@ function findTransitionTimestamp(
 
 function getTimeZoneDayInfo(timestamp: number, timeZone: string): TimeZoneDayInfo {
     const dayIndex = Math.floor(timestamp / ONE_DAY);
-    const cache = getTimeZoneDayCache(timeZone);
-    let dayInfo = cache.days.get(dayIndex);
+    const cacheKey = getTimeZoneDayCacheKey(timeZone, dayIndex);
+    let dayInfo = timeZoneDayCache.get(cacheKey);
     if (!dayInfo) {
-        const offsetBefore = getDayStartOffset(dayIndex, timeZone, cache);
-        const offsetAfter = getDayStartOffset(dayIndex + 1, timeZone, cache);
+        const previousDay = timeZoneDayCache.get(
+            getTimeZoneDayCacheKey(timeZone, dayIndex - 1)
+        );
+        const nextDay = timeZoneDayCache.get(
+            getTimeZoneDayCacheKey(timeZone, dayIndex + 1)
+        );
+        const offsetBefore = previousDay
+            ? previousDay.offsetAfter
+            : getRawTimeZoneOffset(dayIndex * ONE_DAY, timeZone);
+        const offsetAfter = nextDay
+            ? nextDay.offsetBefore
+            : getRawTimeZoneOffset((dayIndex + 1) * ONE_DAY, timeZone);
         dayInfo = {
             offsetBefore: offsetBefore,
             offsetAfter: offsetAfter
@@ -817,7 +808,7 @@ function getTimeZoneDayInfo(timestamp: number, timeZone: string): TimeZoneDayInf
                 dayIndex * ONE_DAY, timeZone, offsetBefore
             );
         }
-        cache.days.set(dayIndex, dayInfo);
+        timeZoneDayCache.put(cacheKey, dayInfo);
     }
     return dayInfo;
 }
@@ -827,12 +818,10 @@ export function getSystemTimeZone(): string {
 }
 
 export function validateTimeZone(timeZone: string): string {
-    try {
-        return getFormatter(timeZone).resolvedOptions().timeZone;
+    if (timeZone !== 'UTC' && timeZone !== getSystemTimeZone()) {
+        getFormatter(timeZone);
     }
-    catch (err) {
-        throw new Error(`Invalid time zone: ${timeZone}`);
-    }
+    return timeZone;
 }
 
 export function getTimeZoneParts(timestamp: number, timeZone: string): TimeZoneDateParts {
