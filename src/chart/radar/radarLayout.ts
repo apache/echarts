@@ -20,8 +20,8 @@
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import RadarSeriesModel, { SERIES_TYPE_RADAR } from './RadarSeries';
-import Radar from '../../coord/radar/Radar';
 import { createSimpleOverallStageHandler } from '../../util/model';
+import { isValidRadarPoint } from './RadarPath';
 
 type Point = number[];
 
@@ -42,33 +42,19 @@ function radarLayout(ecModel: GlobalModel) {
             data.each(data.mapDimension(axes[axisIndex].dim), function (val, dataIndex) {
                 points[dataIndex] = points[dataIndex] || [];
                 const point = coordSys.dataToPoint(val, axisIndex);
-                points[dataIndex][axisIndex] = isValidPoint(point)
-                    ? point : getValueMissingPoint(coordSys);
+                points[dataIndex][axisIndex] = point;
             });
         });
 
         // Close polygon
         data.each(function (idx) {
-            // TODO
-            // Is it appropriate to connect to the next data when some data is missing?
-            // Or, should trade it like `connectNull` in line chart?
             const firstPoint = zrUtil.find(points[idx], function (point) {
-                return isValidPoint(point);
-            }) || getValueMissingPoint(coordSys);
+                return isValidRadarPoint(point);
+            }) || [NaN, NaN];
 
             // Copy the first actual point to the end of the array
             points[idx].push(firstPoint.slice());
             data.setItemLayout(idx, points[idx]);
         });
     });
-}
-
-function isValidPoint(point: Point) {
-    return !isNaN(point[0]) && !isNaN(point[1]);
-}
-
-function getValueMissingPoint(coordSys: Radar): Point {
-    // It is error-prone to input [NaN, NaN] into polygon, polygon.
-    // (probably cause problem when refreshing or animating)
-    return [coordSys.cx, coordSys.cy];
 }
