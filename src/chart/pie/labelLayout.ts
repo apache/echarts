@@ -134,7 +134,9 @@ function adjustSingleSide(
 
     const len = list.length;
     for (let i = 0; i < len; i++) {
-        if (list[i].position === 'outer' && list[i].labelAlignTo === 'labelLine') {
+        if ((list[i].position === 'outer' || list[i].position === 'outside')
+            && list[i].labelAlignTo === 'labelLine'
+        ) {
             const dx = list[i].label.x - farthestX;
             list[i].linePoints[1][0] += dx;
             list[i].label.x = farthestX;
