@@ -295,6 +295,8 @@ function updateZoomBtnStatus(
     if (payload && payload.type === 'takeGlobalCursor') {
         zoomActive = payload.key === 'dataZoomSelect'
             ? payload.dataZoomSelectActive : false;
+    } else if (payload && payload.type === 'restore') {
+        zoomActive = false;
     }
 
     view._isZoomActive = zoomActive;
