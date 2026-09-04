@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+<body>
+    <div id="main"></div>
+    <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                animation: false,
+                series: {
+                    type: 'sunburst',
+                    radius: [0, '80%'],
+                    label: {
+                        show: true,
+                        align: 'center'
+                    },
+                    data: [
+                        {
+                            name: 'South China',
+                            children: [
+                                {name: 'Guangdong', value: 2},
+                                {name: 'Guangxi', value: 1}
+                            ]
+                        },
+                        {
+                            name: 'North China',
+                            children: [
+                                {name: 'Beijing', value: 2},
+                                {name: 'Tianjin', value: 1}
+                            ]
+                        }
+                    ]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main', {
+                title: [
+                    'Drilled sunburst root label should stay **centered**',
+                    'After drilling into South China, its full annular sector label should be at chart center.'
+                ],
+                height: 420,
+                option: option,
+                buttons: [{
+                    text: 'Drill to South China',
+                    onclick: drillToSouthChina
+                }]
+            });
+
+            setTimeout(function () {
+                drillToSouthChina();
+                testHelper.printAssert(chart, function (assert) {
+                    var seriesModel = chart.getModel().getSeriesByType('sunburst')[0];
+                    var viewRoot = seriesModel.getViewRoot();
+                    var layout = viewRoot.getLayout();
+                    var label = seriesModel.getData().getItemGraphicEl(viewRoot.dataIndex).getTextContent();
+
+                    assert(viewRoot.name === 'South China');
+                    assert(layout.r0 > 0);
+                    assert(Math.abs(Math.abs(layout.endAngle - layout.startAngle) - Math.PI * 2) < 1e-8);
+                    assert(Math.abs(label.x - layout.cx) < 1e-8);
+                    assert(Math.abs(label.y - layout.cy) < 1e-8);
+                    assert(Math.abs(label.rotation) < 1e-8);
+                });
+            }, 0);
+
+            function drillToSouthChina() {
+                var seriesModel = chart.getModel().getSeriesByType('sunburst')[0];
+                var targetNode = findNodeByName(seriesModel, 'South China');
+
+                chart.dispatchAction({
+                    type: 'sunburstRootToNode',
+                    targetNode: targetNode
+                });
+            }
+
+            function findNodeByName(seriesModel, name) {
+                var targetNode;
+                seriesModel.getData().tree.root.eachNode(function (node) {
+                    if (node.name === name) {
+                        targetNode = node;
+                    }
+                });
+                return targetNode;
+            }
+        });
+    </script>
+</body>
+</html>
