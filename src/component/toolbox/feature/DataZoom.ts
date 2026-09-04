@@ -296,6 +296,14 @@ function updateZoomBtnStatus(
         zoomActive = payload.key === 'dataZoomSelect'
             ? payload.dataZoomSelectActive : false;
     }
+    else if (payload && payload.type === 'restore') {
+        // Reset zoom state after restore. The restore action re-creates all
+        // models via resetOption('recreate'), so the previous zoom state is
+        // no longer valid. Without this reset, _isZoomActive stays true and
+        // the next zoom button click toggles to false instead of true,
+        // causing the zoom/restore/zoom cycle to malfunction.
+        zoomActive = false;
+    }
 
     view._isZoomActive = zoomActive;
 
