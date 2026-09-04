@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+<body>
+    <div id="main-radial"></div>
+    <div id="main-state"></div>
+    <script>
+        require(['echarts'], function (echarts) {
+            function createChordOption(labelOption, stateOptions) {
+                return {
+                    animation: false,
+                    series: {
+                        type: 'chord',
+                        startAngle: 0,
+                        padAngle: 0,
+                        label: labelOption,
+                        emphasis: stateOptions && stateOptions.emphasis,
+                        blur: stateOptions && stateOptions.blur,
+                        select: stateOptions && stateOptions.select,
+                        data: [
+                            {name: 'Alpha'},
+                            {name: 'Beta'}
+                        ],
+                        edges: [{
+                            source: 'Alpha',
+                            target: 'Beta',
+                            value: 1
+                        }]
+                    }
+                };
+            }
+
+            function getNodeLabel(chart, dataIndex) {
+                var seriesModel = chart.getModel().getSeriesByType('chord')[0];
+                return seriesModel.getData().getItemGraphicEl(dataIndex).getTextContent();
+            }
+
+            function getExpectedRadialRotation(chart, dataIndex) {
+                var seriesModel = chart.getModel().getSeriesByType('chord')[0];
+                var data = seriesModel.getData();
+                var layout = data.getItemLayout(dataIndex);
+                var midAngle = (layout.startAngle + layout.endAngle) / 2;
+                return Math.cos(midAngle) < 0 ? -midAngle + Math.PI : -midAngle;
+            }
+
+            function nearlyEqual(actual, expected) {
+                return Math.abs(actual - expected) < 1e-8;
+            }
+
+            var radialChart = testHelper.create(echarts, 'main-radial', {
+                title: [
+                    'Chord node labels support **rotate: radial**',
+                    'Labels should follow the node angle and remain readable.'
+                ],
+                height: 360,
+                option: createChordOption({
+                    show: true,
+                    rotate: 'radial'
+                })
+            });
+
+            var stateChart = testHelper.create(echarts, 'main-state', {
+                title: [
+                    'Chord node labels keep numeric and state rotations',
+                    'Normal label is 45 degrees; emphasis label is radial.'
+                ],
+                height: 360,
+                option: createChordOption({
+                    show: true,
+                    rotate: 45
+                }, {
+                    emphasis: {
+                        label: {
+                            rotate: 'radial'
+                        }
+                    },
+                    blur: {
+                        label: {
+                            rotate: 30
+                        }
+                    },
+                    select: {
+                        label: {
+                            rotate: 60
+                        }
+                    }
+                })
+            });
+
+            setTimeout(function () {
+                testHelper.printAssert(radialChart, function (assert) {
+                    var label = getNodeLabel(radialChart, 0);
+                    assert(nearlyEqual(label.rotation, getExpectedRadialRotation(radialChart, 0)));
+                });
+
+                testHelper.printAssert(stateChart, function (assert) {
+                    var label = getNodeLabel(stateChart, 0);
+                    assert(nearlyEqual(label.rotation, Math.PI / 4));
+                    assert(nearlyEqual(label.states.emphasis.rotation, getExpectedRadialRotation(stateChart, 0)));
+                    assert(nearlyEqual(label.states.blur.rotation, Math.PI / 6));
+                    assert(nearlyEqual(label.states.select.rotation, Math.PI / 3));
+                });
+            }, 0);
+        });
+    </script>
+</body>
+</html>
