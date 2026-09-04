@@ -43,7 +43,17 @@ export default function jitterLayout(): StageHandler {
             }
             const baseAxis = coordSys.getBaseAxis && coordSys.getBaseAxis() as Axis2D | SingleAxis;
             const hasJitter = baseAxis && needFixJitter(seriesModel, baseAxis);
-            if (!hasJitter) {
+
+            // Also check the other axis (e.g. yAxis when baseAxis is xAxis) for jitter.
+            // This enables jittering on both axis directions when both axes are
+            // category (ordinal) with jitter configured, like JMP scatter plots.
+            const otherAxis = baseAxis && coordSys.getOtherAxis
+                ? coordSys.getOtherAxis(baseAxis) as Axis2D | SingleAxis
+                : null;
+            const hasOtherJitter = otherAxis
+                && needFixJitter(seriesModel, otherAxis);
+
+            if (!hasJitter && !hasOtherJitter) {
                 return;
             }
 
@@ -54,7 +64,7 @@ export default function jitterLayout(): StageHandler {
 
             const jitterOnY = dim === 'y' || (dim === 'single' && isSingleY);
             const jitterOnX = dim === 'x' || (dim === 'single' && !isSingleY);
-            if (!jitterOnY && !jitterOnX) {
+            if (!jitterOnY && !jitterOnX && !hasOtherJitter) {
                 return;
             }
 
@@ -76,6 +86,30 @@ export default function jitterLayout(): StageHandler {
 
                         const rawSize = data.getItemVisual(i, 'symbolSize');
                         const size = rawSize instanceof Array ? (rawSize[1] + rawSize[0]) / 2 : rawSize;
+
+                        // Jitter along the other axis direction first (e.g. y when base is x)
+                        if (hasOtherJitter && otherAxis) {
+                            if (otherAxis.dim === 'y') {
+                                // x is fixed, and y is floating
+                                const jittered = fixJitter(otherAxis, layout[0], layout[1], size / 2);
+                                if (hasPoints) {
+                                    points[offset + 1] = jittered;
+                                }
+                                else {
+                                    layout[1] = jittered;
+                                }
+                            }
+                            else if (otherAxis.dim === 'x') {
+                                // y is fixed, and x is floating
+                                const jittered = fixJitter(otherAxis, layout[1], layout[0], size / 2);
+                                if (hasPoints) {
+                                    points[offset] = jittered;
+                                }
+                                else {
+                                    layout[0] = jittered;
+                                }
+                            }
+                        }
 
                         if (jitterOnY) {
                             // x is fixed, and y is floating
