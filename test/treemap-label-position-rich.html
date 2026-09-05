@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css">
+</head>
+<body>
+    <div id="main"></div>
+
+    <script>
+        require(['echarts'], function (echarts) {
+            var positions = [
+                'insideTopLeft',
+                'inside',
+                'insideBottomLeft',
+                'insideBottom',
+                'insideBottomRight'
+            ];
+            var colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de'];
+            var series = [];
+
+            positions.forEach(function (position, rowIndex) {
+                [false, true].forEach(function (rich, columnIndex) {
+                    var labelText = (rich ? 'Rich: ' : 'Plain: ') + position;
+                    series.push({
+                        type: 'treemap',
+                        animation: false,
+                        breadcrumb: {show: false},
+                        nodeClick: false,
+                        roam: false,
+                        left: columnIndex === 0 ? '3%' : '52%',
+                        top: (rowIndex * 19 + 2) + '%',
+                        width: '45%',
+                        height: '16%',
+                        itemStyle: {
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: true,
+                            position: position,
+                            color: '#fff',
+                            fontSize: 16,
+                            formatter: rich ? '{label|' + labelText + '}\nsecond line' : labelText + '\nsecond line',
+                            rich: rich ? {
+                                label: {
+                                    color: '#fff',
+                                    fontSize: 16,
+                                    fontWeight: 'bold'
+                                }
+                            } : undefined
+                        },
+                        data: [{
+                            name: labelText,
+                            value: 1,
+                            itemStyle: {color: colors[rowIndex]}
+                        }]
+                    });
+                });
+            });
+
+            testHelper.create(echarts, 'main', {
+                title: [
+                    '#17591: bottom-aligned rich treemap labels',
+                    'Plain labels are on the left; equivalent rich labels are on the right.',
+                    'The three bottom rows should align; top and center are compatibility controls.'
+                ],
+                option: {series: series},
+                height: 900
+            });
+        });
+    </script>
+</body>
+</html>
