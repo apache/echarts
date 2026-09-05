@@ -474,7 +474,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         }
 
                         if (!isLarge) {
-                            data.setItemLayout(dataIndex, { x, y, width, height });
+                            data.setItemLayout(dataIndex, { x, y, width, height, valueAxisStart });
                         }
                         else {
                             largePoints[idxOffset] = x;
