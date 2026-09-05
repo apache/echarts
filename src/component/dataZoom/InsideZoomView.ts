@@ -88,7 +88,7 @@ interface DataZoomGetRangeHandler<
     ): [number, number]
 }
 
-const getRangeHandlers: {
+export const getRangeHandlers: {
     pan: DataZoomGetRangeHandler<RoamEventParams['pan']>
     zoom: DataZoomGetRangeHandler<RoamEventParams['zoom']>
     scrollMove: DataZoomGetRangeHandler<RoamEventParams['scrollMove']>
@@ -114,6 +114,17 @@ const getRangeHandlers: {
             ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
 
         const scale = Math.max(1 / e.scale, 0);
+
+        // When the current range is collapsed to a single point (e.g. the toolbox
+        // dataZoom brushed exactly one category), multiplicative zoom cannot expand
+        // a zero-width window. Seed it with a small percent around the wheel anchor
+        // so wheel-out becomes responsive again. See #21541.
+        const SEED_HALF_PERCENT = 2.5;
+        if (range[1] - range[0] < 1e-6 && scale > 1) {
+            range[0] = percentPoint - SEED_HALF_PERCENT;
+            range[1] = percentPoint + SEED_HALF_PERCENT;
+        }
+
         range[0] = (range[0] - percentPoint) * scale + percentPoint;
         range[1] = (range[1] - percentPoint) * scale + percentPoint;
 
