@@ -400,8 +400,10 @@ class SliderZoomView extends DataZoomView {
             const areaPoints = [[size[0], 0], [0, 0]];
             const linePoints: number[][] = [];
             const step = thisShadowExtent[1] / (Math.max(1, data.count() - 1));
-            const normalizationConstant = size[0] / (thisDataExtent[1] - thisDataExtent[0]);
             const isTimeAxis = info.thisAxis.type === 'time';
+            const thisDataExtentSpan = thisDataExtent[1] - thisDataExtent[0];
+            const useTimeAxisCoord = isTimeAxis && isFinite(thisDataExtentSpan) && thisDataExtentSpan > 0;
+            const normalizationConstant = useTimeAxisCoord ? size[0] / thisDataExtentSpan : 0;
             let thisCoord = -step;
 
             // Optimize for large data shadow
@@ -410,13 +412,13 @@ class SliderZoomView extends DataZoomView {
 
             data.each([info.thisDim, otherDim], function (thisValue: ParsedValue, otherValue: ParsedValue, index) {
                 if (stride > 0 && (index % stride)) {
-                    if (!isTimeAxis) {
+                    if (!useTimeAxisCoord) {
                         thisCoord += step;
                     }
                     return;
                 }
 
-                thisCoord = isTimeAxis
+                thisCoord = useTimeAxisCoord
                     ? (+thisValue - thisDataExtent[0]) * normalizationConstant
                     : thisCoord + step;
 
