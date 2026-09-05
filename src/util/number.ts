@@ -229,8 +229,12 @@ export function round(x: number | string, precision: number, returnStr?: boolean
         // precision utils (such as getAcceptableTickPrecision) may return NaN.
         return returnStr ? '' + x : +x;
     }
-    // Avoid range error
-    precision = mathMin(mathMax(0, precision), TO_FIXED_SUPPORTED_PRECISION_MAX);
+    // Avoid range error. Do not clamp large precision to 20 because it may
+    // over-round tiny values such as 3e-21 to zero.
+    if (precision > TO_FIXED_SUPPORTED_PRECISION_MAX) {
+        return returnStr ? '' + x : +x;
+    }
+    precision = mathMax(0, precision);
     // PENDING: 1.005.toFixed(2) is '1.00' rather than '1.01'
     x = (+x).toFixed(precision);
     return (returnStr ? x : +x);
