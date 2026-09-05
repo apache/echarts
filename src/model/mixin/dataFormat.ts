@@ -61,6 +61,9 @@ export class DataFormatMixin {
     ): CallbackDataParams {
 
         const data = this.getData(dataType);
+        if (!data) {
+            return {} as CallbackDataParams;
+        }
         const rawValue = this.getRawValue(dataIndex, dataType);
         const rawDataIndex = data.getRawIndex(dataIndex);
         const name = data.getName(dataIndex);
