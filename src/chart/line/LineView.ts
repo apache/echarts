@@ -323,7 +323,14 @@ function getVisualGradient(
     const stopLen = colorStops.length;
     const outerColors = visualMeta.outerColors.slice();
 
-    if (stopLen && colorStops[0].coord > colorStops[stopLen - 1].coord) {
+    if (stopLen && (
+        colorStops[0].coord > colorStops[stopLen - 1].coord
+        // When stops collapse to the same coord (e.g. a piecewise visualMap with
+        // a single half-infinite piece produces two boundary stops at the same
+        // value), the coord comparison gives no signal — fall back to the axis
+        // direction so we still flip on an inverted axis. See #18066.
+        || (colorStops[0].coord === colorStops[stopLen - 1].coord && axis.inverse)
+    )) {
         colorStops.reverse();
         outerColors.reverse();
     }
@@ -336,6 +343,13 @@ function getVisualGradient(
         return colorStops[0].coord < 0
             ? (outerColors[1] ? outerColors[1] : colorStops[stopLen - 1].color)
             : (outerColors[0] ? outerColors[0] : colorStops[0].color);
+    }
+    if (!inRangeStopLen) {
+        // No color stops at all (e.g. a visualMap piecewise piece producing
+        // a fully [-Infinity, Infinity] interval, like `pieces: [{ lte: null }]`).
+        // Fall back to a single outer color or transparent so we don't crash
+        // on `colorStopsInRange[0].coord` below. See #18066.
+        return outerColors[0] || outerColors[1] || 'transparent';
     }
 
     const tinyExtent = 10; // Arbitrary value: 10px
