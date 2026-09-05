@@ -982,6 +982,8 @@ export interface CallbackDataParams {
 
     // Param name list for mapping `a`, `b`, `c`, `d`, `e`
     $vars: string[];
+    // Pie chart label orientation
+    labelSide?: string;
 }
 export type InterpolatableValue = ParsedValue | ParsedValue[];
 
