@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Label overflow: 'fit' Comprehensive Test</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+        h1 { color: #00d2ff; margin-bottom: 8px; }
+        p.desc { color: #888; margin-bottom: 24px; }
+        .chart-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .chart-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .chart-container {
+            width: 600px;
+            height: 350px;
+            background: #16213e;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+        }
+        .chart-label {
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .renderer-label {
+            font-size: 12px;
+            color: #ff007f;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>overflow: 'fit' — Comprehensive Testing</h1>
+    <p class="desc">Tests Plain text, Rich text, Canvas vs SVG renderers, MarkPoint, and edge cases.</p>
+
+    <!-- Row 1: Plain Text -->
+    <div class="chart-row">
+        <div class="chart-wrapper">
+            <div class="chart-label">1. Plain Labels (short, long, space, number)</div>
+            <div id="plain-canvas" class="chart-container"></div>
+            <div class="renderer-label">Renderer: Canvas</div>
+        </div>
+        <div class="chart-wrapper">
+            <div class="chart-label">1. Plain Labels</div>
+            <div id="plain-svg" class="chart-container"></div>
+            <div class="renderer-label">Renderer: SVG</div>
+        </div>
+    </div>
+
+    <!-- Row 2: Rich Text -->
+    <div class="chart-row">
+        <div class="chart-wrapper">
+            <div class="chart-label">2. Rich Text (Different font sizes)</div>
+            <div id="rich-canvas" class="chart-container"></div>
+            <div class="renderer-label">Renderer: Canvas</div>
+        </div>
+        <div class="chart-wrapper">
+            <div class="chart-label">2. Rich Text</div>
+            <div id="rich-svg" class="chart-container"></div>
+            <div class="renderer-label">Renderer: SVG</div>
+        </div>
+    </div>
+
+    <!-- Row 3: MarkPoint -->
+    <div class="chart-row">
+        <div class="chart-wrapper">
+            <div class="chart-label">3. MarkPoint</div>
+            <div id="markpoint-canvas" class="chart-container"></div>
+            <div class="renderer-label">Renderer: Canvas</div>
+        </div>
+        <div class="chart-wrapper">
+            <div class="chart-label">3. MarkPoint</div>
+            <div id="markpoint-svg" class="chart-container"></div>
+            <div class="renderer-label">Renderer: SVG</div>
+        </div>
+    </div>
+
+    <!-- Row 4: Axis Labels & Resize test -->
+    <div class="chart-row">
+        <div class="chart-wrapper">
+            <div class="chart-label">4. Axis Labels (Y-Axis)</div>
+            <div id="axis-canvas" class="chart-container"></div>
+            <div class="renderer-label">Renderer: Canvas</div>
+        </div>
+        <div class="chart-wrapper">
+            <div class="chart-label">4. Axis Labels (Y-Axis)</div>
+            <div id="axis-svg" class="chart-container"></div>
+            <div class="renderer-label">Renderer: SVG</div>
+        </div>
+    </div>
+
+    <script src="../dist/echarts.js"></script>
+    <script>
+        var charts = [];
+
+        function createChart(id, renderer, option) {
+            var dom = document.getElementById(id);
+            var chart = echarts.init(dom, null, { renderer: renderer });
+            chart.setOption(option);
+            charts.push(chart);
+        }
+
+        // --- Options ---
+        var commonOptions = {
+            backgroundColor: 'transparent',
+            textStyle: { color: '#e0e0e0' }
+        };
+
+        // 1. Plain Text Option
+        var optionPlain = Object.assign({}, commonOptions, {
+            xAxis: {
+                type: 'category',
+                data: ['sh', 'a very very long text', 'singleword', 'space   gap', '123456789'],
+                axisLabel: {
+                    width: 60,
+                    overflow: 'fit',
+                    color: '#00d2ff'
+                }
+            },
+            yAxis: { type: 'value', splitLine: { lineStyle: { color: '#333' } } },
+            series: [{
+                type: 'bar',
+                data: [10, 50, 30, 20, 40],
+                itemStyle: { color: '#533483' },
+                label: {
+                    show: true,
+                    position: 'top',
+                    width: 40,
+                    overflow: 'fit',
+                    color: '#fff'
+                }
+            }]
+        });
+
+        // 2. Rich Text Option
+        var optionRich = Object.assign({}, commonOptions, {
+            xAxis: {
+                type: 'category',
+                data: ['Item 1', 'Item 2', 'Item 3'],
+                axisLabel: { color: '#aaa' }
+            },
+            yAxis: { type: 'value', splitLine: { lineStyle: { color: '#333' } } },
+            series: [{
+                type: 'bar',
+                data: [100, 200, 150],
+                itemStyle: { color: '#e94560' },
+                label: {
+                    show: true,
+                    position: 'inside',
+                    formatter: '{a|Extremely Long Header}\n{b|Short}',
+                    rich: {
+                        a: { fontSize: 16, color: '#fff', fontWeight: 'bold' },
+                        b: { fontSize: 10, color: '#ffb' }
+                    },
+                    width: 70, // Force the rich block to compress
+                    overflow: 'fit'
+                }
+            }]
+        });
+
+        // 3. MarkPoint Option
+        var optionMarkPoint = Object.assign({}, commonOptions, {
+            xAxis: {
+                type: 'category',
+                data: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                axisLabel: { color: '#aaa' }
+            },
+            yAxis: { type: 'value', splitLine: { lineStyle: { color: '#333' } } },
+            series: [{
+                type: 'line',
+                data: [10, 22, 5, 33, 15],
+                lineStyle: { color: '#00d2ff' },
+                itemStyle: { color: '#00d2ff' },
+                markPoint: {
+                    symbol: 'pin',
+                    symbolSize: 60,
+                    itemStyle: { color: '#ff007f' },
+                    label: {
+                        width: 35,
+                        overflow: 'fit',
+                        color: '#fff',
+                        fontSize: 14,
+                        formatter: 'LongVal:{c}'
+                    },
+                    data: [
+                        { type: 'max', name: 'Max' },
+                        { type: 'min', name: 'Min' }
+                    ]
+                }
+            }]
+        });
+
+        // 4. Axis Labels Option
+        var optionAxis = Object.assign({}, commonOptions, {
+            grid: { left: '20%' },
+            xAxis: { type: 'value', splitLine: { lineStyle: { color: '#333' } } },
+            yAxis: {
+                type: 'category',
+                data: ['SuperLongCategoryNameHere', 'AI', 'Very Long DevOps Pipeline'],
+                axisLabel: {
+                    width: 80,
+                    overflow: 'fit',
+                    color: '#00d2ff'
+                }
+            },
+            series: [{
+                type: 'bar',
+                data: [320, 302, 301],
+                itemStyle: { color: '#0f3460' }
+            }]
+        });
+
+        // --- Initialization ---
+        createChart('plain-canvas', 'canvas', optionPlain);
+        createChart('plain-svg', 'svg', optionPlain);
+
+        createChart('rich-canvas', 'canvas', optionRich);
+        createChart('rich-svg', 'svg', optionRich);
+
+        createChart('markpoint-canvas', 'canvas', optionMarkPoint);
+        createChart('markpoint-svg', 'svg', optionMarkPoint);
+
+        createChart('axis-canvas', 'canvas', optionAxis);
+        createChart('axis-svg', 'svg', optionAxis);
+
+        // --- Resize Event ---
+        window.addEventListener('resize', function() {
+            charts.forEach(function(chart) {
+                chart.resize();
+            });
+        });
+    </script>
+</body>
+</html>
