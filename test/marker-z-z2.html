@@ -33,6 +33,7 @@ under the License.
     <div id="main1"></div>
     <div id="main2"></div>
     <div id="main3"></div>
+    <div id="main4"></div>
 
     <script>
         require(["echarts"], function (echarts) {
@@ -582,6 +583,78 @@ under the License.
             console.log(chart)
         });
     </script>
+
+    <script>
+        require(["echarts"], function (echarts) {
+            var option = {
+                animation: false,
+                grid: {
+                    left: 80,
+                    right: 80,
+                    top: 60,
+                    bottom: 80
+                },
+                xAxis: {
+                    type: "category",
+                    data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                },
+                yAxis: {
+                    type: "value"
+                },
+                series: [
+                    {
+                        type: "line",
+                        data: [10, 20, 30, 40, 50, 60, 70],
+                        markLine: {
+                            symbol: "none",
+                            label: {
+                                show: true,
+                                formatter: "{b}",
+                                position: "middle",
+                                fontSize: 30
+                            },
+                            lineStyle: {
+                                width: 16,
+                                opacity: 0.9
+                            },
+                            data: [
+                                {
+                                    name: "red z2:1",
+                                    yAxis: 35,
+                                    z2: 1,
+                                    lineStyle: {
+                                        color: "red"
+                                    },
+                                    label: {
+                                        color: "red"
+                                    }
+                                },
+                                {
+                                    name: "blue z2:2",
+                                    yAxis: 35,
+                                    z2: 2,
+                                    lineStyle: {
+                                        color: "blue"
+                                    },
+                                    label: {
+                                        color: "blue"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            };
+            testHelper.create(echarts, "main4", {
+                option: option,
+                title: [
+                    "MarkLine item z2 should also order labels",
+                    "Blue line and blue label (z2:2) should be above the red label (z2:1)."
+                ]
+            });
+        });
+    </script>
+
 </body>
 
 </html>

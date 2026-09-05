@@ -843,8 +843,9 @@ export function traverseUpdateZ(
     el: Element,
     z: number,
     zlevel: number,
+    labelZ2Lift?: number
 ): void {
-    doUpdateZ(el, z, zlevel, -Infinity);
+    doUpdateZ(el, z, zlevel, -Infinity, labelZ2Lift == null ? 2 : labelZ2Lift);
 }
 
 function doUpdateZ(
@@ -855,6 +856,7 @@ function doUpdateZ(
     //  e.g. in graph, edge labels should be above node elements.
     //  Currently impl does not guarantee that.
     maxZ2: number,
+    labelZ2Lift: number
 ): number {
     // `ignoreModelZ` is used to intentionally lift elements to cover other elements,
     // where maxZ2 (for label.z2) should also not be counted for its parents.
@@ -876,7 +878,8 @@ function doUpdateZ(
                     children[i],
                     z,
                     zlevel,
-                    maxZ2
+                    maxZ2,
+                    labelZ2Lift
                 ),
                 maxZ2
             );
@@ -899,7 +902,7 @@ function doUpdateZ(
         label.zlevel = zlevel;
         // lift z2 of text content
         // TODO if el.emphasis.z2 is spcefied, what about textContent.
-        isFinite(maxZ2) && (label.z2 = maxZ2 + 2);
+        isFinite(maxZ2) && (label.z2 = maxZ2 + labelZ2Lift);
     }
     if (labelLine) {
         const textGuideLineConfig = el.textGuideLineConfig;

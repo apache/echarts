@@ -115,7 +115,7 @@ function updateZ(
 
         if (markerModel && markerDraw && markerDraw.group) {
             const { z, zlevel } = retrieveZInfo(markerModel);
-            traverseUpdateZ(markerDraw.group, z, zlevel);
+            traverseUpdateZ(markerDraw.group, z, zlevel, type === 'markLine' ? 0 : 2);
         }
     });
 }
