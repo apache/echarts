@@ -154,6 +154,18 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
 
             const v12: number[] = [];
             const nLen = nodes.length;
+
+            // Record center of mass before forces are applied.
+            let comX = 0;
+            let comY = 0;
+            let comN = 0;
+            for (let i = 0; i < nLen; i++) {
+                if (!nodes[i].fixed) {
+                    comX += nodes[i].p[0];
+                    comY += nodes[i].p[1];
+                    comN++;
+                }
+            }
             for (let i = 0; i < edges.length; i++) {
                 const e = edges[i];
                 if (e.ignoreForceLayout) {
@@ -212,6 +224,32 @@ export function forceLayout<N extends InputNode, E extends InputEdge>(
                     vec2.sub(v, n.p, n.pp);
                     scaleAndAdd(n.p, n.p, v, friction);
                     vec2.copy(n.pp, n.p);
+                }
+            }
+
+            // Restore center of mass to prevent translational drift.
+            if (comN > 0) {
+                comX /= comN;
+                comY /= comN;
+                let newComX = 0;
+                let newComY = 0;
+                for (let i = 0; i < nLen; i++) {
+                    if (!nodes[i].fixed) {
+                        newComX += nodes[i].p[0];
+                        newComY += nodes[i].p[1];
+                    }
+                }
+                newComX /= comN;
+                newComY /= comN;
+                const dx = comX - newComX;
+                const dy = comY - newComY;
+                for (let i = 0; i < nLen; i++) {
+                    if (!nodes[i].fixed) {
+                        nodes[i].p[0] += dx;
+                        nodes[i].p[1] += dy;
+                        nodes[i].pp[0] += dx;
+                        nodes[i].pp[1] += dy;
+                    }
                 }
             }
 
