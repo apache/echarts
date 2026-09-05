@@ -115,12 +115,12 @@ export default function axisTrigger(
     ecModel: GlobalModel,
     api: ExtensionAPI
 ) {
+    const axisPointerComponent = ecModel.getComponent('axisPointer') as AxisPointerModel;
     const currTrigger = payload.currTrigger;
     let point = [payload.x, payload.y];
     const finder = payload;
     const dispatchAction = payload.dispatchAction || bind(api.dispatchAction, api);
-    const coordSysAxesInfo = (ecModel.getComponent('axisPointer') as AxisPointerModel)
-        .coordSysAxesInfo as CollectedCoordInfo;
+    const coordSysAxesInfo = axisPointerComponent.coordSysAxesInfo as CollectedCoordInfo;
 
     // Pending
     // See #6121. But we are not able to reproduce it yet.
@@ -128,7 +128,10 @@ export default function axisTrigger(
         return;
     }
 
-    if (illegalPoint(point)) {
+    // Chart-wide option. See `CommonAxisPointerOption.findPointOnConnectedCharts`.
+    const findPointOnConnectedCharts = axisPointerComponent.get('findPointOnConnectedCharts');
+
+    if (illegalPoint(point) && findPointOnConnectedCharts) {
         // Used in the default behavior of `connection`: use the sample seriesIndex
         // and dataIndex. And also used in the tooltipView trigger.
         point = findPointFromSeries({
@@ -168,8 +171,13 @@ export default function axisTrigger(
         each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
             const axis = axisInfo.axis;
             const inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
+            // When `triggerOnNoData` is enabled, still trigger this axis even if the point
+            // is illegal (e.g. on a connected chart with no data at the hovered location),
+            // as long as a value is available from the input (the linked value). This is
+            // not applied on `leave`, so the pointer is still hidden when the cursor leaves.
+            const triggerOnNoData = axisInfo.triggerOnNoData && currTrigger !== 'leave' && !!inputAxisInfo;
             // If no inputAxesInfo, no axis is restricted.
-            if (!shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo)) {
+            if ((!shouldHide || triggerOnNoData) && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo)) {
                 let val = inputAxisInfo && inputAxisInfo.value;
                 if (val == null && !isIllegalPoint) {
                     val = axis.pointToData(point);
