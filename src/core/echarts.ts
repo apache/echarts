@@ -1357,14 +1357,22 @@ class ECharts extends Eventful<ECEventDefinition> {
                     params.event = e;
                     params.type = eveName;
 
-                    (this._$eventProcessor as ECEventProcessor).eventInfo = {
+                    const eventProcessor = this._$eventProcessor as ECEventProcessor;
+                    // A user handler may synchronously trigger another ECharts event.
+                    const previousEventInfo = eventProcessor.eventInfo;
+                    eventProcessor.eventInfo = {
                         targetEl: el,
                         packedEvent: params,
                         model: model,
                         view: view
                     };
 
-                    this.trigger(eveName, params);
+                    try {
+                        this.trigger(eveName, params);
+                    }
+                    finally {
+                        eventProcessor.eventInfo = previousEventInfo;
+                    }
                 }
             };
             // Consider that some component (like tooltip, brush, ...)

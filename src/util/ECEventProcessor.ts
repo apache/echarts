@@ -144,8 +144,4 @@ export class ECEventProcessor implements EventProcessor {
         }
     }
 
-    afterTrigger() {
-        // Make sure the eventInfo won't be used in next trigger.
-        this.eventInfo = null;
-    }
 };
