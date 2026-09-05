@@ -216,6 +216,101 @@ export function logScalePowTick(
 }
 
 /**
+ * Forward transform for `'asinh'` log mapping: `a0 * asinh(val / a0)`.
+ * Handles zero and negative values, unlike `logScaleLogTick`.
+ * Linear near zero (`|val| << a0`), logarithmic away from zero (`|val| >> a0`).
+ *
+ * NOTE:
+ *  - If `val` is `0`, returns `0` exactly.
+ *  - If `val` is negative, returns a negative result (odd-symmetric).
+ *  - `a0` must be strictly positive.
+ *
+ * @see {asinhScaleInverseTick}
+ */
+export function asinhScaleForwardTick(val: number, a0: number): number {
+    return Math.asinh(val / a0) * a0;
+}
+
+/**
+ * Inverse transform for `'asinh'` log mapping: `a0 * sinh(linearVal / a0)`.
+ * Converts a value from asinh-transformed space back to raw data space.
+ *
+ * The lookup table serves the same role as in `logScalePowTick`: floating-point
+ * drift means `sinh(asinh(x))` may not round-trip exactly to `x` for extent
+ * endpoints, which would cause tick labels like `99.99999999999999`. Lookups
+ * at known extent boundaries bypass the math and return the original raw value.
+ *
+ * [CAUTION]:
+ *  Monotonicity may be broken on extent ends - callers must make sure it does not matter.
+ *
+ * @see {asinhScaleForwardTick}
+ */
+export function asinhScaleInverseTick(
+    linearVal: number,
+    a0: number,
+    opt: ValueTransformLookupOpt | NullUndefined
+): number {
+    // Short-circuit at known extent boundaries to avoid floating-point drift.
+    // The lookup table is the same pattern used in logScalePowTick.
+    const lookup = opt && opt.lookup;
+    if (lookup) {
+        for (let i = 0; i < lookup.from.length; i++) {
+            if (linearVal === lookup.from[i]) {
+                return lookup.to[i];
+            }
+        }
+    }
+    return Math.sinh(linearVal / a0) * a0;
+}
+
+/**
+ * Forward transform for `'symlog'` log mapping: `sign(val) * ln(1 + |val| / C)`.
+ * Handles zero and negative values, unlike `logScaleLogTick`.
+ * Linear near zero (`|val| << C`), logarithmic away from zero (`|val| >> C`).
+ *
+ * NOTE:
+ *  - If `val` is `0`, returns `0` exactly.
+ *  - If `val` is negative, returns a negative result (odd-symmetric).
+ *  - `C` must be strictly positive.
+ *
+ * @see {symlogScaleInverseTick}
+ */
+export function symlogScaleForwardTick(val: number, C: number): number {
+    return Math.sign(val) * Math.log1p(Math.abs(val) / C);
+}
+
+/**
+ * Inverse transform for `'symlog'` log mapping: `sign(linearVal) * (e^|linearVal| - 1) * C`.
+ * Converts a value from symlog-transformed space back to raw data space.
+ *
+ * The lookup table serves the same role as in `logScalePowTick`: floating-point
+ * drift means `expm1(log1p(x))` may not round-trip exactly to `x` for extent
+ * endpoints. Lookups at known extent boundaries bypass the math and return the
+ * original raw value.
+ *
+ * [CAUTION]:
+ *  Monotonicity may be broken on extent ends - callers must make sure it does not matter.
+ *
+ * @see {symlogScaleForwardTick}
+ */
+export function symlogScaleInverseTick(
+    linearVal: number,
+    C: number,
+    opt: ValueTransformLookupOpt | NullUndefined
+): number {
+    const lookup = opt && opt.lookup;
+    if (lookup) {
+        for (let i = 0; i < lookup.from.length; i++) {
+            if (linearVal === lookup.from[i]) {
+                return lookup.to[i];
+            }
+        }
+    }
+    return Math.sign(linearVal) * Math.expm1(Math.abs(linearVal)) * C;
+}
+
+
+/**
  * For `IntervalScale`, convert `rawExtent` to:
  *  - Be no non-finite number.
  *  - Be `extent[0] < extent[1]`- no equal; otherwise, additional handling is required

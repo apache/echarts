@@ -63,6 +63,15 @@ export function scaleCalcAlign(
     //  (2) `SCALE_EXTENT_KIND_MAPPING` is not considered yet.
 
     const isTargetLogScale = isLogScale(targetScale);
+
+    // alignTicks is not supported for mapped log scales (asinh/symlog).
+    // loopIncreaseInterval multiplies by targetLogScaleBase, which assumes
+    // integer spacing in log space. That assumption does not hold for these
+    // transforms, so each axis calculates its own nice ticks independently.
+    if (isTargetLogScale && (targetScale as LogScale).logMapping) {
+        return;
+    }
+
     const alignToScaleLinear = isLogScale(alignToScale) ? alignToScale.intervalStub : alignToScale;
     const targetIntervalStub = isTargetLogScale ? targetScale.intervalStub : targetScale;
 
