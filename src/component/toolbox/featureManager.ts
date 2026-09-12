@@ -102,7 +102,7 @@ export interface UserDefinedToolboxFeature {
     onclick(): void
 }
 
-type ToolboxFeatureCtor = {
+export type ToolboxFeatureCtor = {
     new(): ToolboxFeature
     /**
      * Static defaultOption property

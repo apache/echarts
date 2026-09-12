@@ -17,7 +17,14 @@
 * under the License.
 */
 
-import {init, use, ComposeOption} from 'echarts/core';
+import {
+    init,
+    use,
+    ComposeOption,
+    EChartsExtensionInstaller,
+    ToolboxFeature,
+    ToolboxFeatureOption
+} from 'echarts/core';
 import {
     BarChart,
     BarSeriesOption,
@@ -35,6 +42,23 @@ import {
 } from 'echarts/renderers';
 
 use([BarChart, LineChart, GridComponent, DataZoomComponent, CanvasRenderer]);
+
+interface ExportDataFeatureOption extends ToolboxFeatureOption {
+    filename?: string
+}
+
+class ExportDataFeature extends ToolboxFeature<ExportDataFeatureOption> {
+    onclick(): void {
+        this.api.getOption();
+        this.model.get('filename');
+    }
+}
+
+const installExportData: EChartsExtensionInstaller = function (registers) {
+    registers.registerToolboxFeature('exportData', ExportDataFeature);
+};
+
+use(installExportData);
 
 type Option = ComposeOption<
     GridComponentOption
