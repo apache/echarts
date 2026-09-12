@@ -1751,7 +1751,7 @@ export type ComponentItemTooltipLabelFormatterParams = {
  * Tooltip option configured on each series
  */
 export type SeriesTooltipOption = CommonTooltipOption<CallbackDataParams> & {
-    trigger?: 'item' | 'axis' | boolean | 'none'
+    trigger?: 'item' | 'activeItem' | 'axis' | boolean | 'none'
 };
 
 
