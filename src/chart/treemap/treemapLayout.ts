@@ -181,7 +181,7 @@ export default {
         seriesModel.setLayoutInfo(layoutInfo);
 
         // FIXME: narrow down pruning boungding rect.
-        // Currently ec width/height is used becuases clip is not supported.
+        // Currently ec width/height is used because clip is not supported.
         prunning(
             treeRoot,
             // Transform to base element coordinate system.
