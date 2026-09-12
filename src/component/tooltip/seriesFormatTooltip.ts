@@ -28,6 +28,7 @@ import {
 } from './tooltipMarkup';
 import { retrieveRawValue } from '../../data/helper/dataProvider';
 import { isNameSpecified } from '../../util/model';
+import { isTimeScale } from '../../scale/helper';
 
 
 export function defaultSeriesFormatTooltip(opt: {
@@ -51,12 +52,14 @@ export function defaultSeriesFormatTooltip(opt: {
     // Complicated rule for pretty tooltip.
     let inlineValue;
     let inlineValueType: DimensionType | DimensionType[];
+    let inlineTimeZone: string | string[];
     let subBlocks: TooltipMarkupBlockFragment[];
     let sortParam: unknown;
     if (tooltipDimLen > 1 || (isValueArr && !tooltipDimLen)) {
         const formatArrResult = formatTooltipArrayValue(value, series, dataIndex, tooltipDims, markerColor);
         inlineValue = formatArrResult.inlineValues;
         inlineValueType = formatArrResult.inlineValueTypes;
+        inlineTimeZone = formatArrResult.inlineTimeZones;
         subBlocks = formatArrResult.blocks;
         // Only support tooltip sort by the first inline value. It's enough in most cases.
         sortParam = formatArrResult.inlineValues[0];
@@ -65,6 +68,7 @@ export function defaultSeriesFormatTooltip(opt: {
         const dimInfo = data.getDimensionInfo(tooltipDims[0]);
         sortParam = inlineValue = retrieveRawValue(data, dataIndex, tooltipDims[0]);
         inlineValueType = dimInfo.type;
+        inlineTimeZone = getDimensionTimeZone(series, dimInfo);
     }
     else {
         sortParam = inlineValue = isValueArr ? value[0] : value;
@@ -94,6 +98,7 @@ export function defaultSeriesFormatTooltip(opt: {
                 noName: !trim(inlineName),
                 value: inlineValue,
                 valueType: inlineValueType,
+                timeZone: inlineTimeZone,
                 rawDataIndex: data.getRawIndex(dataIndex),
             })
         ].concat(subBlocks || [] as any)
@@ -109,6 +114,7 @@ function formatTooltipArrayValue(
 ): {
     inlineValues: unknown[];
     inlineValueTypes: DimensionType[];
+    inlineTimeZones: string[];
     blocks: TooltipMarkupBlockFragment[];
 } {
     // check: category-no-encode-has-axis-data in dataset.html
@@ -121,6 +127,7 @@ function formatTooltipArrayValue(
 
     const inlineValues: unknown[] = [];
     const inlineValueTypes: DimensionType[] = [];
+    const inlineTimeZones: string[] = [];
     const blocks: TooltipMarkupBlockFragment[] = [];
 
     tooltipDims.length
@@ -142,14 +149,25 @@ function formatTooltipArrayValue(
                 markerColor: colorStr,
                 name: dimInfo.displayName,
                 value: val,
-                valueType: dimInfo.type
+                valueType: dimInfo.type,
+                timeZone: getDimensionTimeZone(series, dimInfo)
             }));
         }
         else {
             inlineValues.push(val);
             inlineValueTypes.push(dimInfo.type);
+            inlineTimeZones.push(getDimensionTimeZone(series, dimInfo));
         }
     }
 
-    return { inlineValues, inlineValueTypes, blocks };
+    return { inlineValues, inlineValueTypes, inlineTimeZones, blocks };
+}
+
+function getDimensionTimeZone(series: SeriesModel, dimInfo: {coordDim?: string}): string {
+    const axis = dimInfo.coordDim != null
+        ? series.coordinateSystem?.getAxis?.(dimInfo.coordDim)
+        : null;
+    return axis && isTimeScale(axis.scale)
+        ? axis.scale.getTimeZone()
+        : series.ecModel.getTimeZone();
 }

@@ -39,12 +39,13 @@ import {
     OptionAxisType,
     AXIS_TYPES,
     CategoryTickLabelSplitBuildingOption,
+    TimeAxisBaseOption
 } from './axisCommonTypes';
 import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
 import { Dictionary, DimensionName, NullUndefined, ScaleTick } from '../util/types';
 import { ScaleExtentFixMinMax } from './scaleRawExtentInfo';
-import { parseTimeAxisLabelFormatter } from '../util/time';
+import { parseTimeAxisLabelFormatter, validateTimeZone } from '../util/time';
 import { getScaleBreakHelper } from '../scale/break';
 import { error } from '../util/log';
 import {
@@ -87,6 +88,7 @@ export function createScaleByModel(
             {type?: string}
             & Pick<LogAxisBaseOption, 'logBase'>
             & Pick<AxisBaseOptionCommon, 'breaks'>
+            & Pick<TimeAxisBaseOption, 'timeZone'>
         >
         & Partial<Pick<
             AxisModelExtendedInCreator,
@@ -110,12 +112,16 @@ export function createScaleByModel(
                     : model.getCategories(),
                 extent: initExtentForUnion(),
             });
-        case 'time':
+        case 'time': {
+            const timeZone = model.get('timeZone', true);
             return new TimeScale({
                 locale: model.ecModel.getLocaleModel(),
-                useUTC: model.ecModel.get('useUTC'),
+                timeZone: timeZone != null
+                    ? validateTimeZone(timeZone)
+                    : model.ecModel.getTimeZone(),
                 breakOption,
             });
+        }
         case 'log':
             // See also #3749
             return new LogScale({

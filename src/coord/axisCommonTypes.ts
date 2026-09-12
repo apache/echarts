@@ -241,6 +241,11 @@ export interface LogAxisBaseOption extends NumericAxisBaseOptionCommon {
 }
 export interface TimeAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'time';
+    /**
+     * IANA time zone used to align and format ticks on this axis.
+     * Overrides the global `timeZone` option.
+     */
+    timeZone?: string;
     axisLabel?: AxisLabelOption<'time'>;
 }
 
