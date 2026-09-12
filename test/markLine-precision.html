@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
+            }
+        </style>
+
+        <div id="main0"></div>
+
+        <script>
+
+            require([
+                'echarts',
+            ], function (echarts /*, data */) {
+
+                var  option = {
+                    tooltip: {
+                        trigger: 'axis',
+                    },
+                    grid: {
+                        right: '20%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: [
+                            '26/08/20 12:20:15',
+                            '26/08/20 12:25:15',
+                            '26/08/20 12:30:15',
+                            '26/08/20 12:35:15',
+                            '26/08/20 12:40:15',
+                            '26/08/20 12:45:16',
+                            '26/08/20 12:50:15',
+                            '26/08/20 12:55:15',
+                            '26/08/20 13:00:15',
+                            '26/08/20 13:05:16',
+                            '26/08/20 13:10:15',
+                            '26/08/20 13:15:15',
+                            '26/08/20 13:20:15',
+                            '26/08/20 13:25:15',
+                            '26/08/20 13:30:15',
+                            '26/08/20 13:35:15',
+                            '26/08/20 13:40:15',
+                            '26/08/20 13:45:15',
+                            '26/08/20 13:50:15',
+                            '26/08/20 13:55:15',
+                            '26/08/20 14:00:16',
+                            '26/08/20 14:05:15',
+                            '26/08/20 14:06:11',
+                            '26/08/20 14:10:15',
+                            '26/08/20 14:10:15',
+                            '26/08/20 14:15:15',
+                            '26/08/20 14:20:15',
+                            '26/08/20 14:25:15'
+                        ]
+                    },
+                    yAxis: {
+                        type: 'value',
+                        scale: true,
+                        min: 2.015
+                    },
+                    series: {
+                        data: [
+                            2.024, 2.024, 2.025, 2.02, 2.026, 2.025, 2.019, 2.024, 2.023, 2.022,
+                            2.024, 2.018, 2.02, 2.022, 2.02, 2.027, 2.026, 2.027, 2.027, 2.025,
+                            2.027, 2.026, 2.027, 2.027, 2.029, 2.031, 2.025, 2.027
+                        ],
+                        type: 'line',
+                        markLine: {
+                            // precision: 3,
+                            data: [
+                                {
+                                    xAxis: 3,
+                                    label: {
+                                        formatter: 'xAxis: {c}'
+                                    }
+                                },
+                                {
+                                    xAxis: '26/08/20 13:35:15',
+                                    label: {
+                                        formatter: 'xAxis: {c}'
+                                    }
+                                },
+                                {
+                                    yAxis: 2.0156,
+                                    label: {
+                                        formatter: 'yAxis: {c}'
+                                    }
+                                },
+                                {
+                                    type: 'average',
+                                    label: {
+                                        formatter: 'average: {c}',
+                                        position: 'insideMiddleTop'
+                                    }
+                                },
+                                {
+                                    type: 'median',
+                                    label: {
+                                        formatter: 'median: {c}',
+                                        position: 'insideMiddleBottom'
+                                    }
+                                },
+                                {
+                                    type: 'min',
+                                    label: {
+                                        formatter: 'min: {c}',
+                                        position: 'insideEndTop'
+                                    }
+                                },
+                                {
+                                    type: 'max',
+                                    label: {
+                                        formatter: 'max: {c}',
+                                        position: 'insideEndBottom'
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Use value precision for marker line that targets axis value'
+                    ],
+                    option: option
+                });
+
+            }); // End of `require`
+
+
+        </script>
+
+
+    </body>
+</html>
+

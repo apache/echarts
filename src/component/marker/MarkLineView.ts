@@ -71,6 +71,8 @@ const markLineTransform = function (
 ) {
     const data = seriesModel.getData();
 
+    let precision: number;
+
     let itemArray: MarkLineMergedItemOption[];
     if (!isArray(item)) {
         // Special type markLine like 'min', 'max', 'average', 'median'
@@ -90,12 +92,18 @@ const markLineTransform = function (
             if (item.yAxis != null || item.xAxis != null) {
                 valueAxis = coordSys.getAxis(item.yAxis != null ? 'y' : 'x');
                 value = retrieve(item.yAxis, item.xAxis);
+                // retrieve mark line precision from value rather than default precision when it targets axis value
+                // to ensure it is at the expected position
+                if (isNumber(value)) {
+                    precision = numberUtil.getPrecision(value);
+                }
             }
             else {
                 const axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
                 valueAxis = axisInfo.valueAxis;
                 const valueDataDim = getStackedDimension(data, axisInfo.valueDataDim);
                 value = markerHelper.numCalculate(data, valueDataDim, mlType);
+                // PENDING: auto precision for special type (min/max...) and consider supporting precision for single marker item?
             }
             const valueIndex = valueAxis.dim === 'x' ? 0 : 1;
             const baseIndex = 1 - valueIndex;
@@ -112,9 +120,11 @@ const markLineTransform = function (
             mlFrom.coord[baseIndex] = -Infinity;
             mlTo.coord[baseIndex] = Infinity;
 
-            const precision = mlModel.get('precision');
+            if (precision == null) {
+                precision = mlModel.get('precision');
+            }
             if (precision >= 0 && isNumber(value)) {
-                value = +value.toFixed(Math.min(precision, 20));
+                value = numberUtil.round(value, precision);
             }
 
             mlFrom.coord[valueIndex] = mlTo.coord[valueIndex] = value;
