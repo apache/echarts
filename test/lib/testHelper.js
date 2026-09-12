@@ -1333,7 +1333,12 @@
                     var found = false;
                     for (var idx = 0; idx < selectCtx._optionList.length; idx++) {
                         if (!selectCtx._optionList[idx].input
-                            && selectCtx._optionList[idx].value === inputDefine.value
+                            && (
+                                selectCtx._optionList[idx].value === inputDefine.value
+                                || (
+                                    eqNaN(selectCtx._optionList[idx].value) && eqNaN(inputDefine.value)
+                                )
+                            )
                         ) {
                             found = true;
                             initOptionIdx = idx;
@@ -2499,6 +2504,10 @@
             ? 'object'
             : null;
     };
+
+    function eqNaN(value) {
+        return value !== value;
+    }
 
     function containsDOMElement(parent, child, includeSelf) {
         if (!includeSelf && child) {

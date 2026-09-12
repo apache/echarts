@@ -243,15 +243,22 @@ export class ScaleRawExtentInfo {
             fixMM[0] = true;
         }
         else {
-            noZoomEffMM[0] = parseAxisModelMinMax(
+            const parsedMin = parseAxisModelMinMax(
                 scale,
                 isFunction(modelMinRaw)
                     // This callback always provides users the full data extent (before data is filtered).
                     ? modelMinRaw({min: dataMM[0], max: dataMM[1]})
                     : modelMinRaw
             );
-            // If `xxxAxis.min: null/undefined`, min should not be fixed.
-            fixMM[0] = noZoomEffMM[0] != null;
+            if (isValidNumberForExtent(parsedMin)) {
+                // Follow the treatment of seriesData and axis.dataMin - illegal values are ignored.
+                // MEMO: The previous behavior (before v6.1.0) is partially reasonable: `axis.min: NaN`
+                // coincidentally results in correct series rendering but abnormal axisLabel rendering,
+                // and cause `fixMM[0] = true`. The current behavior is both reasonable and the closest
+                // to previous behavior.
+                fixMM[0] = true;
+                noZoomEffMM[0] = parsedMin;
+            }
         }
 
         const modelMaxRaw = model.get('max', true);
@@ -260,15 +267,18 @@ export class ScaleRawExtentInfo {
             fixMM[1] = true;
         }
         else {
-            noZoomEffMM[1] = parseAxisModelMinMax(
+            const parsedMax = parseAxisModelMinMax(
                 scale,
                 isFunction(modelMaxRaw)
                     // This callback always provides users the full data extent (before data is filtered).
                     ? modelMaxRaw({min: dataMM[0], max: dataMM[1]})
                     : modelMaxRaw
             );
-            // If `xxxAxis.max: null/undefined`, max should not be fixed.
-            fixMM[1] = noZoomEffMM[1] != null;
+            if (isValidNumberForExtent(parsedMax)) {
+                // Follow the treatment of seriesData and axis.dataMin - illegal values are ignored.
+                fixMM[1] = true;
+                noZoomEffMM[1] = parsedMax;
+            }
         }
 
         const boundaryGap = parseBoundaryGapOption(scale, model);
