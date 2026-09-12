@@ -1973,13 +1973,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 const seriesDirtyMap = createHashMap();
                 ecModel.eachSeries(function (seriesModel) {
                     const chartView = ecIns._chartsMap[seriesModel.__viewId];
-                    const pipelineContext = seriesModel.pipelineContext;
-                    if (chartView.updateTransform
-                        // Use the progressive pass if enabled, where each frame renders only a small amount.
-                        // And `ISymbolDraw['updateLayout']` and `ILineDraw['updateLayout']` do not support
-                        // progressive case.
-                        && !pipelineContext.progressiveRender
-                    ) {
+                    if (chartView.updateTransform) {
                         const result = chartView.updateTransform(seriesModel, ecModel, api, payload);
                         result && result.update && seriesDirtyMap.set(seriesModel.uid, 1);
                     }

@@ -29,6 +29,7 @@ import EffectScatterSeriesModel from './EffectScatterSeries';
 import { StageHandlerProgressExecutor } from '../../util/types';
 import { createCoordSysClipAreaSimply } from '../helper/createClipPathFromCoordSys';
 import { SymbolDrawUpdateOpt } from '../helper/baseDraw';
+import { isInProgressiveRendering } from '../../util/model';
 
 class EffectScatterView extends ChartView {
     static readonly type = 'effectScatter';
@@ -48,6 +49,10 @@ class EffectScatterView extends ChartView {
     }
 
     updateTransform(seriesModel: EffectScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
+        if (isInProgressiveRendering(seriesModel)) {
+            return {update: true} as const;
+        }
+
         const data = seriesModel.getData();
 
         this.group.dirty();
