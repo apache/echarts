@@ -100,7 +100,7 @@ under the License.
                         data: [
                             2.024, 2.024, 2.025, 2.02, 2.026, 2.025, 2.019, 2.024, 2.023, 2.022,
                             2.024, 2.018, 2.02, 2.022, 2.02, 2.027, 2.026, 2.027, 2.027, 2.025,
-                            2.027, 2.026, 2.027, 2.027, 2.029, 2.031, 2.025, 2.027
+                            2.027, 2.026, 2.027, 2.027, 2.029, 2.03194, 2.025, 2.027
                         ],
                         type: 'line',
                         markLine: {
@@ -159,7 +159,7 @@ under the License.
 
                 var chart = testHelper.create(echarts, 'main0', {
                     title: [
-                        'Use value precision for marker line that targets axis value'
+                        'Use raw value without precision rounding when the mark line **targets a specific axis value** or is **in `min/max` type**'
                     ],
                     option: option
                 });
