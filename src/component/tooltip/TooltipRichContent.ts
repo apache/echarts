@@ -213,6 +213,9 @@ class TooltipRichContent {
     }
 
     dispose() {
+        // Keep it consistent with `TooltipHTMLContent#dispose`, so that a pending
+        // `hideDelay` timer does not outlive the disposed chart.
+        clearTimeout(this._hideTimeout);
         this._zr.remove(this.el);
     }
 }
