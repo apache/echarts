@@ -457,7 +457,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         left: 'center',
         // right: 'center',
         // top: 0,
-        bottom: tokens.size.m,
+        bottom: 0,
 
         align: 'auto',
 
