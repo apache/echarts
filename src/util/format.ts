@@ -144,7 +144,7 @@ export function formatTpl(
             const val = paramsList[seriesIdx][$vars[k]];
             tpl = tpl.replace(
                 wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
-                encode ? encodeHTML(val) : val
+                () => (encode ? encodeHTML(val) : val)
             );
         }
     }
@@ -159,7 +159,7 @@ export function formatTplSimple(tpl: string, param: Dictionary<any>, encode?: bo
     zrUtil.each(param, function (value, key) {
         tpl = tpl.replace(
             '{' + key + '}',
-            encode ? encodeHTML(value) : value
+            () => (encode ? encodeHTML(value) : value)
         );
     });
     return tpl;
