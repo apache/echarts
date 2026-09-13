@@ -40,6 +40,9 @@ under the License.
         <div id="main0"></div>
 
 
+        <div id="main1"></div>
+
+
         <script>
         require(['echarts'], function (echarts) {
             var option;
@@ -106,6 +109,43 @@ under the License.
             });
         });
         </script>
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                radar: {
+                    radius: 100,
+                    axisName: {
+                        width: 50,
+                        overflow: 'break',
+                        color: '#333'
+                    },
+                    indicator: [
+                        { name: 'Very long radar indicator label', max: 100 },
+                        { name: 'Second very long radar indicator label', max: 100 },
+                        { name: 'Third very long radar indicator label', max: 100 }
+                    ]
+                },
+                series: [{
+                    type: 'radar',
+                    data: [{
+                        value: [50, 60, 70]
+                    }]
+                }]
+            };
+
+            testHelper.create(echarts, 'main1', {
+                title: [
+                    'Radar axisName width and overflow',
+                    'Long radar indicator names should wrap within 50px'
+                ],
+                option: option
+            });
+        });
+        </script>
+
 
 
     </body>

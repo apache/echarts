@@ -908,6 +908,8 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
         const maxWidth = retrieve(
             cfg.raw.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
         );
+        const textOverflow = retrieve2(textStyleModel.get('overflow'), 'truncate');
+        const textWidth = retrieve2(textStyleModel.get('width'), maxWidth) as number;
 
         const nameMarginLevel = extraParams.nameMarginLevel || 0;
 
@@ -919,8 +921,8 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
             style: createTextStyle(textStyleModel, {
                 text: name,
                 font: textFont,
-                overflow: 'truncate',
-                width: maxWidth,
+                overflow: textOverflow,
+                width: textWidth,
                 ellipsis,
                 fill: textStyleModel.getTextColor()
                     || axisModel.get(['axisLine', 'lineStyle', 'color']) as ColorString,
