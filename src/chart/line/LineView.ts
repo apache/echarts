@@ -856,7 +856,8 @@ class LineView extends ChartView {
         polyline.setShape({
             smooth,
             smoothMonotone,
-            connectNulls
+            connectNulls,
+            step: !!step
         });
 
         if (polygon) {
@@ -881,7 +882,8 @@ class LineView extends ChartView {
                 smooth,
                 stackedOnSmooth,
                 smoothMonotone,
-                connectNulls
+                connectNulls,
+                step: !!step
             });
 
             setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');
