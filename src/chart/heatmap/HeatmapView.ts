@@ -322,7 +322,9 @@ class HeatmapView extends ChartView {
                     labelFetcher: seriesModel,
                     labelDataIndex: idx,
                     defaultOpacity: style.opacity,
-                    defaultText: defaultText
+                    defaultText: defaultText,
+                    autoOverflowArea: true,
+                    layoutRect: zrUtil.clone(rect.shape)
                 }
             );
 
