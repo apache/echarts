@@ -1,0 +1,172 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <meta
+            name="viewport"
+            content="user-scalable=no,width=device-width,height=device-height"
+        />
+    </head>
+    <body>
+        <style>
+            #main1,
+            #main2,
+            #main3 {
+                width: 600px;
+                height: 300px;
+                margin: 12px auto;
+            }
+        </style>
+
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+
+        <script>
+            require(["echarts"], function (echarts) {
+                const absT0 = Date.UTC(2025, 0, 1, 0, 0, 0); // 2025-01-01 00:00 UTC
+                const absT1 = absT0 + 60 * 1000; // +1 min
+                const absT2 = absT0 + 120 * 1000; // +2 min
+                const absT3 = absT0 + 180 * 1000; // +3 min
+                const axisMin = absT0 - 60 * 1000; // extend slightly earlier
+                const axisMax = absT0 + 4 * 60 * 1000; // extend slightly later
+
+                // ---------- Chart 1 (data at each timestamp) ----------
+                const chart1 = echarts.init(document.getElementById("main1"));
+                const option1 = {
+                    title: { text: "Chart 1 — with data" },
+                    tooltip: {
+                        showContent: false,
+                        axisPointer: { type: "line" },
+                    },
+                    axisPointer: {
+                        show: true,
+                        alwaysShowContent: true,
+                    },
+                    xAxis: {
+                        type: "time",
+                        min: axisMin,
+                        max: axisMax,
+                        axisPointer: { snap: false },
+                    },
+                    yAxis: {
+                        type: "value",
+                        axisPointer: { show: false },
+                    },
+                    series: [
+                        {
+                            name: "Series A",
+                            type: "line",
+                            showSymbol: true,
+                            data: [
+                                [absT0, 120],
+                                [absT1, 140],
+                                [absT2, 160],
+                                [absT3, 90],
+                            ],
+                        },
+                    ],
+                };
+                chart1.setOption(option1);
+
+                //---------------- Chart 2 (sparse data) ----------------------
+                const chart2 = echarts.init(document.getElementById("main2"));
+                chart2.setOption({
+                    title: {
+                        text: "Chart 2 – series starts at later timestamp",
+                    },
+                    tooltip: {
+                        showContent: false,
+                        axisPointer: { type: "line" },
+                    },
+                    axisPointer: {
+                        show: true,
+                        alwaysShowContent: true,
+                    },
+                    xAxis: {
+                        type: "time",
+                        min: axisMin,
+                        max: axisMax,
+                        axisPointer: { snap: false },
+                    },
+                    yAxis: {
+                        type: "value",
+                        axisPointer: { show: false },
+                    },
+                    series: [
+                        {
+                            name: "Series B",
+                            type: "line",
+                            showSymbol: true,
+                            data: [
+                                [absT2, 80],
+                                [absT3, 100],
+                            ],
+                        },
+                    ],
+                });
+
+                // ---------- Chart 3 (data at each timestamp) ----------
+                const chart3 = echarts.init(document.getElementById("main3"));
+                const option3 = {
+                    title: { text: "Chart 3 — with data" },
+                    tooltip: {
+                        showContent: false,
+                        axisPointer: { type: "line" },
+                    },
+                    axisPointer: {
+                        show: true,
+                        alwaysShowContent: true,
+                    },
+                    xAxis: {
+                        type: "time",
+                        min: axisMin,
+                        max: axisMax,
+                        axisPointer: { snap: false },
+                    },
+                    yAxis: {
+                        type: "value",
+                        axisPointer: { show: false },
+                    },
+                    series: [
+                        {
+                            name: "Series A",
+                            type: "line",
+                            showSymbol: true,
+                            data: [
+                                [absT0, 20],
+                                [absT1, 40],
+                                [absT2, 60],
+                                [absT3, 60],
+                            ],
+                        },
+                    ],
+                };
+                chart3.setOption(option3);
+
+                // Connect the charts to share axisPointer
+                echarts.connect([chart1, chart2, chart3]);
+            });
+        </script>
+    </body>
+</html>
