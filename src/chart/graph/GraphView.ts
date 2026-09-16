@@ -138,7 +138,18 @@ class GraphView extends ChartView implements RoamHostView {
                 api,
                 this._controller,
                 function (e, x, y) {
-                    return seriesModel.coordinateSystem.containPoint([x, y]);
+                    // The roam trigger area should be the view layer (the layout
+                    // viewport), not the roamed content: `containPoint` tests
+                    // against `dataRect` transformed by the roam matrix, which
+                    // moves along with pan/zoom and can drift out of the viewport,
+                    // leaving dead areas where roam can no longer be started.
+                    // With force layout `dataRect` even falls back to `viewRect`,
+                    // i.e. a static rect glued to the content layer.
+                    const coordSys = seriesModel.coordinateSystem;
+                    const viewRect = coordSys.getViewRect && coordSys.getViewRect();
+                    return viewRect
+                        ? viewRect.contain(x, y)
+                        : coordSys.containPoint([x, y]);
                 },
                 null,
             );
