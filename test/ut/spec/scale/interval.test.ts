@@ -115,6 +115,57 @@ describe('scale_interval', function () {
     });
 
 
+    describe('categoryAxisTickInterval', function () {
+        it('should respect custom axisTick interval callback exactly', function () {
+            const categoryData = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
+            chart.setOption({
+                xAxis: {
+                    type: 'category',
+                    data: categoryData,
+                    axisTick: {
+                        interval: function (categoryIndex: number, value: string) {
+                            return value === 'Mon';
+                        }
+                    }
+                },
+                yAxis: {},
+                series: [{
+                    type: 'bar',
+                    data: [1, 2, 3, 4, 5, 6, 7]
+                }]
+            });
+
+            const xAxis = getECModel(chart).getComponent('xAxis', 0) as CartesianAxisModel;
+            expect(xAxis.axis.getTicksCoords().map(tick => tick.tickValue)).toEqual([2]);
+        });
+
+        it('should not append an end tick for custom axisTick interval callback', function () {
+            const categoryData = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+
+            chart.setOption({
+                xAxis: {
+                    type: 'category',
+                    data: categoryData,
+                    axisTick: {
+                        interval: function (categoryIndex: number) {
+                            return categoryIndex === 2 || categoryIndex === 5;
+                        }
+                    }
+                },
+                yAxis: {},
+                series: [{
+                    type: 'bar',
+                    data: [1, 2, 3, 4, 5, 6, 7]
+                }]
+            });
+
+            const xAxis = getECModel(chart).getComponent('xAxis', 0) as CartesianAxisModel;
+            expect(xAxis.axis.getTicksCoords().map(tick => tick.tickValue)).toEqual([2, 5]);
+        });
+    });
+
+
     describe('ticks', function () {
 
         function randomNumber(quantity: number): number {
