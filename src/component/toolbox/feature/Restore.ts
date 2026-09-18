@@ -34,6 +34,9 @@ class RestoreOption extends ToolboxFeature<ToolboxRestoreFeatureOption> {
         history.clear(ecModel);
 
         api.dispatchAction({
+            type: 'takeGlobalCursor'
+        });
+        api.dispatchAction({
             type: 'restore',
             from: this.uid
         });
