@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Heatmap Encode Value Bug Fix Test</title>
+    <script src="../dist/echarts.js"></script>
+</head>
+<body>
+    <div id="main" style="width: 800px;height:600px;"></div>
+    <script type="text/javascript">
+        // Dataset with multiple value columns
+        var dataset = {
+            source: [
+                ['x', 'y', 'value1', 'value2', 'value3'],
+                ['A', 'X', 0.1, 0.5, 0.9],
+                ['A', 'Y', 0.2, 0.6, 0.8],
+                ['B', 'X', 0.3, 0.7, 0.7],
+                ['B', 'Y', 0.4, 0.8, 0.6]
+            ]
+        };
+
+        var xData = [
+            { value: 'Group1', children: [{ value: 'A' }, { value: 'B' }] }
+        ];
+
+        var yData = [
+            { value: 'Group1', children: [{ value: 'X' }, { value: 'Y' }] }
+        ];
+
+        var myChart = echarts.init(document.getElementById('main'));
+        
+        var option = {
+            dataset: dataset,
+            matrix: {
+                top: 80,
+                bottom: 80,
+                left: 120,
+                right: 30,
+                x: {
+                    data: xData,
+                    levels: [{ levelSize: 20 }, { levelSize: 50 }]
+                },
+                y: {
+                    data: yData,
+                    levels: [{ levelSize: 20 }, { levelSize: 50 }]
+                }
+            },
+            series: [{
+                type: 'heatmap',
+                coordinateSystem: 'matrix',
+                encode: {
+                    x: 'x',
+                    y: 'y',
+                    value: 'value1'
+                },
+                datasetIndex: 0
+            }],
+            visualMap: {
+                type: 'continuous',
+                min: 0,
+                max: 1,
+                calculable: true,
+                orient: 'vertical',
+                left: 10,
+                top: 80,
+                inRange: {
+                    color: ['#ffffff', '#006400']
+                }
+            },
+            tooltip: {
+                show: true,
+                formatter: function (params) {
+                    var d = params.data;
+                    return 'x: ' + d[0] + '<br>y: ' + d[1] + '<br>' +
+                           'value1: ' + d[2] + '<br>' +
+                           'value2: ' + d[3] + '<br>' +
+                           'value3: ' + d[4];
+                }
+            }
+        };
+
+        myChart.setOption(option);
+    </script>
+</body>
+</html>
