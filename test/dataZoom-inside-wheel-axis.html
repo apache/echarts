@@ -1,0 +1,423 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="./lib/simpleRequire.js"></script>
+        <script src="./lib/config.js"></script>
+        <script src="./lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <style>
+            h1 {
+                line-height: 48px;
+                height: 48px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 13px;
+                margin: 24px 0 0;
+            }
+            .note {
+                padding: 8px 16px;
+                background: #fffae6;
+                border-left: 4px solid #f5c518;
+                font-size: 13px;
+                line-height: 1.6;
+            }
+            .panel-row {
+                display: flex;
+                align-items: flex-start;
+                gap: 20px;
+                max-width: 960px;
+                margin: 12px auto 0;
+            }
+            .panel-row .chart {
+                flex: 0 0 520px;
+                width: 520px;
+                height: 480px;
+                margin: 0;
+            }
+            pre.config {
+                flex: 1;
+                margin: 0;
+                padding: 12px 16px;
+                background: #f6f8fa;
+                border: 1px solid #e1e4e8;
+                border-radius: 4px;
+                font-size: 12px;
+                line-height: 1.5;
+                font-family: SFMono-Regular, Menlo, Consolas, monospace;
+                white-space: pre;
+                overflow-x: auto;
+                color: #24292e;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="note">
+            Manual check for independent x/y wheel handling on
+            <code>dataZoom.inside</code> via the
+            <code>moveOnMouseWheelAxis</code> and
+            <code>zoomOnMouseWheelAxis</code> options. Pan and zoom behavior
+            differs per panel — see each section heading and the config shown
+            to the right of each chart. A physical tilt wheel (or
+            <code>shift + vertical wheel</code>, which browsers convert to a
+            horizontal scroll) is useful for exercising the
+            <code>'horizontal'</code> cases.
+        </div>
+        <div id="panels-root"></div>
+
+        <script>
+            // ---- Chart / option helpers ---------------------------------
+
+            // Fixed axis ranges are used on every panel so panning one axis
+            // does not cause the other to auto-rescale between events,
+            // keeping the visual effect of wheel behavior clearer during
+            // manual verification.
+            var SAMPLE_POINTS = (function () {
+                var points = [];
+                for (var i = 0; i < 200; i++) {
+                    points.push([i, Math.sin(i / 8) * 50 + 50 + Math.random() * 10]);
+                }
+                return points;
+            })();
+
+            function buildOption(dataZoom) {
+                return {
+                    tooltip: { trigger: 'axis' },
+                    grid: { left: 50, right: 30, top: 20, bottom: 50 },
+                    xAxis: { type: 'value', min: 0, max: 200 },
+                    yAxis: { type: 'value', min: 0, max: 120 },
+                    series: [{
+                        type: 'line',
+                        data: SAMPLE_POINTS,
+                        showSymbol: false,
+                        areaStyle: {}
+                    }],
+                    dataZoom: dataZoom
+                };
+            }
+
+            // Polar scatter data for panels that exercise non-cartesian
+            // coordinate systems. Generated once so inputs stay stable
+            // across re-renders.
+            var POLAR_POINTS = (function () {
+                var points = [];
+                for (var i = 0; i < 150; i++) {
+                    points.push([Math.random() * 10, Math.random() * 360]);
+                }
+                return points;
+            })();
+
+            function polarBuildOption(dataZoom) {
+                return {
+                    tooltip: { trigger: 'item' },
+                    polar: { radius: '70%' },
+                    angleAxis: { type: 'value', min: 0, max: 360 },
+                    radiusAxis: { type: 'value', min: 0, max: 10 },
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'polar',
+                        data: POLAR_POINTS,
+                        symbolSize: 6
+                    }],
+                    dataZoom: dataZoom
+                };
+            }
+
+            // Append visible slider dataZooms for any axes that the inside
+            // configs target, so the current range is always visible during
+            // manual verification. Inside configs without an explicit
+            // axis index are treated as x-axis (matching dataZoom defaults).
+            // singleAxis targets are skipped; those panels rely on the plot
+            // itself for visual feedback.
+            function withSliders(insideConfigs) {
+                var needX = false;
+                var needY = false;
+                var needRadius = false;
+                var needAngle = false;
+                insideConfigs.forEach(function (c) {
+                    if (c.radiusAxisIndex != null) { needRadius = true; }
+                    else if (c.angleAxisIndex != null) { needAngle = true; }
+                    else if (c.singleAxisIndex != null) { return; }
+                    else if (c.yAxisIndex != null) { needY = true; }
+                    else { needX = true; }
+                });
+                var sliders = [];
+                if (needX) {
+                    sliders.push({ type: 'slider', xAxisIndex: 0, height: 18, bottom: 22 });
+                }
+                if (needY) {
+                    sliders.push({ type: 'slider', yAxisIndex: 0, width: 18, right: 8 });
+                }
+                if (needRadius) {
+                    sliders.push({
+                        type: 'slider', radiusAxisIndex: 0,
+                        orient: 'horizontal', height: 18, bottom: 22
+                    });
+                }
+                if (needAngle) {
+                    sliders.push({
+                        type: 'slider', angleAxisIndex: 0,
+                        orient: 'vertical', width: 18, right: 8
+                    });
+                }
+                return insideConfigs.concat(sliders);
+            }
+
+            // ---- Panel rendering ---------------------------------------
+
+            // Pretty-prints the inside dataZoom configs for display alongside
+            // the chart. Each property gets its own line so readers can
+            // quickly scan which options are set per panel.
+            function formatConfigs(configs) {
+                return configs.map(function (c) {
+                    var pairs = Object.keys(c).map(function (k) {
+                        return '  ' + k + ': ' + JSON.stringify(c[k]);
+                    });
+                    return '{\n' + pairs.join(',\n') + '\n}';
+                }).join(',\n');
+            }
+
+            function createPanelDom(panel) {
+                var section = document.createElement('section');
+                var heading = document.createElement('h1');
+                heading.textContent = panel.title;
+                section.appendChild(heading);
+
+                var row = document.createElement('div');
+                row.className = 'panel-row';
+
+                var chart = document.createElement('div');
+                chart.className = 'chart';
+                chart.id = panel.id;
+                row.appendChild(chart);
+
+                var pre = document.createElement('pre');
+                pre.className = 'config';
+                pre.textContent = formatConfigs(panel.configs);
+                row.appendChild(pre);
+
+                section.appendChild(row);
+                return section;
+            }
+
+            function renderPanel(echarts, panel) {
+                var root = document.getElementById('panels-root');
+                root.appendChild(createPanelDom(panel));
+                // Panels may override `buildOption` to exercise coordinate
+                // systems other than the default cartesian grid.
+                var build = panel.buildOption || buildOption;
+                testHelper.createChart(
+                    echarts, panel.id, build(withSliders(panel.configs))
+                );
+            }
+
+            // ---- Panel definitions -------------------------------------
+
+            var PANELS = [
+                {
+                    // Default config — wheel zooms only, no new options. Used
+                    // as a baseline to confirm the zoom path is untouched.
+                    id: 'legacy',
+                    title: 'A. legacy behavior (no new options) — baseline',
+                    configs: [
+                        { type: 'inside', start: 30, end: 60 }
+                    ]
+                },
+                {
+                    // Two inside dataZooms without the new axis option: a
+                    // vertical wheel pans BOTH x and y via the legacy
+                    // single-`scrollDelta` fallback.
+                    id: 'dual-auto',
+                    title: 'B. dual-axis, moveOnMouseWheelAxis unset'
+                        + ' — vertical wheel pans BOTH (backward-compat)',
+                    configs: [
+                        { type: 'inside', xAxisIndex: 0, start: 30, end: 60,
+                          zoomOnMouseWheel: false, moveOnMouseWheel: true },
+                        { type: 'inside', yAxisIndex: 0, start: 30, end: 70,
+                          zoomOnMouseWheel: false, moveOnMouseWheel: true }
+                    ]
+                },
+                {
+                    // Explicit pan split — x-axis uses the horizontal wheel
+                    // component, y-axis uses the vertical one. A diagonal
+                    // trackpad swipe drives each axis by its own component.
+                    id: 'dual-split',
+                    title: "C. dual-axis, x-dz: 'horizontal', y-dz: 'vertical'"
+                        + ' — clean axis separation',
+                    configs: [
+                        { type: 'inside', xAxisIndex: 0, start: 30, end: 60,
+                          zoomOnMouseWheel: false, moveOnMouseWheel: true,
+                          moveOnMouseWheelAxis: 'horizontal' },
+                        { type: 'inside', yAxisIndex: 0, start: 30, end: 70,
+                          zoomOnMouseWheel: false, moveOnMouseWheel: true,
+                          moveOnMouseWheelAxis: 'vertical' }
+                    ]
+                },
+                {
+                    // x-axis dataZoom locked to the vertical wheel only.
+                    // Horizontal wheel input is ignored. Emulates the
+                    // traditional "vertical wheel scrolls the chart" feel
+                    // without relying on the default axis fallback.
+                    id: 'x-locked-y',
+                    title: "D. x-axis only, moveOnMouseWheelAxis: 'vertical'"
+                        + ' — vertical wheel pans, horizontal ignored',
+                    configs: [
+                        { type: 'inside', xAxisIndex: 0, start: 30, end: 60,
+                          zoomOnMouseWheel: false, moveOnMouseWheel: true,
+                          moveOnMouseWheelAxis: 'vertical' }
+                    ]
+                },
+                {
+                    // x-axis dataZoom locked to the horizontal wheel only.
+                    // Natural fit for a tilt-wheel mouse or for reacting to
+                    // shift+wheel (which browsers convert to a horizontal
+                    // scroll). Plain vertical wheels are ignored.
+                    id: 'x-locked-x',
+                    title: "E. x-axis only, moveOnMouseWheelAxis: 'horizontal'"
+                        + ' — tilt wheel / shift+wheel pans, vertical ignored',
+                    configs: [
+                        { type: 'inside', xAxisIndex: 0, start: 30, end: 60,
+                          zoomOnMouseWheel: false, moveOnMouseWheel: true,
+                          moveOnMouseWheelAxis: 'horizontal' }
+                    ]
+                },
+                {
+                    // y-axis dataZoom driven by the vertical wheel only.
+                    // A very common configuration: pan the y-axis with the
+                    // mouse wheel, ignore any stray horizontal scroll.
+                    id: 'y-locked-y',
+                    title: "F. y-axis only, moveOnMouseWheelAxis: 'vertical'"
+                        + ' — typical vertical-only pan of y-axis',
+                    configs: [
+                        { type: 'inside', yAxisIndex: 0, start: 30, end: 70,
+                          zoomOnMouseWheel: false, moveOnMouseWheel: true,
+                          moveOnMouseWheelAxis: 'vertical' }
+                    ]
+                },
+                {
+                    // Zoom is enabled and still responds to any wheel
+                    // direction (pan axis lock has no effect on zoom by
+                    // default). Pan is horizontal-only, so vertical wheel
+                    // zooms without panning, horizontal wheel both zooms and
+                    // pans the x-axis.
+                    id: 'zoom-plus-locked-pan',
+                    title: "G. zoom + pan both enabled, moveOnMouseWheelAxis: 'horizontal'"
+                        + ' — wheelAxis affects pan only',
+                    configs: [
+                        { type: 'inside', xAxisIndex: 0, start: 30, end: 60,
+                          zoomOnMouseWheel: true, moveOnMouseWheel: true,
+                          moveOnMouseWheelAxis: 'horizontal' }
+                    ]
+                },
+                {
+                    // Dual-axis 2D chart where each axis zooms only from the
+                    // matching wheel direction. Horizontal wheel (tilt or
+                    // shift+wheel) zooms the x-axis; vertical wheel zooms
+                    // the y-axis. Each dataZoom ignores the other wheel axis.
+                    id: 'dual-zoom-split',
+                    title: 'H. dual-axis zoom with zoomOnMouseWheelAxis'
+                        + ' — horizontal wheel zooms x, vertical wheel zooms y',
+                    configs: [
+                        { type: 'inside', xAxisIndex: 0, start: 20, end: 80,
+                          zoomOnMouseWheel: true,
+                          zoomOnMouseWheelAxis: 'horizontal' },
+                        { type: 'inside', yAxisIndex: 0, start: 20, end: 80,
+                          zoomOnMouseWheel: true,
+                          zoomOnMouseWheelAxis: 'vertical' }
+                    ]
+                },
+                {
+                    // Exercises the `'shift'` modifier together with a
+                    // horizontal axis lock. The two input surfaces behave
+                    // slightly differently:
+                    //   - Mouse wheel: a plain vertical wheel is ignored, and
+                    //     shift+wheel goes through the browser's Y-to-X
+                    //     conversion, so the delta arrives on `deltaX` and
+                    //     passes the `'horizontal'` lock.
+                    //   - Trackpad: browsers typically do NOT apply the shift
+                    //     Y-to-X conversion for trackpad scrolls, so
+                    //     shift+vertical-swipe produces `deltaY` and is
+                    //     rejected; only shift+horizontal-swipe (which
+                    //     already carries `deltaX` natively) pans.
+                    // In both cases the net effect is "shift + horizontal
+                    // intent pans the x-axis," which is the usual user
+                    // expectation for shift-modified horizontal scrolling.
+                    id: 'shift-horizontal-pan',
+                    title: "I. shift + wheel pans x-axis, moveOnMouseWheelAxis: 'horizontal'"
+                        + ' — works with both mouse (via browser Y→X conversion)'
+                        + ' and trackpad (via native horizontal swipe)',
+                    configs: [
+                        { type: 'inside', xAxisIndex: 0, start: 30, end: 60,
+                          zoomOnMouseWheel: false,
+                          moveOnMouseWheel: 'shift',
+                          moveOnMouseWheelAxis: 'horizontal' }
+                    ]
+                },
+                {
+                    // Verifies that inside-dataZoom pan still works on polar
+                    // coordinates. The pan magnitude must match the scalar
+                    // `scrollDelta`, not the polar-transformed
+                    // `directionInfo.pixel` — regression check for a bug
+                    // where diagonal / shift pans produced wildly wrong
+                    // magnitudes on polar.
+                    id: 'polar-radius-pan',
+                    title: 'J. polar + radiusAxis inside pan'
+                        + ' — wheel pan on a non-cartesian coordinate system',
+                    configs: [
+                        { type: 'inside', radiusAxisIndex: 0, start: 20, end: 60,
+                          zoomOnMouseWheel: false, moveOnMouseWheel: true }
+                    ],
+                    buildOption: polarBuildOption
+                },
+                {
+                    // Exercises `moveOnMouseWheelAxis` on polar. Radius pan
+                    // is locked to vertical wheel input; angle pan is locked
+                    // to horizontal wheel input. A tilt wheel (or shift +
+                    // wheel) therefore rotates the chart; a plain vertical
+                    // wheel pans radius. Validates that the axis-lock option
+                    // applies uniformly across coordinate systems.
+                    id: 'polar-dual-split',
+                    title: 'K. polar + axis-locked pan'
+                        + " — radius: 'vertical', angle: 'horizontal'",
+                    configs: [
+                        { type: 'inside', radiusAxisIndex: 0, start: 20, end: 60,
+                          zoomOnMouseWheel: false, moveOnMouseWheel: true,
+                          moveOnMouseWheelAxis: 'vertical' },
+                        { type: 'inside', angleAxisIndex: 0, start: 20, end: 80,
+                          zoomOnMouseWheel: false, moveOnMouseWheel: true,
+                          moveOnMouseWheelAxis: 'horizontal' }
+                    ],
+                    buildOption: polarBuildOption
+                }
+            ];
+
+            require(['echarts'], function (echarts) {
+                PANELS.forEach(function (panel) {
+                    renderPanel(echarts, panel);
+                });
+            });
+        </script>
+    </body>
+</html>
