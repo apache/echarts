@@ -72,8 +72,16 @@ export function push(ecModel: GlobalModel, newSnapshot: DataZoomStoreSnapshot) {
 
 export function pop(ecModel: GlobalModel) {
     const storedSnapshots = getStoreSnapshots(ecModel);
+
+    // When only the origin snapshot remains, there is nothing to undo.
+    // Return an empty snapshot so callers do not dispatch a redundant
+    // dataZoom action (see #21660).
+    if (storedSnapshots.length <= 1) {
+        return {};
+    }
+
     const head = storedSnapshots[storedSnapshots.length - 1];
-    storedSnapshots.length > 1 && storedSnapshots.pop();
+    storedSnapshots.pop();
 
     // Find top for all dataZoom.
     const snapshot: DataZoomStoreSnapshot = {};
