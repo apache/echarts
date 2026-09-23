@@ -1783,6 +1783,33 @@ export interface CommonAxisPointerOption {
     triggerEmphasis?: boolean
 
     /**
+     * By default the axisPointer is only displayed when the triggered point maps to
+     * an actual value (i.e. there is data at that location). When set to `true`, the
+     * axisPointer is still displayed even if there is no data at the location, as long
+     * as an axis value is available (e.g. the value linked from a connected chart).
+     *
+     * This is mainly useful for `echarts.connect`-ed charts that have different data:
+     * hovering over one chart at a position where another chart has no data will still
+     * show the axisPointer on the other chart at the linked value.
+     *
+     * Configured per axis (e.g. `xAxis.axisPointer.triggerOnNoData`). Default `false`.
+     */
+    triggerOnNoData?: boolean
+
+    /**
+     * Used by the default behavior of `echarts.connect`. When an action is replayed on
+     * a connected chart, the original pixel point is meaningless on that chart, so by
+     * default a sample point is looked up from the chart's own series (using the sample
+     * `seriesIndex`/`dataIndex`) to position the axisPointer/tooltip.
+     *
+     * Set to `false` to skip this lookup, so the axisPointer is positioned solely by the
+     * linked axis value (see {@link triggerOnNoData}) rather than snapped to a sample data
+     * point. This is a chart-wide option; configure it on the top-level `axisPointer`
+     * component. Default `true` (keeps the legacy behavior).
+     */
+    findPointOnConnectedCharts?: boolean
+
+    /**
      * current value. When using axisPointer.handle, value can be set to define the initial position of axisPointer.
      */
     value?: ScaleDataValue
