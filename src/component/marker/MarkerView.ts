@@ -115,7 +115,8 @@ function updateZ(
 
         if (markerModel && markerDraw && markerDraw.group) {
             const { z, zlevel } = retrieveZInfo(markerModel);
-            traverseUpdateZ(markerDraw.group, z, zlevel);
+            const z2 = markerModel.get('z2');
+            traverseUpdateZ(markerDraw.group, z, zlevel, z2);
         }
     });
 }
