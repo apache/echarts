@@ -292,6 +292,14 @@ function constrainTextWidth(
             // Temporarily set background to be null to calculate
             // the bounding box without background.
             label.setStyle('backgroundColor', null);
+            // Temporarily remove lineHeight to prevent the background
+            // rect from being created during measurement.
+            // zrender's needDrawBackground returns true when lineHeight
+            // is set, which creates a background rect at full availableWidth
+            // and inflates getBoundingRect().width.
+            // See https://github.com/apache/echarts/issues/21710
+            const savedLineHeight = (style as any).lineHeight;
+            label.setStyle('lineHeight', null);
             // Set constraining width
             label.setStyle('width', availableWidth - paddingH);
 
@@ -300,6 +308,7 @@ function constrainTextWidth(
 
             label.setStyle('width', Math.ceil(innerRect.width));
             label.setStyle('backgroundColor', bgColor);
+            label.setStyle('lineHeight', savedLineHeight);
         }
         else {
             const availableInnerWidth = availableWidth - paddingH;
