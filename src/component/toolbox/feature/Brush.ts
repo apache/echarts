@@ -54,7 +54,7 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
 
         ecModel.eachComponent({mainType: 'brush'}, function (brushModel: BrushModel) {
             brushType = brushModel.brushType;
-            brushMode = brushModel.brushOption.brushMode || 'single';
+            brushMode = brushModel.brushOption.brushMode || brushModel.get('brushMode') || 'single';
             isBrushed = isBrushed || !!brushModel.areas.length;
         });
         this._brushType = brushType;
