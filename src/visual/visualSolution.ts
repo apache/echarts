@@ -29,9 +29,11 @@ import {
     ParsedValue,
     DimensionLoose,
     StageHandlerProgressExecutor,
-    DimensionIndex
+    DimensionIndex,
+    OrdinalNumber
 } from '../util/types';
 import SeriesData from '../data/SeriesData';
+import OrdinalMeta from '../data/OrdinalMeta';
 import { getItemVisualFromData, setItemVisualFromData } from './helper';
 
 const each = zrUtil.each;
@@ -195,12 +197,14 @@ export function applyVisual<VisualState extends string, Scope>(
  * @param visualMappings <state, Object.<visualType, module:echarts/visual/VisualMapping>>
  * @param getValueState param: valueOrIndex, return: state.
  * @param dim dimension or dimension index.
+ * @param useCategory map ordinal numbers on `dim` back to their category strings.
  */
 export function incrementalApplyVisual<VisualState extends string>(
     stateList: readonly VisualState[],
     visualMappings: VisualMappingCollection<VisualState>,
     getValueState: (valueOrIndex: ParsedValue | number) => VisualState,
-    dim?: DimensionLoose
+    dim?: DimensionLoose,
+    useCategory?: boolean
 ): StageHandlerProgressExecutor {
     const visualTypesMap: Partial<Record<VisualState, BuiltinVisualProperty[]>> = {};
     zrUtil.each(stateList, function (state) {
@@ -210,9 +214,12 @@ export function incrementalApplyVisual<VisualState extends string>(
 
     return {
         progress: function progress(params, data) {
+            const store = data.getStore();
             let dimIndex: DimensionIndex;
+            let ordinalMeta: OrdinalMeta;
             if (dim != null) {
                 dimIndex = data.getDimensionIndex(dim);
+                ordinalMeta = useCategory && store.getOrdinalMeta(dimIndex);
             }
 
             function getVisual(key: string) {
@@ -224,7 +231,6 @@ export function incrementalApplyVisual<VisualState extends string>(
             }
 
             let dataIndex: number;
-            const store = data.getStore();
             while ((dataIndex = params.next()) != null) {
                 const rawDataItem = data.getRawDataItem(dataIndex);
 
@@ -234,9 +240,12 @@ export function incrementalApplyVisual<VisualState extends string>(
                     continue;
                 }
 
-                const value = dim != null
+                let value: ParsedValue = dim != null
                     ? store.get(dimIndex, dataIndex)
                     : dataIndex;
+                if (ordinalMeta) {
+                    value = ordinalMeta.categories[value as OrdinalNumber];
+                }
 
                 const valueState = getValueState(value);
                 const mappings = visualMappings[valueState];

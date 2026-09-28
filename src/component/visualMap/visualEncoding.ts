@@ -42,7 +42,8 @@ export const visualMapEncodingHandlers: StageHandler[] = [
                     visualMapModel.stateList,
                     visualMapModel.targetVisuals,
                     zrUtil.bind(visualMapModel.getValueState, visualMapModel),
-                    visualMapModel.getDataDimensionIndex(seriesModel.getData())
+                    visualMapModel.getDataDimensionIndex(seriesModel.getData()),
+                    visualMapModel.isCategoryMode()
                 ));
             });
 
