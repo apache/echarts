@@ -63,13 +63,12 @@ class BrushFeature extends ToolboxFeature<ToolboxBrushFeatureOption> {
         zrUtil.each(featureModel.get('type', true), function (type) {
             featureModel.setIconStatus(
                 type,
-                (
-                    type === 'keep'
-                    ? brushMode === 'multiple'
-                    : type === 'clear'
-                    ? isBrushed
-                    : type === brushType
-                ) ? 'emphasis' : 'normal'
+                type === 'clear'
+                    // The clear button is not a toggle. The emphasis indicates that it is available.
+                    ? (isBrushed ? 'emphasis' : 'normal')
+                    : (type === 'keep' ? brushMode === 'multiple' : type === brushType)
+                    ? 'select'
+                    : 'normal'
             );
         });
     }
