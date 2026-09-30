@@ -42,6 +42,25 @@ export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
     lang?: string[]
 }
 
+interface ProxyWindow extends Window {
+    rawWindow?: Window
+}
+
+function pickEventView(): Window {
+  try {
+    void new MouseEvent("click", { view: (window as ProxyWindow)?.rawWindow || window });
+    return (window as ProxyWindow)?.rawWindow || window;
+  } catch {
+    if (document.defaultView) {
+      try {
+        void new MouseEvent("click", { view: document.defaultView });
+        return document.defaultView;
+      } catch {}
+    }
+    return window;
+  }
+}
+
 class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI) {
@@ -66,7 +85,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             $a.href = url;
             const evt = new MouseEvent('click', {
                 // some micro front-end framework， window maybe is a Proxy
-                view: document.defaultView,
+                view: pickEventView(),
                 bubbles: true,
                 cancelable: false
             });
