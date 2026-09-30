@@ -17,11 +17,13 @@
 * under the License.
 */
 
-import { assert, noop } from 'zrender/src/core/util';
+import { assert, map, noop } from 'zrender/src/core/util';
 import {
     ensureValidSplitNumber, getIntervalPrecision,
     intervalScaleEnsureValidExtent,
     isIntervalScale, isLogScale, isTimeScale,
+    asinhScaleForwardTick,
+    symlogScaleForwardTick,
 } from '../scale/helper';
 import IntervalScale, { IntervalScaleConfig } from '../scale/Interval';
 import { mathCeil, mathFloor, mathMax, nice, quantity, round } from '../util/number';
@@ -54,6 +56,12 @@ function calcNiceForIntervalOrLogScale(
 
     const isTargetLogScale = isLogScale(scale);
     const intervalStub = isTargetLogScale ? scale.intervalStub : scale;
+
+    // For mapped-log axes (asinh/symlog), use the raw-space tick strategy.
+    if (isTargetLogScale && (scale as LogScale).logMapping) {
+        logMappingCalcNiceTicks(scale as LogScale, opt.splitNumber);
+        return;
+    }
 
     const fixMinMax = opt.fixMinMax || [];
     const oldOutermostExtent = isTargetLogScale ? scale.getExtent() : null;
@@ -195,6 +203,90 @@ function logScaleCalcNiceTicks(
 };
 
 // ------ END: LogScale Nice ------
+
+
+// ------ START: logMapping Nice ------
+
+/**
+ * Tick strategy for `logMapping: 'asinh' | 'symlog'` axes.
+ *
+ * Standard log ticking assumes integer intervals in transformed space (integer
+ * log_b values = powers of b in raw space). For asinh/symlog the candidates
+ * `0, ±a0, ±b*a0, ...` are non-uniformly spaced in transformed space, so a
+ * single integer interval does not work.
+ *
+ * Strategy: choose candidates in raw-value space, store as `_mappedLogTicks`,
+ * then set `intervalStub` extent to the transformed range so that
+ * `normalize`/`scale` pixel mapping remains correct.
+ */
+export function logMappingCalcNiceTicks(
+    scale: LogScale, splitNumber?: number | NullUndefined
+): void {
+    const base = scale.base;
+    const a0 = scale.linearWidth || 1;
+    const [rawMin, rawMax] = scale.getExtent();
+    const maxTicks = ensureValidSplitNumber(splitNumber, 5) + 1;
+
+    const forward = scale.logMapping === 'asinh'
+        ? (v: number) => asinhScaleForwardTick(v, a0)
+        : (v: number) => symlogScaleForwardTick(v, a0);
+
+    // Count how many powers of `base` span the extent so we can decide
+    // whether to step by base^1, base^2, … to stay within `splitNumber`.
+    const absMax = Math.max(Math.abs(rawMin), Math.abs(rawMax));
+    const totalSteps = absMax > a0 ? Math.ceil(Math.log(absMax / a0) / Math.log(base)) : 0;
+    // Account for both positive and negative sides plus zero.
+    const hasNeg = rawMin < 0;
+    const hasPos = rawMax > 0;
+    const sidesMultiplier = (hasNeg && hasPos) ? 2 : 1;
+    const estimatedTicks = totalSteps * sidesMultiplier + 1; // +1 for zero
+
+    // Raise the effective base so tick count stays within splitNumber.
+    let stride = 1;
+    if (estimatedTicks > maxTicks && totalSteps > 0) {
+        stride = Math.ceil(totalSteps * sidesMultiplier / (maxTicks - 1));
+    }
+    const effectiveBase = Math.pow(base, stride);
+
+    // Candidates: 0, ±a0, ±a0·effectiveBase, ±a0·effectiveBase², ...
+    const candidates: number[] = [0];
+    let v = a0;
+    while (v <= absMax * 1.0001) {
+        candidates.push(v, -v);
+        v *= effectiveBase;
+    }
+
+    // Filter to data extent and sort ascending.
+    // Candidates are distinct by construction (0 once, then ±v pairs with v > 0),
+    // so no deduplication is needed.
+    const filtered: number[] = [];
+    candidates.sort((a, b) => a - b);
+    for (let i = 0; i < candidates.length; i++) {
+        const c = candidates[i];
+        if (c >= rawMin && c <= rawMax) {
+            filtered.push(c);
+        }
+    }
+    const ticks = map(filtered, value => ({ value }));
+
+    // Degenerate extent: ensure at least one tick.
+    if (ticks.length === 0) {
+        ticks.push({ value: (rawMin + rawMax) / 2 });
+    }
+
+    scale._mappedLogTicks = ticks;
+
+    // Align intervalStub extent to the transformed data range so that
+    // `normalize`/`scale` (pixel mapping) covers the full data extent.
+    // Use the data min/max rather than the tick min/max, because the
+    // outermost ticks may fall inside the data range when thinning skips
+    // intermediate powers.
+    const intervalStub = scale.intervalStub;
+    intervalStub.setExtent(forward(rawMin), forward(rawMax));
+    intervalStub.setConfig({ interval: 1 });
+}
+
+// ------ END: logMapping Nice ------
 
 
 // ------ START: scaleCalcNice Entry ------

@@ -85,7 +85,7 @@ export function createScaleByModel(
             // Expect `Pick<AxisBaseOptionCommon, 'type'>`,
             // but be lenient for user's invalid input.
             {type?: string}
-            & Pick<LogAxisBaseOption, 'logBase'>
+            & Pick<LogAxisBaseOption, 'logBase' | 'logMapping' | 'logLinearWidth'>
             & Pick<AxisBaseOptionCommon, 'breaks'>
         >
         & Partial<Pick<
@@ -120,6 +120,8 @@ export function createScaleByModel(
             // See also #3749
             return new LogScale({
                 logBase: model.get('logBase'),
+                logMapping: model.get('logMapping'),
+                logLinearWidth: model.get('logLinearWidth'),
                 breakOption,
             });
         case 'value':
