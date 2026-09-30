@@ -35,7 +35,7 @@ import SeriesData from '../../data/SeriesData';
 import type Polar from '../../coord/polar/Polar';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Element from 'zrender/src/Element';
-import { getIncrementalId } from '../../util/model';
+import { getIncrementalId, isInProgressiveRendering } from '../../util/model';
 import { getCurrentCanvasPainter } from '../../util/graphic';
 import { ILineDraw } from '../helper/baseDraw';
 
@@ -134,7 +134,8 @@ class LinesView extends ChartView {
         const data = seriesModel.getData();
         const lineDraw = this._lineDraw;
 
-        if (!this._finished
+        if (isInProgressiveRendering(seriesModel)
+            || !this._finished
             || !lineDraw
             // TODO Don't have to do update in large mode. Only do it when there are millions of data.
             || !lineDraw.updateLayout
