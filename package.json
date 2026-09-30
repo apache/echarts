@@ -38,6 +38,7 @@
     "lib/component/*.js",
     "extension/**/*.js",
     "theme/*.js",
+    "theme/*.mjs",
     "i18n/*.js"
   ],
   "scripts": {
@@ -142,6 +143,18 @@
     "./index.simple.js": "./index.simple.js",
     "./index": "./index.js",
     "./index.js": "./index.js",
+    "./theme/v5": {
+      "types": "./theme/v5.d.ts",
+      "import": "./theme/v5.mjs",
+      "require": "./theme/v5.js",
+      "default": "./theme/v5.js"
+    },
+    "./theme/v5.js": {
+      "types": "./theme/v5.d.ts",
+      "import": "./theme/v5.mjs",
+      "require": "./theme/v5.js",
+      "default": "./theme/v5.js"
+    },
     "./theme/*": "./theme/*",
     "./i18n/*": "./i18n/*",
     "./types/dist/all": "./types/dist/all.d.ts",
