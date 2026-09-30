@@ -137,6 +137,10 @@ class SliderZoomView extends DataZoomView {
     private _shadowSize: number[];
     private _shadowPolygonPts: number[][];
     private _shadowPolylinePts: number[][];
+    // Cached step mode of the shadow series (mirrors line `step` option,
+    // normalized to null when stepping is off). Kept inline as a union
+    // to avoid a component -> chart type dependency.
+    private _shadowStep: boolean | 'start' | 'middle' | 'end' | null;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
@@ -381,10 +385,33 @@ class SliderZoomView extends DataZoomView {
 
         let polygonPts = this._shadowPolygonPts;
         let polylinePts = this._shadowPolylinePts;
+        // Resolve step mode for line series. See #13408.
+        // Only cartesian supports step (see `FIXME step not support polar` in LineView).
+        // For polar coordinate systems step is ignored, same as the main series rendering.
+        const stepMode = (seriesModel as any).get
+            ? (seriesModel as any).get('step')
+            : null;
+        const coordSysType = seriesModel.coordinateSystem
+            && (seriesModel.coordinateSystem as any).type;
+        const useStep = !!stepMode && coordSysType !== 'polar';
+        // Determine whether the zoomed axis (mapped to shadow x) is the base axis
+        // of the series. Step turns at the base axis, so the orientation of the
+        // intermediate step points depends on it.
+        let isBaseThis = true;
+        if (useStep) {
+            const coordSys = seriesModel.coordinateSystem as any;
+            if (coordSys && coordSys.getBaseAxis) {
+                const baseAxis = coordSys.getBaseAxis();
+                if (baseAxis && baseAxis.dim != null && info.thisAxis && info.thisAxis.dim != null) {
+                    isBaseThis = baseAxis.dim === info.thisAxis.dim;
+                }
+            }
+        }
         // Not re-render if data doesn't change.
         if (
             data !== this._shadowData || otherDim !== this._shadowDim
             || size[0] !== oldSize[0] || size[1] !== oldSize[1]
+            || (useStep ? stepMode : null) !== this._shadowStep
         ) {
             const thisDataExtent = data.getDataExtent(info.thisDim);
             let otherDataExtent = data.getDataExtent(otherDim);
@@ -400,7 +427,9 @@ class SliderZoomView extends DataZoomView {
             const areaPoints = [[size[0], 0], [0, 0]];
             const linePoints: number[][] = [];
             const step = thisShadowExtent[1] / (Math.max(1, data.count() - 1));
-            const normalizationConstant = size[0] / (thisDataExtent[1] - thisDataExtent[0]);
+            const thisSpan = thisDataExtent[1] - thisDataExtent[0];
+            // Guard against zero span (e.g. single data point) to avoid NaN. See #13408.
+            const normalizationConstant = thisSpan === 0 ? 0 : size[0] / thisSpan;
             const isTimeAxis = info.thisAxis.type === 'time';
             let thisCoord = -step;
 
@@ -441,6 +470,51 @@ class SliderZoomView extends DataZoomView {
                 }
 
                 if (!isEmpty) {
+                    // Insert intermediate step points so that the data shadow
+                    // closely matches a step line series. See #13408.
+                    // Only connect consecutive non-empty points; gaps resume
+                    // from the baseline without stepping.
+                    if (useStep && !lastIsEmpty && linePoints.length) {
+                        const prevPt = linePoints[linePoints.length - 1];
+                        const prevThis = prevPt[0];
+                        const prevOther = prevPt[1];
+                        if (isBaseThis) {
+                            if (stepMode === 'middle') {
+                                const middle = (prevThis + thisCoord) / 2;
+                                areaPoints.push([middle, prevOther]);
+                                linePoints.push([middle, prevOther]);
+                                areaPoints.push([middle, otherCoord]);
+                                linePoints.push([middle, otherCoord]);
+                            }
+                            else if (stepMode === 'end') {
+                                areaPoints.push([thisCoord, prevOther]);
+                                linePoints.push([thisCoord, prevOther]);
+                            }
+                            else {
+                                // 'start' (default, also covers `true`)
+                                areaPoints.push([prevThis, otherCoord]);
+                                linePoints.push([prevThis, otherCoord]);
+                            }
+                        }
+                        else {
+                            if (stepMode === 'middle') {
+                                const middle = (prevOther + otherCoord) / 2;
+                                areaPoints.push([prevThis, middle]);
+                                linePoints.push([prevThis, middle]);
+                                areaPoints.push([thisCoord, middle]);
+                                linePoints.push([thisCoord, middle]);
+                            }
+                            else if (stepMode === 'end') {
+                                areaPoints.push([prevThis, otherCoord]);
+                                linePoints.push([prevThis, otherCoord]);
+                            }
+                            else {
+                                // 'start' (default, also covers `true`)
+                                areaPoints.push([thisCoord, prevOther]);
+                                linePoints.push([thisCoord, prevOther]);
+                            }
+                        }
+                    }
                     areaPoints.push([thisCoord, otherCoord]);
                     linePoints.push([thisCoord, otherCoord]);
                 }
@@ -455,6 +529,7 @@ class SliderZoomView extends DataZoomView {
         this._shadowData = data;
         this._shadowDim = otherDim;
         this._shadowSize = [size[0], size[1]];
+        this._shadowStep = useStep ? stepMode : null;
 
         const dataZoomModel = this.dataZoomModel;
 
