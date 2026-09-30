@@ -128,6 +128,8 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     jitter?: number;
     jitterOverlap?: boolean;
     jitterMargin?: number;
+    jitterSeed?: string | number;
+    jitterRng?: () => number;
 
     breaks?: AxisBreakOption[];
     breakArea?: {
