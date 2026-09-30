@@ -61,6 +61,11 @@ interface InnerLineLabel extends LineLabel {
     __verticalAlign: TextStyleProps['verticalAlign']
     __position: LineLabelOption['position']
     __labelDistance: number[]
+    // Whether the label position is customized by the user via dragging.
+    // Only possible when `labelLayout.draggable` is enabled.
+    __labelDragged: boolean
+    // Whether the drag listener has been attached to the label.
+    __labelDragListenerAttached: boolean
 }
 
 function makeSymbolTypeKey(symbolCategory: 'fromSymbol' | 'toSymbol') {
@@ -333,6 +338,21 @@ class Line extends graphic.Group {
             inside: false   // Can't be inside for stroke element.
         });
 
+        // Track the dragging of the label so that `beforeUpdate` can keep
+        // the dragged position instead of recalculating it from the line
+        // geometry. See https://github.com/apache/echarts/issues/18752
+        if (label && !label.__labelDragListenerAttached) {
+            label.__labelDragListenerAttached = true;
+            label.on('drag', function () {
+                label.__labelDragged = true;
+            });
+        }
+        // The dragged position only lasts until the next data update,
+        // where the label position is recalculated as usual.
+        if (label) {
+            label.__labelDragged = false;
+        }
+
         toggleHoverEmphasis(this, focus, blurScope, emphasisDisabled);
     }
 
@@ -419,107 +439,116 @@ class Line extends graphic.Group {
         }
 
         if (label && !label.ignore) {
-            label.x = label.y = 0;
-            label.originX = label.originY = 0;
+            // Keep the position dragged by the user when `labelLayout.draggable`
+            // is enabled. Otherwise the position is recalculated from the line
+            // geometry below, which would reset the drag immediately on every
+            // update. See https://github.com/apache/echarts/issues/18752
+            const keepDraggedPosition = label.draggable && label.__labelDragged;
 
-            let textAlign: ZRTextAlign;
-            let textVerticalAlign: ZRTextVerticalAlign;
+            if (!keepDraggedPosition) {
+                label.x = label.y = 0;
+                label.originX = label.originY = 0;
 
-            const distance = label.__labelDistance;
-            const distanceX = distance[0] * invScale;
-            const distanceY = distance[1] * invScale;
-            const halfPercent = percent / 2;
-            const tangent = line.tangentAt(halfPercent);
-            const n = [tangent[1], -tangent[0]];
-            const cp = line.pointAt(halfPercent);
-            if (n[1] > 0) {
-                n[0] = -n[0];
-                n[1] = -n[1];
-            }
-            const dir = tangent[0] < 0 ? -1 : 1;
+                let textAlign: ZRTextAlign;
+                let textVerticalAlign: ZRTextVerticalAlign;
 
-            if (label.__position !== 'start' && label.__position !== 'end') {
-                let rotation = -Math.atan2(tangent[1], tangent[0]);
-                if (toPos[0] < fromPos[0]) {
-                    rotation = Math.PI + rotation;
+                const distance = label.__labelDistance;
+                const distanceX = distance[0] * invScale;
+                const distanceY = distance[1] * invScale;
+                const halfPercent = percent / 2;
+                const tangent = line.tangentAt(halfPercent);
+                const n = [tangent[1], -tangent[0]];
+                const cp = line.pointAt(halfPercent);
+                if (n[1] > 0) {
+                    n[0] = -n[0];
+                    n[1] = -n[1];
                 }
-                label.rotation = rotation;
-            }
+                const dir = tangent[0] < 0 ? -1 : 1;
 
-            let dy;
-            switch (label.__position) {
-                case 'insideStartTop':
-                case 'insideMiddleTop':
-                case 'insideEndTop':
-                case 'middle':
-                    dy = -distanceY;
-                    textVerticalAlign = 'bottom';
-                    break;
+                if (label.__position !== 'start' && label.__position !== 'end') {
+                    let rotation = -Math.atan2(tangent[1], tangent[0]);
+                    if (toPos[0] < fromPos[0]) {
+                        rotation = Math.PI + rotation;
+                    }
+                    label.rotation = rotation;
+                }
 
-                case 'insideStartBottom':
-                case 'insideMiddleBottom':
-                case 'insideEndBottom':
-                    dy = distanceY;
-                    textVerticalAlign = 'top';
-                    break;
+                let dy;
+                switch (label.__position) {
+                    case 'insideStartTop':
+                    case 'insideMiddleTop':
+                    case 'insideEndTop':
+                    case 'middle':
+                        dy = -distanceY;
+                        textVerticalAlign = 'bottom';
+                        break;
 
-                default:
-                    dy = 0;
-                    textVerticalAlign = 'middle';
-            }
+                    case 'insideStartBottom':
+                    case 'insideMiddleBottom':
+                    case 'insideEndBottom':
+                        dy = distanceY;
+                        textVerticalAlign = 'top';
+                        break;
 
-            switch (label.__position) {
-                case 'end':
-                    label.x = d[0] * distanceX + toPos[0];
-                    label.y = d[1] * distanceY + toPos[1];
-                    textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
-                    textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
-                    break;
+                    default:
+                        dy = 0;
+                        textVerticalAlign = 'middle';
+                }
 
-                case 'start':
-                    label.x = -d[0] * distanceX + fromPos[0];
-                    label.y = -d[1] * distanceY + fromPos[1];
-                    textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
-                    textVerticalAlign = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
-                    break;
+                switch (label.__position) {
+                    case 'end':
+                        label.x = d[0] * distanceX + toPos[0];
+                        label.y = d[1] * distanceY + toPos[1];
+                        textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
+                        textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
+                        break;
 
-                case 'insideStartTop':
-                case 'insideStart':
-                case 'insideStartBottom':
-                    label.x = distanceX * dir + fromPos[0];
-                    label.y = fromPos[1] + dy;
-                    textAlign = tangent[0] < 0 ? 'right' : 'left';
-                    label.originX = -distanceX * dir;
-                    label.originY = -dy;
-                    break;
+                    case 'start':
+                        label.x = -d[0] * distanceX + fromPos[0];
+                        label.y = -d[1] * distanceY + fromPos[1];
+                        textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
+                        textVerticalAlign = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
+                        break;
 
-                case 'insideMiddleTop':
-                case 'insideMiddle':
-                case 'insideMiddleBottom':
-                case 'middle':
-                    label.x = cp[0];
-                    label.y = cp[1] + dy;
-                    textAlign = 'center';
-                    label.originY = -dy;
-                    break;
+                    case 'insideStartTop':
+                    case 'insideStart':
+                    case 'insideStartBottom':
+                        label.x = distanceX * dir + fromPos[0];
+                        label.y = fromPos[1] + dy;
+                        textAlign = tangent[0] < 0 ? 'right' : 'left';
+                        label.originX = -distanceX * dir;
+                        label.originY = -dy;
+                        break;
 
-                case 'insideEndTop':
-                case 'insideEnd':
-                case 'insideEndBottom':
-                    label.x = -distanceX * dir + toPos[0];
-                    label.y = toPos[1] + dy;
-                    textAlign = tangent[0] >= 0 ? 'right' : 'left';
-                    label.originX = distanceX * dir;
-                    label.originY = -dy;
-                    break;
+                    case 'insideMiddleTop':
+                    case 'insideMiddle':
+                    case 'insideMiddleBottom':
+                    case 'middle':
+                        label.x = cp[0];
+                        label.y = cp[1] + dy;
+                        textAlign = 'center';
+                        label.originY = -dy;
+                        break;
+
+                    case 'insideEndTop':
+                    case 'insideEnd':
+                    case 'insideEndBottom':
+                        label.x = -distanceX * dir + toPos[0];
+                        label.y = toPos[1] + dy;
+                        textAlign = tangent[0] >= 0 ? 'right' : 'left';
+                        label.originX = distanceX * dir;
+                        label.originY = -dy;
+                        break;
+                }
+
+                label.setStyle({
+                    // Use the user specified text align and baseline first
+                    verticalAlign: label.__verticalAlign || textVerticalAlign,
+                    align: label.__align || textAlign
+                });
             }
 
             label.scaleX = label.scaleY = invScale;
-            label.setStyle({
-                // Use the user specified text align and baseline first
-                verticalAlign: label.__verticalAlign || textVerticalAlign,
-                align: label.__align || textAlign
-            });
         }
     }
 }
