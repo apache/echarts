@@ -165,6 +165,33 @@ class PiePiece extends graphic.Sector {
             y: dy
         });
 
+        // `selectedOffset` lives on the select state and is applied again when
+        // the item is actually selected. If it is not, drop any translation
+        // already painted on the element. Otherwise `updateStates` reapplies
+        // `prevStates` (still including 'select') and a following `resize()`
+        // aborts that transition — animation duration is 0 — leaving the
+        // slice shifted after `setOption` replaces the data.
+        if (!seriesModel.isSelected(idx)) {
+            sector.attr({
+                x: 0,
+                y: 0
+            });
+            if (labelLine) {
+                labelLine.attr({
+                    x: 0,
+                    y: 0
+                });
+            }
+            const prevStates = sector.prevStates;
+            if (prevStates) {
+                for (let i = prevStates.length - 1; i >= 0; i--) {
+                    if (prevStates[i] === 'select') {
+                        prevStates.splice(i, 1);
+                    }
+                }
+            }
+        }
+
         toggleHoverEmphasis(
             this, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled')
         );
