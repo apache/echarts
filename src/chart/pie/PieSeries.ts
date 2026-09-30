@@ -115,7 +115,7 @@ export interface PieSeriesOption extends
 
     type?: 'pie'
 
-    roseType?: 'radius' | 'area'
+    roseType?: 'radius' | 'area' | 'mixed'
 
     clockwise?: boolean
     startAngle?: number
