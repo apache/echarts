@@ -71,31 +71,41 @@ const markLineTransform = function (
 ) {
     const data = seriesModel.getData();
 
+    let useRawValue = false;
+
     let itemArray: MarkLineMergedItemOption[];
     if (!isArray(item)) {
-        // Special type markLine like 'min', 'max', 'average', 'median'
         const mlType = item.type;
-        if (
-            mlType === 'min' || mlType === 'max' || mlType === 'average' || mlType === 'median'
-            // In case
-            // data: [{
-            //   yAxis: 10
-            // }]
-            || (item.xAxis != null || item.yAxis != null)
-        ) {
+        // Special statistic type like 'min', 'max', 'average', 'median'
+        const isSpecialType = mlType === 'min' || mlType === 'max' || mlType === 'average' || mlType === 'median';
+        // In case
+        // data: [{
+        //   yAxis: 10
+        // }]
+        const isAxisValueType = item.xAxis != null || item.yAxis != null;
+        if (isSpecialType || isAxisValueType) {
 
             let valueAxis;
             let value;
 
-            if (item.yAxis != null || item.xAxis != null) {
+            if (isAxisValueType) {
                 valueAxis = coordSys.getAxis(item.yAxis != null ? 'y' : 'x');
                 value = retrieve(item.yAxis, item.xAxis);
+
+                // use raw value without precision rounding when targeting axis value
+                // to ensure it is at the expected position
+                useRawValue = true;
             }
             else {
                 const axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
                 valueAxis = axisInfo.valueAxis;
                 const valueDataDim = getStackedDimension(data, axisInfo.valueDataDim);
                 value = markerHelper.numCalculate(data, valueDataDim, mlType);
+                // PENDING:
+                // consider supporting precision for single marker item and auto precision for statistic type (average/median)?
+
+                // use raw value for min/max value
+                useRawValue = mlType === 'min' || mlType === 'max';
             }
             const valueIndex = valueAxis.dim === 'x' ? 0 : 1;
             const baseIndex = 1 - valueIndex;
@@ -112,9 +122,11 @@ const markLineTransform = function (
             mlFrom.coord[baseIndex] = -Infinity;
             mlTo.coord[baseIndex] = Infinity;
 
-            const precision = mlModel.get('precision');
-            if (precision >= 0 && isNumber(value)) {
-                value = +value.toFixed(Math.min(precision, 20));
+            if (!useRawValue) {
+                const precision = mlModel.get('precision');
+                if (precision >= 0 && isNumber(value)) {
+                    value = numberUtil.round(value, precision);
+                }
             }
 
             mlFrom.coord[valueIndex] = mlTo.coord[valueIndex] = value;
