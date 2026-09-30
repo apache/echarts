@@ -257,6 +257,13 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
     }
 
     /**
+     * @override
+     */
+    isCategoryMode(): boolean {
+        return this._mode === 'categories';
+    }
+
+    /**
      * @public
      */
     getPieceList(): InnerVisualPiece[] {
@@ -313,9 +320,14 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
             const dataIndices: number[] = [];
             const data = seriesModel.getData();
 
-            data.each(this.getDataDimensionIndex(data), function (value: number, dataIndex: number) {
+            const dimIndex = this.getDataDimensionIndex(data);
+            const ordinalMeta = this.isCategoryMode() && data.getStore().getOrdinalMeta(dimIndex);
+
+            data.each(dimIndex, function (value: number, dataIndex: number) {
                 // Should always base on model pieceList, because it is order sensitive.
-                const pIdx = VisualMapping.findPieceIndex(value, pieceList);
+                const pIdx = VisualMapping.findPieceIndex(
+                    (ordinalMeta ? ordinalMeta.categories[value] : value) as number, pieceList
+                );
                 pIdx === pieceIndex && dataIndices.push(dataIndex);
             }, this);
 

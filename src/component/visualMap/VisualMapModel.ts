@@ -648,6 +648,13 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     }
 
     /**
+     * Whether data values on an ordinal dimension are matched by their category strings.
+     */
+    isCategoryMode(): boolean {
+        return false;
+    }
+
+    /**
      * FIXME
      * Do not publish to thirt-part-dev temporarily
      * util the interface is stable. (Should it return
