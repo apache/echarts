@@ -68,6 +68,29 @@ describe('scale_interval', function () {
             expect(ticks[ticks.length - 1].value).toEqual(max);
         });
 
+        it('ticks_tiny_max', function () {
+            chart.setOption({
+                xAxis: {},
+                yAxis: {
+                    type: 'value',
+                    scale: true,
+                    max: 2.324097633474072e-20
+                },
+                series: [{
+                    type: 'line',
+                    data: [1e-20]
+                }]
+            });
+
+            const yAxis = getECModel(chart).getComponent('yAxis', 0) as CartesianAxisModel;
+            const ticks = yAxis.axis.scale.getTicks();
+
+            expect(ticks.length).toBeGreaterThan(2);
+            ticks.forEach(function (tick) {
+                expect(tick.value).toBeFinite();
+            });
+        });
+
         it('ticks_small_value', function () {
             chart.setOption({
                 tooltip: {},
