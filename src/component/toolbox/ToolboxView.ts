@@ -19,7 +19,7 @@
 
 import * as textContain from 'zrender/src/contain/text';
 import * as graphic from '../../util/graphic';
-import { enterEmphasis, leaveEmphasis } from '../../util/states';
+import { enterEmphasis, leaveEmphasis, enterSelect, leaveSelect } from '../../util/states';
 import Model from '../../model/Model';
 import DataDiffer from '../../data/DataDiffer';
 import * as listComponentHelper from '../helper/listComponent';
@@ -169,7 +169,7 @@ class ToolboxView extends ComponentView {
                 option.iconStatus = option.iconStatus || {};
                 option.iconStatus[iconName] = status;
                 if (iconPaths[iconName]) {
-                    (status === 'emphasis' ? enterEmphasis : leaveEmphasis)(iconPaths[iconName]);
+                    applyIconStatus(iconPaths[iconName], status);
                 }
             };
 
@@ -185,6 +185,12 @@ class ToolboxView extends ComponentView {
         ) {
             const iconStyleModel = featureModel.getModel('iconStyle');
             const iconStyleEmphasisModel = featureModel.getModel(['emphasis', 'iconStyle']);
+            // `select.iconStyle` is optional. If it is not specified on either the feature or the toolbox,
+            // use `emphasis.iconStyle`. That keeps the backward compatibility, since the icons toggled on
+            // were previously displayed in emphasis state.
+            const iconStyleSelectModel = featureModel.get(['select', 'iconStyle']) != null
+                ? featureModel.getModel(['select', 'iconStyle'])
+                : iconStyleEmphasisModel;
 
             // If one feature has multiple icons, they are organized as
             // {
@@ -232,6 +238,9 @@ class ToolboxView extends ComponentView {
 
                 const pathEmphasisState = path.ensureState('emphasis');
                 pathEmphasisState.style = iconStyleEmphasisModel.getItemStyle();
+
+                const pathSelectState = path.ensureState('select');
+                pathSelectState.style = iconStyleSelectModel.getItemStyle();
 
                 // Text position calculation
                 // TODO: extract `textStyle` from `iconStyle` and use `createTextStyle`
@@ -297,7 +306,7 @@ class ToolboxView extends ComponentView {
                     }
                     textContent.hide();
                 });
-                (featureModel.get(['iconStatus', iconName]) === 'emphasis' ? enterEmphasis : leaveEmphasis)(path);
+                applyIconStatus(path, featureModel.get(['iconStatus', iconName]));
 
                 group.add(path);
                 (path as graphic.Path).on('click', bind(
@@ -395,6 +404,15 @@ class ToolboxView extends ComponentView {
     }
 }
 
+
+/**
+ * `'select'` represents that the icon is toggled on. `'emphasis'` is also supported as a status,
+ * which was used for that purpose previously and can still be specified by users.
+ */
+function applyIconStatus(iconPath: IconPath, status: DisplayState | NullUndefined): void {
+    (status === 'emphasis' ? enterEmphasis : leaveEmphasis)(iconPath);
+    (status === 'select' ? enterSelect : leaveSelect)(iconPath);
+}
 
 function isUserFeatureName(featureName: string): boolean {
     return featureName.indexOf('my') === 0;

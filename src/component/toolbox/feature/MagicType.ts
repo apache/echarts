@@ -143,7 +143,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
             }
         });
 
-        model.setIconStatus(type, 'emphasis');
+        model.setIconStatus(type, 'select');
 
         ecModel.eachComponent(
             {
@@ -166,7 +166,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
                 tiled: model.option.title.stack
             }, model.option.title);
 
-            if (model.get(['iconStatus', type]) !== 'emphasis') {
+            if (model.get(['iconStatus', type]) !== 'select') {
                 currentType = 'tiled';
             }
         }
@@ -226,7 +226,7 @@ const seriesOptGenreator: Record<IconType, SeriesOptGenreator> = {
     'stack': function (seriesType, seriesId, seriesModel, model) {
         const isStack = seriesModel.get('stack') === INNER_STACK_KEYWORD;
         if (seriesType === 'line' || seriesType === 'bar') {
-            model.setIconStatus('stack', isStack ? 'normal' : 'emphasis');
+            model.setIconStatus('stack', isStack ? 'normal' : 'select');
             return zrUtil.merge({
                 id: seriesId,
                 stack: isStack ? '' : INNER_STACK_KEYWORD
