@@ -25,7 +25,7 @@ import SunburstSeriesModel, { SERIES_TYPE_SUNBURST, SunburstSeriesOption } from 
 import { TreeNode } from '../../data/Tree';
 import { createSimpleOverallStageHandler } from '../../util/model';
 
-// let PI2 = Math.PI * 2;
+const PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
 
 export const sunburstLayoutStageHandler = createSimpleOverallStageHandler(SERIES_TYPE_SUNBURST, sunburstLayout);
@@ -82,17 +82,68 @@ function sunburstLayout(
 
         const stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
-        // In the case some sector angle is smaller than minAngle
-        // let restAngle = PI2;
-        // let valueSumLargerThanMinAngle = 0;
-
         const dir = clockwise ? 1 : -1;
+
+        /**
+         * Calculate the angle of every node in a sibling group, which takes up
+         * `totalAngle`, the angle of their parent, in total.
+         *
+         * Sectors smaller than `minAngle` are enlarged, and the rest of them
+         * shrink so that the children still fit in their parent. Otherwise
+         * they overflow and overlap each other. See also `pieLayout`.
+         */
+        const getChildrenAngles = function (children: TreeNode[], totalAngle: number) {
+            const angles: number[] = [];
+
+            // In the case some sector angle is smaller than minAngle
+            let restAngle = totalAngle;
+            let valueSumLargerThanMinAngle = 0;
+
+            zrUtil.each(children, function (child, idx) {
+                const value = child.getValue() as number;
+                let angle = (sum === 0 && stillShowZeroSum)
+                    ? unitRadian : (value * unitRadian);
+
+                if (angle < minAngle) {
+                    angle = minAngle;
+                    restAngle -= minAngle;
+                }
+                else {
+                    valueSumLargerThanMinAngle += value;
+                }
+
+                angles[idx] = angle;
+            });
+
+            // Some sector is constrained by minAngle.
+            // Rest sectors needs recalculate angle.
+            if (restAngle < totalAngle) {
+                if (restAngle <= 1e-3) {
+                    // Average the angle if rest angle is not enough after all
+                    // angles is constrained by minAngle
+                    const angle = totalAngle / children.length;
+                    for (let i = 0; i < angles.length; i++) {
+                        angles[i] = angle;
+                    }
+                }
+                else {
+                    const restUnitRadian = restAngle / valueSumLargerThanMinAngle;
+                    zrUtil.each(children, function (child, idx) {
+                        if (angles[idx] !== minAngle) {
+                            angles[idx] = (child.getValue() as number) * restUnitRadian;
+                        }
+                    });
+                }
+            }
+
+            return angles;
+        };
 
         /**
          * Render a tree
          * @return increased angle
          */
-        const renderNode = function (node: TreeNode, startAngle: number) {
+        const renderNode = function (node: TreeNode, startAngle: number, angle: number) {
             if (!node) {
                 return;
             }
@@ -102,18 +153,6 @@ function sunburstLayout(
             // Render self
             if (node !== virtualRoot) {
                 // Tree node is virtual, so it doesn't need to be drawn
-                const value = node.getValue() as number;
-
-                let angle = (sum === 0 && stillShowZeroSum)
-                    ? unitRadian : (value * unitRadian);
-                if (angle < minAngle) {
-                    angle = minAngle;
-                    // restAngle -= minAngle;
-                }
-                // else {
-                //     valueSumLargerThanMinAngle += value;
-                // }
-
                 endAngle = startAngle + dir * angle;
 
                 const depth = node.depth - rootDepth
@@ -151,9 +190,10 @@ function sunburstLayout(
             // Render children
             if (node.children && node.children.length) {
                 // currentAngle = startAngle;
+                const childAngles = getChildrenAngles(node.children, angle);
                 let siblingAngle = 0;
-                zrUtil.each(node.children, function (node) {
-                    siblingAngle += renderNode(node, startAngle + siblingAngle);
+                zrUtil.each(node.children, function (node, idx) {
+                    siblingAngle += renderNode(node, startAngle + siblingAngle, childAngles[idx]);
                 });
             }
 
@@ -178,7 +218,9 @@ function sunburstLayout(
             });
         }
 
-        renderNode(treeRoot, startAngle);
+        // The view root always takes up the whole circle, no matter whether it
+        // is the virtual root (which is not drawn) or a rolled up node.
+        renderNode(treeRoot, startAngle, PI2);
     });
 }
 
