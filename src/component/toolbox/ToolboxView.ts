@@ -19,7 +19,6 @@
 
 import * as textContain from 'zrender/src/contain/text';
 import * as graphic from '../../util/graphic';
-import { enterEmphasis, leaveEmphasis } from '../../util/states';
 import Model from '../../model/Model';
 import DataDiffer from '../../data/DataDiffer';
 import * as listComponentHelper from '../helper/listComponent';
@@ -169,7 +168,7 @@ class ToolboxView extends ComponentView {
                 option.iconStatus = option.iconStatus || {};
                 option.iconStatus[iconName] = status;
                 if (iconPaths[iconName]) {
-                    (status === 'emphasis' ? enterEmphasis : leaveEmphasis)(iconPaths[iconName]);
+                    applyIconStatus(api, iconPaths[iconName], status);
                 }
             };
 
@@ -297,7 +296,7 @@ class ToolboxView extends ComponentView {
                     }
                     textContent.hide();
                 });
-                (featureModel.get(['iconStatus', iconName]) === 'emphasis' ? enterEmphasis : leaveEmphasis)(path);
+                applyIconStatus(api, path, featureModel.get(['iconStatus', iconName]));
 
                 group.add(path);
                 (path as graphic.Path).on('click', bind(
@@ -377,7 +376,8 @@ class ToolboxView extends ComponentView {
         api: ExtensionAPI,
         payload: unknown
     ) {
-        each(this._features, function (feature) {
+        // `_features` is a HashMap, which can not be iterated by the util `each`.
+        this._features && this._features.each(function (feature) {
             feature
                 && feature instanceof ToolboxFeature
                 && feature.updateView
@@ -385,8 +385,19 @@ class ToolboxView extends ComponentView {
         });
     }
 
+    updateVisual(
+        toolboxModel: ToolboxModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI,
+        payload: Payload
+    ) {
+        // The icon status may depend on the result of the actions that only update visual.
+        // For example, the action `brush` changes the brushed areas, which the icon `clear` depends on.
+        this.updateView(toolboxModel, ecModel, api, payload);
+    }
+
     dispose(ecModel: GlobalModel, api: ExtensionAPI) {
-        each(this._features, function (feature) {
+        this._features && this._features.each(function (feature) {
             feature
                 && feature instanceof ToolboxFeature
                 && feature.dispose
@@ -395,6 +406,12 @@ class ToolboxView extends ComponentView {
     }
 }
 
+
+function applyIconStatus(api: ExtensionAPI, iconPath: IconPath, status: DisplayState | NullUndefined): void {
+    // Use the methods of `api` to make sure that the states are applied in the next frame,
+    // even if the status is changed out of a full update.
+    status === 'emphasis' ? api.enterEmphasis(iconPath) : api.leaveEmphasis(iconPath);
+}
 
 function isUserFeatureName(featureName: string): boolean {
     return featureName.indexOf('my') === 0;
