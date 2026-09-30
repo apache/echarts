@@ -237,6 +237,36 @@ describe('util/number', function () {
     });
 
     describe('parseDate', function () {
+        it('parses ISO weeks as the local Monday', function () {
+            [
+                ['2026-W04', '2026-01-19'],
+                ['2020-W01', '2019-12-30'],
+                ['2020-W53', '2020-12-28'],
+                ['2021-W01', '2021-01-04'],
+                ['2026-W53', '2026-12-28'],
+                ['2026-W13', '2026-03-23'],
+                ['2026-W44', '2026-10-26']
+            ].forEach(function (pair) {
+                expect(+parseDate(pair[0])).toEqual(+parseDate(pair[1]));
+                expect(parseDate(pair[0]).getDay()).toEqual(1);
+                expect(parseDate(pair[0]).getHours()).toEqual(0);
+            });
+        });
+
+        it('rejects invalid ISO weeks', function () {
+            ['2021-W53', '2026-W00', '2026-W54', '2026-W4', '2026-w04',
+                '2026-W04extra', '2026-W04-1'].forEach(function (value) {
+                expect('' + parseDate(value)).toEqual('Invalid Date');
+            });
+        });
+
+        it('does not interpret ISO week years below 100 as 1900-based years', function () {
+            const date = parseDate('0099-W01');
+            expect(date.getFullYear()).toEqual(98);
+            expect(date.getMonth()).toEqual(11);
+            expect(date.getDate()).toEqual(29);
+        });
+
         it('parseDate', function () {
 
             // Invalid Date

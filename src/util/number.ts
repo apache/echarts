@@ -482,12 +482,14 @@ export function isRadianAroundZero(val: number): boolean {
 
 // eslint-disable-next-line
 const TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(?::(\d{1,2})(?::(\d{1,2})(?:[.,](\d+))?)?)?(Z|[\+\-]\d\d:?\d\d)?)?)?)?)?$/; // jshint ignore:line
+const ISO_WEEK_REG = /^(\d{4})-W(\d{2})$/;
 
 /**
  * @param value valid type: number | string | Date, otherwise return `new Date(NaN)`
  *   These values can be accepted:
  *   + An instance of Date, represent a time in its own time zone.
  *   + Or string in a subset of ISO 8601, only including:
+ *     + ISO week: '2026-W04', representing Monday at local midnight,
  *     + only year, month, date: '2012-03', '2012-03-01', '2012-03-01 05', '2012-03-01 05:06',
  *     + separated with T or space: '2012-03-01T12:22:33.123', '2012-03-01 12:22:33.123',
  *     + time zone: '2012-03-01T12:22:33Z', '2012-03-01T12:22:33+8000', '2012-03-01T12:22:33-05:00',
@@ -504,6 +506,24 @@ export function parseDate(value: unknown): Date {
         return value;
     }
     else if (zrUtil.isString(value)) {
+        const weekMatch = ISO_WEEK_REG.exec(value);
+        if (weekMatch) {
+            const year = +weekMatch[1];
+            const week = +weekMatch[2];
+            if (week < 1 || week > 53) {
+                return new Date(NaN);
+            }
+            const date = new Date(0);
+            date.setFullYear(year, 0, 4);
+            date.setHours(0, 0, 0, 0);
+            // ISO week 1 contains January 4; its Thursday is in the ISO week year.
+            date.setDate(4 - (date.getDay() + 6) % 7 + (week - 1) * 7 + 3);
+            if (date.getFullYear() !== year) {
+                return new Date(NaN);
+            }
+            date.setDate(date.getDate() - 3);
+            return date;
+        }
         // Different browsers parse date in different way, so we parse it manually.
         // Some other issues:
         // new Date('1970-01-01') is UTC,
