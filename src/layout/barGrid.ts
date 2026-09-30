@@ -446,7 +446,12 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         if (isValueAxisH) {
                             const coord = cartesian.dataToPoint([value, baseValue]);
                             if (stacked) {
-                                baseCoord = cartesian.dataToPoint([stackStartValue, baseValue])[0];
+                                const stackStartCoord = cartesian.dataToPoint([stackStartValue, baseValue])[0];
+                                // On a log axis, a `stackStartValue` that is out of the log domain
+                                // (e.g., 0, resulting from stacking over a null value) maps to a
+                                // non-finite coordinate. Draw the bar from the axis start in that
+                                // case, as if it were the first bar in the stack.
+                                baseCoord = isFinite(stackStartCoord) ? stackStartCoord : valueAxisStart;
                             }
                             x = baseCoord;
                             y = coord[1] + columnOffset;
@@ -460,7 +465,9 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         else {
                             const coord = cartesian.dataToPoint([baseValue, value]);
                             if (stacked) {
-                                baseCoord = cartesian.dataToPoint([baseValue, stackStartValue])[1];
+                                const stackStartCoord = cartesian.dataToPoint([baseValue, stackStartValue])[1];
+                                // See the comment in the horizontal case above.
+                                baseCoord = isFinite(stackStartCoord) ? stackStartCoord : valueAxisStart;
                             }
                             x = coord[0] + columnOffset;
                             y = baseCoord;
