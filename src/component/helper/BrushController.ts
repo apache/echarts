@@ -40,7 +40,7 @@ import tokens from '../../visual/tokens';
  */
 
 
-export type BrushType = 'polygon' | 'rect' | 'lineX' | 'lineY';
+export type BrushType = 'polygon' | 'rect' | 'lineX' | 'lineY' | 'circle';
 /**
  * Only for drawing (after enabledBrush).
  * 'line', 'rect', 'polygon' or false
@@ -744,6 +744,22 @@ function getGlobalDirection2(
     return globalDir.join('') as keyof typeof CURSOR_MAP;
 }
 
+function driftCircle(
+    controller: BrushController,
+    cover: BrushCover,
+    dx: number,
+    dy: number
+): void {
+    const range = cover.__brushOption.range as BrushDimensionMinMax; // [cx, cy, radius]
+    const localDelta = toLocalDelta(controller, dx, dy);
+
+    range[0] += localDelta[0];
+    range[1] += localDelta[1];
+
+    updateCoverAfterCreation(controller, cover);
+    trigger(controller, {isEnd: false});
+}
+
 function driftRect(
     rectRangeConverter: RectRangeConverter,
     controller: BrushController,
@@ -1032,6 +1048,44 @@ const coverRenderers: Record<BrushType, CoverRenderer> = {
     lineX: getLineRenderer(0),
 
     lineY: getLineRenderer(1),
+
+    circle: {
+        createCover: function (controller, brushOption) {
+            const cover = new graphic.Group() as BrushCover;
+
+            cover.add(new graphic.Circle({
+                name: 'main',
+                style: makeStyle(brushOption),
+                silent: true,
+                draggable: true,
+                cursor: 'move',
+                drift: curry(driftCircle, controller, cover),
+                ondragend: curry(trigger, controller, {isEnd: true})
+            }));
+
+            return cover;
+        },
+        getCreatingRange: function (localTrack) {
+            const ends = getTrackEnds(localTrack);
+            const cx = ends[0][0];
+            const cy = ends[0][1];
+            const dx = ends[1][0] - cx;
+            const dy = ends[1][1] - cy;
+            const r = mathPow(dx * dx + dy * dy, 0.5);
+
+            // The range structure passed to selector.ts: [centerX, centerY, radius]
+            return [cx, cy, r];
+        },
+        updateCoverShape: function (controller, cover, localRange: BrushDimensionMinMax, brushOption) {
+            (cover.childAt(0) as graphic.Circle).setShape({
+                cx: localRange[0],
+                cy: localRange[1],
+                r: localRange[2]
+            });
+        },
+        updateCommon: updateCommon,
+        contain: mainShapeContain
+    },
 
     rect: {
         createCover: function (controller, brushOption) {
