@@ -37,7 +37,8 @@ import {
     CallbackDataParams,
     ComponentOnCalendarOptionMixin,
     ComponentOnMatrixOptionMixin,
-    RoamHostModel
+    RoamHostModel,
+    SOURCE_FORMAT_ORIGINAL
 } from '../../util/types';
 import { Dictionary, NullUndefined } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
@@ -165,7 +166,14 @@ class MapSeries extends SeriesModel<MapSeriesOption> implements RoamHostModel {
         // Complete data with missing regions. The consequent processes (like visual
         // map and render) can not be performed without a "full data". For example,
         // find `dataIndex` by name.
-        data.appendData(toAppendItems);
+        if (this.getSource().sourceFormat === SOURCE_FORMAT_ORIGINAL) {
+            data.appendData(toAppendItems);
+        }
+        else {
+            // A dataset can not hold `{name}` items, and `seriesLayoutBy: 'row'`
+            // can not be appended at all, so only add names to the store.
+            data.appendValues([], zrUtil.map(toAppendItems, item => item.name as string));
+        }
 
         return data;
     }
