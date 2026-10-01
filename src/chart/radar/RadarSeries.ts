@@ -117,13 +117,14 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
         return createTooltipMarkup('section', {
             header: nameToDisplay,
             sortBlocks: true,
-            blocks: zrUtil.map(indicatorAxes, axis => {
+            blocks: zrUtil.map(indicatorAxes, (axis, indicatorIndex) => {
                 const val = data.get(data.mapDimension(axis.dim), dataIndex);
                 return createTooltipMarkup('nameValue', {
                     markerType: 'subItem',
                     markerColor: markerColor,
                     name: axis.name,
                     value: val,
+                    dataIndex: indicatorIndex,
                     sortParam: val
                 });
             })
