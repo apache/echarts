@@ -450,6 +450,13 @@ class AxisProxy {
                             })
                         );
                     }
+                    else if (shouldKeepLineBoundary(seriesModel)) {
+                        // Line / area series need one neighboring data row on each side
+                        // of the in-window range so partial line segments at the
+                        // boundary are still drawn (#21564) and null gap markers that
+                        // fall outside the window still interrupt the line (#21565).
+                        keepLineBoundary(seriesData, dim, valueWindow);
+                    }
                     else {
                         const range: Dictionary<[number, number]> = {};
                         range[dim] = valueWindow as [number, number];
@@ -497,6 +504,47 @@ class AxisProxy {
             minMaxSpan[minMax + 'ValueSpan' as 'minValueSpan' | 'maxValueSpan'] = valueSpan;
         }, this);
     }
+}
+
+function shouldKeepLineBoundary(seriesModel: SeriesModel): boolean {
+    return seriesModel.subType === 'line';
+}
+
+function keepLineBoundary(
+    seriesData: ReturnType<SeriesModel['getData']>,
+    dim: string,
+    valueWindow: number[]
+): void {
+    const store = seriesData.getStore();
+    const dimIdx = seriesData.getDimensionIndex(dim);
+    const count = store.count();
+    if (!count || dimIdx < 0) {
+        return;
+    }
+
+    const min = valueWindow[0];
+    const max = valueWindow[1];
+    const inWindow = new Uint8Array(count);
+    let allIn = true;
+    for (let i = 0; i < count; i++) {
+        const v = store.get(dimIdx, i) as number;
+        const isIn = ((v >= min && v <= max) || isNaN(v)) ? 1 : 0;
+        inWindow[i] = isIn;
+        if (!isIn) {
+            allIn = false;
+        }
+    }
+    if (allIn) {
+        return;
+    }
+
+    seriesData.filterSelf(function (idx: number) {
+        return !!(
+            inWindow[idx]
+            || (idx > 0 && inWindow[idx - 1])
+            || (idx < count - 1 && inWindow[idx + 1])
+        );
+    });
 }
 
 export default AxisProxy;
