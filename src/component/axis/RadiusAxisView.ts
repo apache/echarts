@@ -223,8 +223,8 @@ function layoutAxis(polar: Polar, radiusAxisModel: RadiusAxisModel, axisAngle: n
     return {
         position: [polar.cx, polar.cy],
         rotation: axisAngle / 180 * Math.PI,
-        labelDirection: -1 as const,
-        tickDirection: -1 as const,
+        labelDirection: radiusAxisModel.get(['axisLabel', 'inside']) ? 1 as const : -1 as const,
+        tickDirection: radiusAxisModel.get(['axisTick', 'inside']) ? 1 as const : -1 as const,
         nameDirection: 1 as const,
         labelRotate: radiusAxisModel.getModel('axisLabel').get('rotate'),
         // Over splitLine and splitArea
