@@ -135,7 +135,7 @@ class RadarView extends ChartView {
                 itemGroup.add(symbolGroup);
 
                 updateSymbols(
-                    polyline.shape.points, points, symbolGroup, data, idx, true
+                    getInitialPoints(points), points, symbolGroup, data, idx, true
                 );
 
                 data.setItemGraphicEl(idx, itemGroup);
