@@ -1,0 +1,136 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main0, #main1, #main2 {
+                width: 100%;
+            }
+            #main0, #main1, #main2 {
+                height: 400px;
+            }
+            body {
+                margin: 0;
+            }
+        </style>
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                // Sparse varying levels so step start/middle/end turn
+                // positions are far apart and unmistakable.
+                // filterMode 'none' keeps edge segments visible while
+                // comparing the main chart against the slider preview.
+                var sparseVals = [10, 30, 12, 28, 8, 22, 15, 35, 5, 25];
+
+                var chart0 = echarts.init(document.getElementById('main0'));
+                chart0.setOption({
+                    animation: false,
+                    title: {text: 'step MIDDLE, sparse varying heights (category)'},
+                    xAxis: {type: 'category', data: sparseVals.map(function (_, idx) { return 'c' + idx; })},
+                    yAxis: {},
+                    series: [{
+                        type: 'line',
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        step: 'middle',
+                        data: sparseVals
+                    }],
+                    dataZoom: [
+                        {type: 'slider', filterMode: 'none'},
+                        {type: 'inside', filterMode: 'none'}
+                    ]
+                });
+
+                // Same values on an uneven time axis, different step mode.
+                // Compare vertical-turn x-position vs chart0, and uneven
+                // point spacing vs evenly-spaced categories.
+                var chart1 = echarts.init(document.getElementById('main1'));
+                var base = new Date('2020-10-01').getTime();
+                var gaps = [1, 1, 5, 1, 1, 4, 1, 1, 6]; // days between points
+                var timeData = [];
+                var t = base;
+                for (var j = 0; j < sparseVals.length; j++) {
+                    timeData.push([t, sparseVals[j]]);
+                    t += (gaps[j] || 1) * 86400000;
+                }
+                chart1.setOption({
+                    animation: false,
+                    title: {text: 'step START, same heights, uneven time (time axis)'},
+                    xAxis: {type: 'time'},
+                    yAxis: {},
+                    series: [{
+                        type: 'line',
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        step: 'start',
+                        data: timeData
+                    }],
+                    dataZoom: [
+                        {type: 'slider', filterMode: 'none'},
+                        {type: 'inside', filterMode: 'none'}
+                    ]
+                });
+
+                // Many points with VARYING jump heights so downsampling
+                // fidelity is checkable: each plateau level differs.
+                var chart2 = echarts.init(document.getElementById('main2'));
+                var levels = [10, 30, 12, 28, 8, 22, 15, 35];
+                var manyVals = [];
+                var perLevel = 2500;
+                for (var k = 0; k < levels.length; k++) {
+                    for (var n = 0; n < perLevel; n++) {
+                        manyVals.push(levels[k]);
+                    }
+                }
+                chart2.setOption({
+                    animation: false,
+                    title: {text: 'step END, 20k points, varying heights (downsampled preview)'},
+                    xAxis: {type: 'category', data: manyVals.map(function (_, idx) { return 'c' + idx; })},
+                    yAxis: {},
+                    series: [{
+                        type: 'line',
+                        symbol: 'none',
+                        step: 'end',
+                        data: manyVals,
+                        large: true,
+                        largeThreshold: 5000
+                    }],
+                    dataZoom: [
+                        {type: 'slider', filterMode: 'none'},
+                        {type: 'inside', filterMode: 'none'}
+                    ]
+                });
+            })
+
+        </script>
+    </body>
+</html>
