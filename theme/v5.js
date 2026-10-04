@@ -81,7 +81,7 @@
 
     var gradientColor = ['#f6efa6', '#d88273', '#bf444c'];
 
-    echarts.registerTheme('v5', {
+    var v5Theme = {
         color: colorPalette,
         gradientColor: gradientColor,
 
@@ -577,5 +577,7 @@
                 color: '#333'
             }
         }
-    });
+    };
+    echarts.registerTheme('v5', v5Theme);
+    exports.v5Theme = v5Theme;
 });

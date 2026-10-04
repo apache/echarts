@@ -18,6 +18,9 @@
 */
 
 import * as echarts from 'echarts';
+import {v5Theme} from 'echarts/theme/v5.js';
+
+echarts.registerTheme('v5-explicit', v5Theme);
 
 const dom = document.createElement('div');
 dom.className = 'chart';
