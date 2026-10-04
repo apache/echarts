@@ -1,0 +1,155 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                margin: 0;
+            }
+            #main {
+                width: 520px;
+                height: 400px;
+                border: 2px solid #333;
+                background: #fff;
+            }
+            #status {
+                font: 14px sans-serif;
+                margin: 8px;
+            }
+        </style>
+
+        <p id="status">Loading</p>
+        <button id="select">Select A and B</button>
+        <button id="replace">setOption fewer items + resize</button>
+        <button id="select-again">Select first remaining slice</button>
+        <div id="main"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var FULL = [
+                    { name: 'A', value: 120 },
+                    { name: 'B', value: 80 },
+                    { name: 'C', value: 60 },
+                    { name: 'D', value: 40 },
+                    { name: 'E', value: 25 }
+                ];
+                var statusEl = document.getElementById('status');
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                function pieOption(data) {
+                    return {
+                        series: [{
+                            name: 'Grouping',
+                            type: 'pie',
+                            radius: '70%',
+                            selectedMode: 'multiple',
+                            selectedOffset: 10,
+                            label: {
+                                show: true,
+                                position: 'inside',
+                                formatter: '{b}'
+                            },
+                            data: data
+                        }]
+                    };
+                }
+
+                function pieceOffsets() {
+                    var data = chart.getModel().getSeriesByIndex(0).getData();
+                    var offsets = [];
+                    data.each(function (idx) {
+                        var el = data.getItemGraphicEl(idx);
+                        offsets.push({
+                            name: data.getName(idx),
+                            x: el ? el.x || 0 : 0,
+                            y: el ? el.y || 0 : 0
+                        });
+                    });
+                    return offsets;
+                }
+
+                function replaceData() {
+                    var before = pieceOffsets();
+                    var popped = before.filter(function (item) {
+                        return Math.hypot(item.x, item.y) > 1;
+                    });
+                    chart.setOption(pieOption([
+                        { name: 'A', value: 30 },
+                        { name: 'B', value: 20 }
+                    ]), { notMerge: true });
+                    chart.resize();
+                    var offsets = pieceOffsets();
+                    var shifted = offsets.some(function (item) {
+                        return Math.hypot(item.x, item.y) > 0.5;
+                    });
+                    var ok = popped.length >= 2 && !shifted;
+                    statusEl.textContent = (ok ? 'PASS' : 'FAIL')
+                        + ' selected before replace: ' + JSON.stringify(before)
+                        + ' after replace: ' + JSON.stringify(offsets);
+                    statusEl.style.color = ok ? '#080' : '#c00';
+                }
+
+                chart.setOption(pieOption(FULL));
+
+                document.getElementById('select').onclick = function () {
+                    chart.dispatchAction({
+                        type: 'select',
+                        seriesIndex: 0,
+                        dataIndex: [0, 1]
+                    });
+                    statusEl.textContent = 'Selected A and B. Wait for the slices to pop out, then replace data.';
+                };
+                document.getElementById('replace').onclick = replaceData;
+                document.getElementById('select-again').onclick = function () {
+                    chart.dispatchAction({
+                        type: 'select',
+                        seriesIndex: 0,
+                        dataIndex: 0
+                    });
+                    statusEl.textContent = 'Dispatched select on the first remaining slice.';
+                };
+
+                // #21756: select, then setOption(notMerge) with fewer items, then resize.
+                // Previously selected slices must not keep selectedOffset x/y.
+                // Step the state animation explicitly so the check does not depend
+                // on a paint frame having run.
+                setTimeout(function () {
+                    chart.dispatchAction({
+                        type: 'select',
+                        seriesIndex: 0,
+                        dataIndex: [0, 1]
+                    });
+                    setTimeout(function () {
+                        chart.getZr().animation.update();
+                        replaceData();
+                    }, 400);
+                }, 50);
+            });
+        </script>
+    </body>
+</html>
