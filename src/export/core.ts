@@ -23,6 +23,18 @@ export * from '../core/echarts';
 export * from './api';
 import { use } from '../extension';
 
+export type {
+    EChartsExtension,
+    EChartsExtensionInstaller,
+    EChartsExtensionInstallRegisters
+} from '../extension';
+export {
+    ToolboxFeature,
+    ToolboxFeatureOption,
+    ToolboxFeatureModel,
+    ToolboxFeatureCtor
+} from '../component/toolbox/featureManager';
+
 // Import label layout by default.
 // TODO will be treeshaked.
 import { installLabelLayout } from '../label/installLabelLayout';
