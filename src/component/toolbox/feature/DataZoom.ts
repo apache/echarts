@@ -277,6 +277,7 @@ function updateBackBtnStatus(
     featureModel: ToolboxDataZoomFeatureModel,
     ecModel: GlobalModel
 ) {
+    // The back button is not a toggle. The emphasis indicates that it is available.
     featureModel.setIconStatus(
         'back',
         history.count(ecModel) > 1 ? 'emphasis' : 'normal'
@@ -299,7 +300,7 @@ function updateZoomBtnStatus(
 
     view._isZoomActive = zoomActive;
 
-    featureModel.setIconStatus('zoom', zoomActive ? 'emphasis' : 'normal');
+    featureModel.setIconStatus('zoom', zoomActive ? 'select' : 'normal');
 
     const brushTargetManager = new BrushTargetManager(
         makeAxisFinder(featureModel),

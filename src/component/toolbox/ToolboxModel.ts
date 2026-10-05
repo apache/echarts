@@ -75,6 +75,15 @@ export interface ToolboxOption extends
         iconStyle?: ItemStyleOption
     }
 
+    /**
+     * The style of the icons in `select` status, that is, the icons that are currently
+     * toggled on, such as the icon of the current type in `magicType`.
+     * If not specified, `emphasis.iconStyle` is used.
+     */
+    select?: {
+        iconStyle?: ItemStyleOption
+    }
+
     textStyle?: LabelOption
 
     tooltip?: CommonTooltipOption<ToolboxTooltipFormatterParams>

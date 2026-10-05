@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+
+
+        <div id="main1"></div>
+
+
+        <div id="main2"></div>
+
+
+
+
+
+        <script>
+
+            function makeOption(toolbox, useBrush) {
+                return {
+                    toolbox: toolbox,
+                    legend: {},
+                    tooltip: {},
+                    brush: useBrush ? {xAxisIndex: 0} : null,
+                    grid: {
+                        top: 80
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {},
+                    series: [{
+                        name: 'a',
+                        type: 'bar',
+                        data: [120, 200, 150, 80, 70, 110, 130]
+                    }, {
+                        name: 'b',
+                        type: 'bar',
+                        data: [60, 90, 120, 40, 30, 80, 100]
+                    }]
+                };
+            }
+
+        </script>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = makeOption({
+                    left: 'center',
+                    itemSize: 20,
+                    feature: {
+                        magicType: {
+                            type: ['line', 'bar', 'stack'],
+                            iconStyle: {
+                                borderColor: '#333'
+                            },
+                            emphasis: {
+                                iconStyle: {
+                                    borderColor: 'orange'
+                                }
+                            },
+                            select: {
+                                iconStyle: {
+                                    borderColor: 'green',
+                                    borderWidth: 2
+                                }
+                            }
+                        }
+                    }
+                });
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        '**select.iconStyle** is specified on the feature `magicType`.',
+                        'Normal: **dark gray**. Hover: **orange**. Selected: **green and thicker**.',
+                        'Click "line" or "bar": only the clicked one of them should be **green**.',
+                        'Click "stack": it should be toggled between **green** and **dark gray**.',
+                        'Move the mouse out after clicking: the selected icons should stay **green**.'
+                    ],
+                    option: option,
+                    width: 600,
+                    height: 300
+                });
+
+            }); // End of `require`
+
+
+        </script>
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = makeOption({
+                    left: 'center',
+                    itemSize: 20,
+                    iconStyle: {
+                        borderColor: '#333'
+                    },
+                    emphasis: {
+                        iconStyle: {
+                            borderColor: 'orange'
+                        }
+                    },
+                    feature: {
+                        magicType: {
+                            type: ['line', 'bar', 'stack']
+                        },
+                        dataZoom: {},
+                        brush: {}
+                    }
+                }, true);
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        '**select.iconStyle** is **NOT** specified. Should be the same as before.',
+                        'Normal: **dark gray**. Hover: **orange**. Selected: **orange**.',
+                        'Click icons of magicType, dataZoom and brush to toggle them on and off.'
+                    ],
+                    option: option,
+                    width: 600,
+                    height: 300
+                });
+
+            }); // End of `require`
+
+
+        </script>
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = makeOption({
+                    left: 'center',
+                    itemSize: 20,
+                    iconStyle: {
+                        borderColor: '#333'
+                    },
+                    emphasis: {
+                        iconStyle: {
+                            borderColor: 'orange'
+                        }
+                    },
+                    select: {
+                        iconStyle: {
+                            borderColor: 'green'
+                        }
+                    },
+                    feature: {
+                        magicType: {
+                            type: ['line', 'bar', 'stack'],
+                            select: {
+                                iconStyle: {
+                                    borderColor: 'red'
+                                }
+                            }
+                        },
+                        dataZoom: {},
+                        brush: {}
+                    }
+                }, true);
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        '**select.iconStyle** is specified on toolbox (**green**) and overridden by `magicType` (**red**).',
+                        'Normal: **dark gray**. Hover: **orange**.',
+                        'Selected icons of magicType should be **red**.',
+                        'Selected icons of dataZoom (zoom) and brush (brush types, keep) should be **green**.',
+                        'The "back" of dataZoom and the "clear" of brush are not toggles.',
+                        'They should never be **green**. They use **orange** when available, the same as before.'
+                    ],
+                    option: option,
+                    width: 600,
+                    height: 300
+                });
+
+            }); // End of `require`
+
+
+        </script>
+
+
+    </body>
+</html>
+
