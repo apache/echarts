@@ -1,0 +1,164 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body { margin: 0; }
+            h1 { font: 14px/1.5 sans-serif; margin: 8px; }
+            .cell { display: inline-block; width: 320px; height: 320px; vertical-align: top; }
+            .cell .title { font: 12px/1.5 sans-serif; text-align: center; }
+            .chart { width: 320px; height: 300px; }
+        </style>
+        <h1>
+            Edge arrowheads should sit flush against each central node's outline at <em>every</em>
+            approach angle — no gap, no overlap. Try roaming/zooming; use the browser to inspect.
+            <br><small>Note: <code>image://</code> nodes (raster or SVG data-URIs) have no vector
+            outline, so endpoints clip to the image's <em>bounding box</em>. Use <code>path://</code>
+            (e.g. the whale) for true outline following.</small>
+        </h1>
+        <div id="root"></div>
+        <script>
+
+            var WHALE = 'path://M36.2145543,24.477144 C35.7759706,24.3133453 35.3249718,24.2446326 34.8840006,24.2649744 C34.9626687,23.9194004 34.9847531,23.5731168 34.9532381,23.2338109 C34.8413837,22.0030139 34.0384674,20.88457 32.7969674,20.4150529 C31.520013,19.9369025 30.1351436,20.2769179 29.2274161,21.1723118 C29.5873317,21.1753867 29.9524998,21.2425619 30.3059692,21.3766759 C31.932573,21.9858653 32.7489786,23.7868239 32.1347943,25.3982016 C31.9073849,25.9918982 31.5167899,26.4761986 31.0341567,26.82331 C30.2043811,27.4136952 29.1014755,27.5962983 28.0764023,27.2101589 C26.4499179,26.6026252 25.6326766,24.800957 26.2475773,23.1886332 C26.3279166,22.9795384 26.4293854,22.7838078 26.5491185,22.598248 L26.5474473,22.598248 C26.5474473,22.598248 26.5474473,22.598248 26.5474473,22.5999037 C27.071026,21.7894251 27.5197567,20.9111799 27.8780011,19.9759303 C30.6587224,12.7019642 26.9601267,4.568439 19.6154603,1.812717 C12.2700776,-0.942059 4.0634043,2.7221845 1.2819668,9.9969784 C0.5214286,11.9820775 0.2459111,14.029503 0.395488,16.0168491 C0.3985918,16.0823686 0.4049186,16.1494256 0.4112455,16.2164826 C1.0048974,22.9703137 5.3971812,29.1250079 12.2228051,31.684881 C19.165894,34.2876848 26.703351,32.4570414 31.6617111,27.6088345 C32.5096318,26.7936252 33.7896899,26.491928 34.9658918,26.9324698 C36.3814406,27.4636035 37.1820887,28.8956896 36.9617225,30.3199702 C37.4915087,29.9502698 37.9206619,29.4254042 38.1694394,28.7771868 C38.8283894,27.0541658 37.9521769,25.1284363 36.2145543,24.477144 Z';
+
+            // An embedded raster image (40x40 RGB gradient with a border), as a base64 PNG data URI.
+            var PNG_URI = 'image://data:image/png;base64,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';
+
+            // A complex multi-path SVG (a toothed gear with a radial gradient), inlined as a
+            // urlencoded SVG data-URI image. Rendered as an image => clips to its bounding box.
+            function makeGearSvg() {
+                var cx = 50, cy = 50, teeth = 10, ro = 47, ri = 37, steps = teeth * 2, d = '';
+                for (var i = 0; i <= steps; i++) {
+                    var ang = i / steps * Math.PI * 2;
+                    var r = (i % 2 === 0) ? ro : ri;
+                    d += (i === 0 ? 'M' : 'L')
+                        + (cx + Math.cos(ang) * r).toFixed(2) + ' '
+                        + (cy + Math.sin(ang) * r).toFixed(2) + ' ';
+                }
+                d += 'Z';
+                return '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">'
+                    + '<defs><radialGradient id="g" cx="45%" cy="38%" r="65%">'
+                    + '<stop offset="0%" stop-color="#ffe29a"/>'
+                    + '<stop offset="55%" stop-color="#ff9d6c"/>'
+                    + '<stop offset="100%" stop-color="#b0341f"/></radialGradient></defs>'
+                    + '<path d="' + d + '" fill="url(#g)" stroke="#6f1f13" stroke-width="2"/>'
+                    + '<circle cx="50" cy="50" r="14" fill="#2b1a14"/>'
+                    + '<circle cx="50" cy="50" r="6" fill="#ffd27f"/></svg>';
+            }
+            var GEAR_URI = 'image://data:image/svg+xml,' + encodeURIComponent(makeGearSvg());
+
+            // Each case: a big central node of some shape, ringed by peripheral nodes so edges
+            // approach from all angles, with an arrow at the central end of every edge.
+            var cases = [
+                { title: 'rect', center: { symbol: 'rect', symbolSize: 70 } },
+                { title: 'roundRect', center: { symbol: 'roundRect', symbolSize: 70 } },
+                { title: 'diamond', center: { symbol: 'diamond', symbolSize: 80 } },
+                { title: 'triangle', center: { symbol: 'triangle', symbolSize: 80 } },
+                { title: 'pin', center: { symbol: 'pin', symbolSize: 80 } },
+                { title: 'arrow', center: { symbol: 'arrow', symbolSize: 80 } },
+                { title: 'circle (control)', center: { symbol: 'circle', symbolSize: 70 } },
+                { title: 'ellipse symbolSize [110,44]', center: { symbol: 'circle', symbolSize: [110, 44] } },
+                { title: 'rect [110,44]', center: { symbol: 'rect', symbolSize: [110, 44] } },
+                { title: 'rect rotated 30deg', center: { symbol: 'rect', symbolSize: [110, 44], symbolRotate: 30 } },
+                { title: 'diamond rotated 20deg', center: { symbol: 'diamond', symbolSize: 90, symbolRotate: 20 } },
+                { title: 'SVG whale, path:// (keepAspect)', center: { symbol: WHALE, symbolSize: 120, symbolKeepAspect: true } },
+                { title: 'image:// PNG data-URI (bbox)', center: { symbol: PNG_URI, symbolSize: 80 } },
+                { title: 'image:// PNG [120,60] keepAspect', center: { symbol: PNG_URI, symbolSize: [120, 60], symbolKeepAspect: true } },
+                { title: 'image:// SVG gear data-URI (bbox)', center: { symbol: GEAR_URI, symbolSize: 100 } },
+                { title: 'image:// SVG gear, rotated 25deg', center: { symbol: GEAR_URI, symbolSize: [120, 80], symbolRotate: 25 } },
+                { title: 'curved edges + diamond', center: { symbol: 'diamond', symbolSize: 80 }, curveness: 0.25 },
+                { title: 'curved edges + rect rot', center: { symbol: 'rect', symbolSize: [110, 44], symbolRotate: 25 }, curveness: 0.3 }
+            ];
+
+            function buildOption(cfg) {
+                var cx = 160;
+                var cy = 150;
+                var R = 115;
+                var N = 18;
+                var nodes = [];
+                var links = [];
+
+                nodes.push({
+                    name: 'c',
+                    x: cx,
+                    y: cy,
+                    fixed: true,
+                    symbol: cfg.center.symbol,
+                    symbolSize: cfg.center.symbolSize,
+                    symbolRotate: cfg.center.symbolRotate,
+                    symbolKeepAspect: cfg.center.symbolKeepAspect,
+                    itemStyle: { color: '#8fd0ff', borderColor: '#1f6fb2', borderWidth: 1 }
+                });
+                for (var i = 0; i < N; i++) {
+                    var a = i / N * Math.PI * 2;
+                    nodes.push({
+                        name: 'p' + i,
+                        x: cx + Math.cos(a) * R,
+                        y: cy + Math.sin(a) * R,
+                        fixed: true,
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        itemStyle: { color: '#bbb' }
+                    });
+                    // peripheral -> center, so the arrow (toSymbol) lands on the central node.
+                    links.push({ source: 'p' + i, target: 'c' });
+                }
+
+                return {
+                    series: [{
+                        type: 'graph',
+                        layout: 'none',
+                        coordinateSystem: 'view',
+                        roam: true,
+                        edgeSymbol: ['none', 'arrow'],
+                        edgeSymbolSize: 11,
+                        lineStyle: { color: '#c0392b', width: 1.5, opacity: 1, curveness: cfg.curveness || 0 },
+                        data: nodes,
+                        links: links
+                    }]
+                };
+            }
+
+            require(['echarts'], function (echarts) {
+                var root = document.getElementById('root');
+                cases.forEach(function (cfg) {
+                    var cell = document.createElement('div');
+                    cell.className = 'cell';
+                    var title = document.createElement('div');
+                    title.className = 'title';
+                    title.textContent = cfg.title;
+                    var chartDiv = document.createElement('div');
+                    chartDiv.className = 'chart';
+                    cell.appendChild(title);
+                    cell.appendChild(chartDiv);
+                    root.appendChild(cell);
+
+                    var chart = echarts.init(chartDiv);
+                    chart.setOption(buildOption(cfg));
+                });
+            });
+        </script>
+    </body>
+</html>
