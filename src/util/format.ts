@@ -23,7 +23,7 @@ import { parseDate, isNumeric, numericToNumber, isNullableNumberFinite } from '.
 import { TooltipRenderMode, ColorString, ZRColor, DimensionType } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
-import { format as timeFormat, pad } from './time';
+import { format as timeFormat, getSystemTimeZone, pad } from './time';
 import { deprecateReplaceLog } from './log';
 
 /**
@@ -64,8 +64,25 @@ export { encodeHTML };
 export function makeValueReadable(
     value: unknown,
     valueType: DimensionType,
-    useUTC: boolean
+    timeZone: string
+): string;
+/**
+ * @deprecated Pass a time zone string instead of the legacy `isUTC` boolean.
+ */
+export function makeValueReadable(
+    value: unknown,
+    valueType: DimensionType,
+    isUTC: boolean
+): string;
+export function makeValueReadable(
+    value: unknown,
+    valueType: DimensionType,
+    timeZoneOrUTC: string | boolean
 ): string {
+    if (__DEV__ && typeof timeZoneOrUTC === 'boolean') {
+        deprecateReplaceLog('isUTC boolean parameter', 'timeZone string parameter', 'makeValueReadable');
+    }
+
     const USER_READABLE_DEFUALT_TIME_PATTERN = '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss}';
 
     function stringToUserReadable(str: string): string {
@@ -80,7 +97,10 @@ export function makeValueReadable(
     if (isTypeTime || isValueDate) {
         const date = isTypeTime ? parseDate(value) : value;
         if (!isNaN(+date)) {
-            return timeFormat(date, USER_READABLE_DEFUALT_TIME_PATTERN, useUTC);
+            const timeZone = typeof timeZoneOrUTC === 'string'
+                ? timeZoneOrUTC
+                : timeZoneOrUTC ? 'UTC' : getSystemTimeZone();
+            return timeFormat(date, USER_READABLE_DEFUALT_TIME_PATTERN, timeZone);
         }
         else if (isValueDate) {
             return '-';

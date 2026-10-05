@@ -62,6 +62,7 @@ import { concatInternalOptions } from './internalComponentCreator';
 import { LocaleOption } from '../core/locale';
 import {PaletteMixin} from './mixin/palette';
 import { error, warn } from '../util/log';
+import { getSystemTimeZone, validateTimeZone } from '../util/time';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -163,6 +164,8 @@ class GlobalModel extends Model<ECUnitOption> {
 
     private _optionManager: OptionManager;
 
+    private _timeZone: string;
+
     private _componentsMap: HashMap<ComponentModel[], ComponentMainType>;
 
     /**
@@ -218,7 +221,6 @@ class GlobalModel extends Model<ECUnitOption> {
         opts: GlobalModelSetOptionOpts,
         optionPreprocessorFuncs: OptionPreprocessor[]
     ): void {
-
         if (__DEV__) {
             assert(option != null, 'option is null/undefined');
             assert(
@@ -314,6 +316,18 @@ class GlobalModel extends Model<ECUnitOption> {
         opt: InnerSetOptionOpts
     ): void {
         const option = this.option;
+        const timeZone = newOption.timeZone != null
+            ? newOption.timeZone
+            : option.timeZone;
+        if (timeZone != null) {
+            this._timeZone = validateTimeZone(timeZone);
+        }
+        else if (newOption.useUTC != null) {
+            this._timeZone = resolveTimeZone(newOption);
+        }
+        else if (this._timeZone == null) {
+            this._timeZone = resolveTimeZone(option);
+        }
         const componentsMap = this._componentsMap;
         const componentsCount = this._componentsCount;
         const newCmptTypes: ComponentMainType[] = [];
@@ -861,6 +875,10 @@ echarts.use([${seriesImportName}]);`);
         return (this._seriesIndices || []).slice();
     }
 
+    getTimeZone(): string {
+        return this._timeZone;
+    }
+
     filterSeries<T>(
         cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => boolean,
         context?: T
@@ -933,6 +951,7 @@ echarts.use([${seriesImportName}]);`);
             // i.e. `chart.setOption(chart.getModel().option);` is forbidden.
             ecModel.option = {} as ECUnitOption;
             ecModel.option[OPTION_INNER_KEY] = OPTION_INNER_VALUE;
+            ecModel._timeZone = null;
 
             // Init with series: [], in case of calling findSeries method
             // before series initialized.
@@ -955,6 +974,12 @@ echarts.use([${seriesImportName}]);`);
         };
 
     })();
+}
+
+function resolveTimeZone(option: ECUnitOption): string {
+    return option.timeZone != null
+        ? validateTimeZone(option.timeZone)
+        : option.useUTC ? 'UTC' : getSystemTimeZone();
 }
 
 
