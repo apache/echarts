@@ -161,6 +161,9 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
             const axis = coordSys.getAxis(dimName);
             const axisModel = axis.model;
             const dataZoomModel = findDataZoom(dimName, axisModel, ecModel);
+            if (!dataZoomModel) {
+                return;
+            }
 
             // Restrict range.
             const minMaxSpan = dataZoomModel.findRepresentativeAxisProxy(axisModel).getMinMaxSpan();
@@ -179,11 +182,11 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
                 0.5
             );
 
-            dataZoomModel && (snapshot[dataZoomModel.id] = {
+            snapshot[dataZoomModel.id] = {
                 dataZoomId: dataZoomModel.id,
                 startValue: isFinite(precision) ? round(minMax[0], precision) : minMax[0],
                 endValue: isFinite(precision) ? round(minMax[1], precision) : minMax[1]
-            });
+            };
         }
 
         function findDataZoom(
