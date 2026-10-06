@@ -263,6 +263,9 @@ class ScrollableLegendView extends LegendView {
         const contentRect = contentGroup.getBoundingRect();
         const controllerRect = controllerGroup.getBoundingRect();
         const showController = this._showController = contentRect[wh] > maxSize[wh];
+        const contentSize = Math.max(contentRect[hw], controllerRect[hw]);
+        const mainSize = Math.min(contentSize, maxSize[hw]);
+        const crossOverflow = contentSize > maxSize[hw];
 
         // In case that the inner elements of contentGroup layout do not based on [0, 0]
         const contentPos = [-contentRect.x, -contentRect.y];
@@ -293,8 +296,8 @@ class ScrollableLegendView extends LegendView {
             }
         }
 
-        // Always align controller to content as 'middle'.
-        controllerPos[1 - orientIdx] += contentRect[hw] / 2 - controllerRect[hw] / 2;
+        // Always align controller to visible content as 'middle'.
+        controllerPos[1 - orientIdx] += mainSize / 2 - controllerRect[hw] / 2;
 
         contentGroup.setPosition(contentPos);
         containerGroup.setPosition(containerPos);
@@ -307,15 +310,17 @@ class ScrollableLegendView extends LegendView {
 
         // Consider content may be overflow (should be clipped).
         mainRect[wh] = showController ? maxSize[wh] : contentRect[wh];
-        mainRect[hw] = Math.max(contentRect[hw], controllerRect[hw]);
+        mainRect[hw] = mainSize;
 
         // `containerRect[yx] + containerPos[1 - orientIdx]` is 0.
         mainRect[yx] = Math.min(0, controllerRect[yx] + controllerPos[1 - orientIdx]);
 
         containerGroup.__rectSize = maxSize[wh];
-        if (showController) {
+        if (showController || crossOverflow) {
             const clipShape = {x: 0, y: 0} as graphic.Rect['shape'];
-            clipShape[wh] = Math.max(maxSize[wh] - controllerRect[wh] - pageButtonGap, 0);
+            clipShape[wh] = showController
+                ? Math.max(maxSize[wh] - controllerRect[wh] - pageButtonGap, 0)
+                : mainRect[wh];
             clipShape[hw] = mainRect[hw];
             containerGroup.setClipPath(new graphic.Rect({shape: clipShape}));
             // Consider content may be larger than container, container rect
