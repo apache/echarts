@@ -555,11 +555,11 @@ class TooltipView extends ComponentView {
             each(itemCoordSys.dataByAxis, function (axisItem) {
                 const axisModel = ecModel.getComponent(axisItem.axisDim + 'Axis', axisItem.axisIndex) as AxisBaseModel;
                 const axisValue = axisItem.value;
-                const axis = axisModel.axis;
-                const axisValueParsed = axis.scale.parse(axisValue);
                 if (!axisModel || axisValue == null) {
                     return;
                 }
+                const axis = axisModel.axis;
+                const axisValueParsed = axis.scale.parse(axisValue);
                 // FIXME: when using `tooltip.trigger: 'axis'`, the precision of the axis value displayed in tooltip
                 //  should match the original series values rather than using the default strategy in Interval.ts
                 //  (getPrecision(interval) + 2); otherwise it may cause confusion.
@@ -578,6 +578,9 @@ class TooltipView extends ComponentView {
 
                 each(axisItem.seriesDataIndices, function (idxItem) {
                     const series = ecModel.getSeriesByIndex(idxItem.seriesIndex);
+                    if (!series) {
+                        return;
+                    }
                     const dataIndex = idxItem.dataIndexInside;
                     const cbParams = series.getDataParams(dataIndex) as TooltipCallbackDataParams;
                     // Can't find data.
