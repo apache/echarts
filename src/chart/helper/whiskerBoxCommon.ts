@@ -29,6 +29,7 @@ import type SeriesData from '../../data/SeriesData';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordDimensionDefinition } from '../../data/helper/createDimensions';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
+import { SINGLE_REFERRING } from '../../util/model';
 import {
     SHAPE_CLIP_KIND_FULLY_CLIPPED, SHAPE_CLIP_KIND_NOT_CLIPPED, SHAPE_CLIP_KIND_PARTIALLY_CLIPPED,
     ShapeClipKind
@@ -79,8 +80,8 @@ export class WhiskerBoxCommonMixin<Opts extends CommonOption> {
 
         let ordinalMeta;
 
-        const xAxisModel = ecModel.getComponent('xAxis', this.get('xAxisIndex')) as CartesianAxisModel;
-        const yAxisModel = ecModel.getComponent('yAxis', this.get('yAxisIndex')) as CartesianAxisModel;
+        const xAxisModel = this.getReferringComponents('xAxis', SINGLE_REFERRING).models[0] as CartesianAxisModel;
+        const yAxisModel = this.getReferringComponents('yAxis', SINGLE_REFERRING).models[0] as CartesianAxisModel;
         const xAxisType = xAxisModel.get('type');
         const yAxisType = yAxisModel.get('type');
         let addOrdinal;
@@ -178,9 +179,9 @@ export class WhiskerBoxCommonMixin<Opts extends CommonOption> {
      */
     getBaseAxis(): Axis2D {
         const dim = this._baseAxisDim;
-        return (this.ecModel.getComponent(
-            dim + 'Axis', this.get(dim + 'AxisIndex' as 'xAxisIndex' | 'yAxisIndex')
-        ) as CartesianAxisModel).axis;
+        return (this.getReferringComponents(
+            dim + 'Axis', SINGLE_REFERRING
+        ).models[0] as CartesianAxisModel).axis;
     }
 
     getWhiskerBoxesLayout() {
