@@ -876,14 +876,20 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     private _updateTheme(theme: string | ThemeOption): void {
         if (isString(theme)) {
-            theme = themeStorage[theme] as object;
+            const themeName = theme;
+            theme = themeStorage[themeName] as object;
+            if (!theme) {
+                if (__DEV__) {
+                    warn('Theme ' + themeName + ' is not registered.');
+                }
+                return;
+            }
         }
 
-        if (theme) {
-            theme = clone(theme);
-            theme && backwardCompat(theme as ECUnitOption, true);
-            this._theme = theme;
-        }
+        // `null` or `undefined` means the default theme, the same as in `init`.
+        theme = theme ? clone(theme) : {};
+        backwardCompat(theme as ECUnitOption, true);
+        this._theme = theme;
     }
 
     // We don't want developers to use getModel directly.
