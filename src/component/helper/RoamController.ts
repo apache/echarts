@@ -279,6 +279,7 @@ class RoamController extends Eventful<RoamEventDefinition> {
 
     private _mousedownHandler(e: ZRElementEvent) {
         if (eventTool.isMiddleOrRightButtonOnMouseUpDown(e)
+            || interactionMutex.isTaken(this._zr, 'globalPan')
             || eventConsumed(e)
         ) {
             return;
@@ -349,7 +350,9 @@ class RoamController extends Eventful<RoamEventDefinition> {
     }
 
     private _mouseupHandler(e: ZRElementEvent) {
-        if (eventConsumed(e)) {
+        if (interactionMutex.isTaken(this._zr, 'globalPan')
+            || eventConsumed(e)
+        ) {
             return;
         }
         const zr = this._zr;
