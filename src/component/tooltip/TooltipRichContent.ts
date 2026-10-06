@@ -111,11 +111,7 @@ class TooltipRichContent {
         ] as const, propName => {
             (this.el.style as any)[propName] = tooltipModel.get(propName);
         });
-        zrUtil.each([
-            'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
-        ] as const, propName => {
-            this.el.style[propName] = textStyleModel.get(propName) || 0;
-        });
+        applyRichTextStyle(this.el.style, textStyleModel);
 
         this._zr.add(this.el);
 
@@ -214,6 +210,30 @@ class TooltipRichContent {
 
     dispose() {
         this._zr.remove(this.el);
+    }
+}
+
+function applyRichTextStyle(
+    style: TextStyleProps,
+    textStyleModel: Model<TooltipOption['textStyle']>
+) {
+    zrUtil.each([
+        'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'lineHeight',
+        'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
+    ] as const, propName => {
+        const val = textStyleModel.get(propName);
+        if (val != null) {
+            (style as any)[propName] = val;
+        }
+    });
+
+    const textBorderColor = textStyleModel.get('textBorderColor');
+    if (textBorderColor != null) {
+        style.stroke = textBorderColor;
+    }
+    const textBorderWidth = textStyleModel.get('textBorderWidth');
+    if (textBorderWidth != null) {
+        style.lineWidth = textBorderWidth;
     }
 }
 
