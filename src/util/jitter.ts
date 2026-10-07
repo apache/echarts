@@ -61,7 +61,8 @@ export function fixJitter(
     fixedAxis: Axis2D | SingleAxis,
     fixedCoord: number,
     floatCoord: number,
-    radius: number
+    radius: number,
+    rng: () => number
 ): number {
     if (fixedAxis instanceof Axis2D) {
         const scaleType = fixedAxis.scale.type;
@@ -81,24 +82,25 @@ export function fixJitter(
         ? calcBandWidth(fixedAxis).w
         : null;
     if (jitterOverlap) {
-        return fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius);
+        return fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius, rng);
     }
-    return fixJitterAvoidOverlaps(fixedAxis, fixedCoord, floatCoord, radius, jitter, jitterMargin);
+    return fixJitterAvoidOverlaps(fixedAxis, fixedCoord, floatCoord, radius, jitter, jitterMargin, rng);
 }
 
 function fixJitterIgnoreOverlaps(
     floatCoord: number,
     jitter: number,
     bandWidth: number | null,
-    radius: number
+    radius: number,
+    rng: () => number
 ): number {
     // Don't clamp single axis
     if (bandWidth === null) {
-        return floatCoord + (Math.random() - 0.5) * jitter;
+        return floatCoord + (rng() - 0.5) * jitter;
     }
     const maxJitter = bandWidth - radius * 2;
     const actualJitter = Math.min(Math.max(0, jitter), maxJitter);
-    return floatCoord + (Math.random() - 0.5) * actualJitter;
+    return floatCoord + (rng() - 0.5) * actualJitter;
 }
 
 function fixJitterAvoidOverlaps(
@@ -107,7 +109,8 @@ function fixJitterAvoidOverlaps(
     floatCoord: number,
     radius: number,
     jitter: number,
-    margin: number
+    margin: number,
+    rng: () => number
 ): number {
     const store = inner(fixedAxis);
     if (!store.items) {
@@ -129,7 +132,7 @@ function fixJitterAvoidOverlaps(
     if (distance > jitter / 2 || (bandWidth && distance > bandWidth / 2 - radius)) {
         // If the new item is moved too far, then give up.
         // Fall back to random jitter.
-        return fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius);
+        return fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius, rng);
     }
 
     // Add new point to array
