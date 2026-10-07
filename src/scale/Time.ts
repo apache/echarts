@@ -536,7 +536,8 @@ function createIntervalTicks(
         out.push({
             value: dateTime,
             // extent[1] should be added; deduplication will be performed later.
-            notAdd: dateTime > extent[1]
+            // Past maxTimestamp it falls inside the next span, off this level's interval.
+            notAdd: dateTime > extent[1] || dateTime > maxTimestamp
         });
     }
 
