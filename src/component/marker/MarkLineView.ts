@@ -175,6 +175,13 @@ function markLineFilter(
     coordSys: CoordinateSystem,
     item: MarkLine2DDataItemOption
 ) {
+    // An invalid entry in `markLine.data` (e.g. an empty object `{}`) is
+    // normalized to undefined endpoints. Such a markLine cannot be drawn, so
+    // drop it here instead of dereferencing `undefined.coord` and throwing,
+    // which would abort rendering of all the other markLines. See #21683.
+    if (!item[0] || !item[1]) {
+        return false;
+    }
     if (coordSys.type === 'cartesian2d') {
         const fromCoord = item[0].coord;
         const toCoord = item[1].coord;
