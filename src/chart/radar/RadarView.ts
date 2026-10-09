@@ -31,6 +31,7 @@ import { VectorArray } from 'zrender/src/core/vector';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { isValidRadarPoint, RadarPolygon, RadarPolyline } from './RadarPath';
 
 type RadarSymbol = ReturnType<typeof symbolUtil.createSymbol> & {
     __dimIdx: number
@@ -84,10 +85,13 @@ class RadarView extends ChartView {
             // Simply rerender all
             symbolGroup.removeAll();
             for (let i = 0; i < newPoints.length - 1; i++) {
+                if (!isValidRadarPoint(newPoints[i])) {
+                    continue;
+                }
                 const symbolPath = createSymbol(data, idx);
                 if (symbolPath) {
                     symbolPath.__dimIdx = i;
-                    if (oldPoints[i]) {
+                    if (oldPoints[i] && isValidRadarPoint(oldPoints[i])) {
                         symbolPath.setPosition(oldPoints[i]);
                         graphic[isInit ? 'initProps' : 'updateProps'](
                             symbolPath, {
@@ -106,7 +110,7 @@ class RadarView extends ChartView {
 
         function getInitialPoints(points: number[][]) {
             return zrUtil.map(points, function (pt) {
-                return [polar.cx, polar.cy];
+                return isValidRadarPoint(pt) ? [polar.cx, polar.cy] : [NaN, NaN];
             });
         }
         data.diff(oldData)
@@ -115,8 +119,8 @@ class RadarView extends ChartView {
                 if (!points) {
                     return;
                 }
-                const polygon = new graphic.Polygon();
-                const polyline = new graphic.Polyline();
+                const polygon = new RadarPolygon();
+                const polyline = new RadarPolyline();
                 const target = {
                     shape: {
                         points: points
