@@ -942,8 +942,13 @@ class LineView extends ChartView {
     ) {
         const data = seriesModel.getData();
         const dataIndex = modelUtil.queryDataIndex(data, payload);
+        const emphasisDisabled = seriesModel.getModel('emphasis').get('disabled');
 
         this._changePolyState('emphasis');
+
+        if (emphasisDisabled) {
+            return;
+        }
 
         if (!(dataIndex instanceof Array) && dataIndex != null && dataIndex >= 0) {
             const points = data.getLayout('points');
@@ -1001,6 +1006,7 @@ class LineView extends ChartView {
     ) {
         const data = seriesModel.getData();
         const dataIndex = modelUtil.queryDataIndex(data, payload) as number;
+        const emphasisDisabled = seriesModel.getModel('emphasis').get('disabled');
 
         this._changePolyState('normal');
 
@@ -1011,12 +1017,12 @@ class LineView extends ChartView {
                     data.setItemGraphicEl(dataIndex, null);
                     this.group.remove(symbol);
                 }
-                else {
+                else if (!emphasisDisabled) {
                     symbol.downplay();
                 }
             }
         }
-        else {
+        else if (!emphasisDisabled) {
             // FIXME
             // can not downplay completely.
             // Downplay whole series
