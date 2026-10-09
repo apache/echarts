@@ -478,6 +478,9 @@ export function blurSeries(
             // TODO blurScope: coordinate system
         )) {
             const view = api.getViewOfSeriesModel(seriesModel);
+            if (!view || !view.group) {
+                return;
+            }
             view.group.traverse(function (child) {
                 // For the elements that have been triggered by other components,
                 // and are still required to be highlighted,
