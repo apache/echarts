@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -23,20 +22,34 @@ under the License.
         <meta charset="utf-8">
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
         <style>
-            html, body, #main {
+            html, body, #main, #main2 {
                 width: 100%;
                 height: 100%;
                 margin: 0;
             }
-            #main {
+            #main, #main2 {
                 background: #fff;
             }
         </style>
+        <h2>
+            angleAxis range should adjust when `boundaryGap: false`.
+        </h2>
+        <p>
+            1. startAngle: 90, endAngle: -270, clockwise: true: `a` to `d` should take 3/4 of the circle so that pieces are not overlapped.
+        </p>
+        <p>
+            2. (click "textNext") startAngle: 90, endAngle: -90, clockwise: true: `a` to `d` should take 1/2 of the circle so that pieces are not overlapped.
+        </p>
+        <div id="main2"></div>
         <div id="main"></div>
+
+
+
         <script>
 
             require(['echarts'], function (echarts) {
@@ -70,6 +83,78 @@ under the License.
                 });
 
                 window.onresize = chart.resize;
+            });
+        </script>
+
+
+
+        <script>
+
+            require(['echarts'], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main2'));
+
+                var config = {
+                    startAngle: 90,
+                    endAngle: -270,
+                    clockwise: true,
+                    testNext: function() {
+                        config.startAngle = 90;
+                        config.endAngle = -90;
+                        update();
+                        gui.__controllers.forEach(function(controller) {
+                            controller.updateDisplay();
+                        });
+                    }
+                };
+
+                chart.setOption({
+                    angleAxis: {
+                        type: 'category',
+                        data: [
+                            'a',
+                            'b',
+                            'c',
+                            'd'
+                        ],
+                        boundaryGap: false,
+                        startAngle: config.startAngle,
+                        endAngle: config.endAngle,
+                        clockwise: config.clockwise
+                    },
+                    radiusAxis: {
+                    },
+                    polar: {},
+                    series: [
+                        {
+                            type: 'bar',
+                            data: [10, 20, 30, 40],
+                            coordinateSystem: 'polar',
+                            itemStyle: {
+                                opacity: 0.5
+                            }
+                        }
+                    ]
+                });
+
+                function update() {
+                    chart.setOption({
+                        angleAxis: {
+                            startAngle: config.startAngle,
+                            endAngle: config.endAngle,
+                            clockwise: config.clockwise
+                        }
+                    });
+                }
+
+                var gui = new dat.GUI();
+                gui.add(config, 'startAngle', -360, 360)
+                    .onChange(update);
+                gui.add(config, 'endAngle', -360, 360)
+                    .onChange(update);
+                gui.add(config, 'clockwise')
+                    .onChange(update);
+                gui.add(config, 'testNext');
             });
         </script>
     </body>
