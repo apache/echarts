@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { extend, retrieve3 } from 'zrender/src/core/util';
+import { extend, isNumber, retrieve3 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import SeriesData from '../../data/SeriesData';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
@@ -26,8 +26,25 @@ import type Model from '../../model/Model';
 import type { GraphNode } from '../../data/Graph';
 import { getLabelStatesModels, setLabelStyle } from '../../label/labelStyle';
 import type { BuiltinTextPosition } from 'zrender/src/core/types';
-import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, SPECIAL_STATES, toggleHoverEmphasis } from '../../util/states';
 import { getECData } from '../../util/innerStore';
+import { normalizeRadian } from 'zrender/src/contain/util';
+import { isRadianAroundZero } from '../../util/number';
+
+const RADIAN = Math.PI / 180;
+const LABEL_FLIP_START_ANGLE = Math.PI * 0.5;
+const LABEL_FLIP_END_ANGLE = Math.PI * 1.5;
+
+function getLabelRotation(rotate: number | 'radial', midAngle: number): number {
+    if (rotate === 'radial') {
+        const midAngleNormal = normalizeRadian(midAngle);
+        const needsFlip = midAngleNormal > LABEL_FLIP_START_ANGLE
+            && !isRadianAroundZero(midAngleNormal - LABEL_FLIP_START_ANGLE)
+            && midAngleNormal < LABEL_FLIP_END_ANGLE;
+        return normalizeRadian(-midAngle + (needsFlip ? Math.PI : 0));
+    }
+    return isNumber(rotate) ? rotate * RADIAN : 0;
+}
 
 export default class ChordPiece extends graphic.Sector {
 
@@ -174,10 +191,21 @@ export default class ChordPiece extends graphic.Sector {
             ? normalLabelModel.get('verticalAlign') || 'middle'
             : (dy > 0 ? 'top' : 'bottom');
 
+        const labelRotate = getLabelRotation(normalLabelModel.get('rotate'), midAngle);
+
+        for (let i = 0; i < SPECIAL_STATES.length; i++) {
+            const stateName = SPECIAL_STATES[i];
+            const stateRotate = labelStateModels[stateName].getShallow('rotate');
+            const state = label.ensureState(stateName);
+            state.rotation = stateRotate != null
+                ? getLabelRotation(stateRotate, midAngle)
+                : null;
+        }
+
         label.attr({
             x: dx * r + layout.cx,
             y: dy * r + layout.cy,
-            rotation: 0,
+            rotation: labelRotate,
             style: {
                 align,
                 verticalAlign
@@ -185,4 +213,3 @@ export default class ChordPiece extends graphic.Sector {
         });
     }
 }
-
