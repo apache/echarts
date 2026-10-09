@@ -301,8 +301,12 @@ class TooltipView extends ComponentView {
 
         const dispatchAction = makeDispatchAction(payload, api);
 
-        // Reset ticket
-        this._ticket = '';
+        /** Note: We don't reset the ticket here anymore, because if the tooltip content
+          * hasn't changed, we want to preserve the async ticket so that pending callbacks
+          * can still update the tooltip. The ticket will be reset in _showTooltipContent
+          * when new content is actually shown.
+          */
+        // this._ticket = '';
 
         // When triggered from axisPointer.
         const dataByCoordSys = payload.dataByCoordSys;
