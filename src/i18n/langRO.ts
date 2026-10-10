@@ -91,7 +91,7 @@
             radar: 'Diagramă radar',
             tree: 'Arbore',
             treemap: 'Hartă de arbori',
-            boxplot: 'Diagramă boxbare',
+            boxplot: 'Diagramă boxplot',
             candlestick: 'Diagramă bursieră',
             k: 'Diagramă cu linii K',
             heatmap: 'Hartă termografică',
@@ -101,7 +101,7 @@
             graph: 'Graf',
             sankey: 'Diagramă Sankey',
             funnel: 'Diagramă pâlnie',
-            gauge: 'Calibru',
+            gauge: 'Indicator',
             pictorialBar: 'Diagramă cu bare picturale',
             themeRiver: 'Streamgraph',
             sunburst: 'Diagramă rază de soare',
@@ -111,7 +111,7 @@
     },
     aria: {
         general: {
-            withTitle: 'Aceasta este o diagrmă despre "{title}"',
+            withTitle: 'Aceasta este o diagramă despre "{title}"',
             withoutTitle: 'Aceasta este o diagramă'
         },
         series: {
