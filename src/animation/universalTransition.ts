@@ -623,7 +623,7 @@ function findTransitionSeriesBatches(
                     const oldSeries: TransitionSeries[] = [];
                     each(transitionKey, key => {
                         const oldData = oldDataMap.get(key);
-                        if (oldData.data) {
+                        if (oldData && oldData.data) {
                             oldSeries.push({
                                 dataGroupId: oldData.dataGroupId,
                                 divide: getDivideShapeFromData(oldData.data),
