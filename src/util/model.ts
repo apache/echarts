@@ -1442,3 +1442,7 @@ export function createSimpleOverallStageHandler2(
         overallReset: overallReset
     };
 }
+
+export function isInProgressiveRendering(seriesModel: SeriesModel): boolean {
+    return seriesModel.pipelineContext.progressiveRender;
+}

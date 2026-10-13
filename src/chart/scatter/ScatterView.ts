@@ -28,7 +28,7 @@ import SeriesData from '../../data/SeriesData';
 import { TaskProgressParams } from '../../core/task';
 import type { StageHandlerProgressExecutor } from '../../util/types';
 import Element from 'zrender/src/Element';
-import { getIncrementalId } from '../../util/model';
+import { getIncrementalId, isInProgressiveRendering } from '../../util/model';
 import { createCoordSysClipAreaSimply } from '../helper/createClipPathFromCoordSys';
 import { ISymbolDraw, SymbolDrawUpdateOpt } from '../helper/baseDraw';
 
@@ -78,7 +78,9 @@ class ScatterView extends ChartView {
         // PENDING
         this.group.dirty();
 
-        if (!this._finished) { // FIXME: _finished checking is unnecessary?
+        if (isInProgressiveRendering(seriesModel)
+            || !this._finished
+        ) { // FIXME: _finished checking is unnecessary?
             return {update: true} as const;
         }
         else {
