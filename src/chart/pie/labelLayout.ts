@@ -289,17 +289,29 @@ function constrainTextWidth(
     if (availableWidth < oldOuterWidth || forceRecalculate) {
 
         if (overflow && overflow.match('break')) {
-            // Temporarily set background to be null to calculate
-            // the bounding box without background.
-            label.setStyle('backgroundColor', null);
-            // Set constraining width
-            label.setStyle('width', availableWidth - paddingH);
+            // Temporarily remove everything that makes zrender add a
+            // background rect (backgroundColor, lineHeight, border), because
+            // that rect takes the constraining width rather than the width of
+            // the wrapped text, and would be included in the bounding box.
+            const lineHeight = style.lineHeight;
+            const borderWidth = style.borderWidth;
+            label.setStyle({
+                backgroundColor: null,
+                lineHeight: null,
+                borderWidth: null,
+                // Set constraining width
+                width: availableWidth - paddingH
+            });
 
             // This is the real bounding box of the text without padding.
             const innerRect = label.getBoundingRect();
 
-            label.setStyle('width', Math.ceil(innerRect.width));
-            label.setStyle('backgroundColor', bgColor);
+            label.setStyle({
+                width: Math.ceil(innerRect.width),
+                backgroundColor: bgColor,
+                lineHeight,
+                borderWidth
+            });
         }
         else {
             const availableInnerWidth = availableWidth - paddingH;
