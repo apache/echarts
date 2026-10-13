@@ -141,7 +141,11 @@ const componetsMissingLogPrinted: Record<string, boolean> = {};
 
 function checkMissingComponents(option: ECUnitOption) {
     each(option, function (componentOption, mainType: ComponentMainType) {
-        if (!ComponentModel.hasClass(mainType)) {
+        // A `null`/`undefined` option value means the component is not actually
+        // used and should not be reported as missing. For example, `parseRawOption`
+        // injects an empty `timeline` entry into `baseOption` when using the
+        // `{ baseOption, media }` form without a `timeline`. See #21686.
+        if (componentOption != null && !ComponentModel.hasClass(mainType)) {
             const componentImportName = BUITIN_COMPONENTS_MAP[mainType as keyof typeof BUITIN_COMPONENTS_MAP];
             if (componentImportName && !componetsMissingLogPrinted[componentImportName]) {
                 error(`Component ${mainType} is used but not imported.

@@ -149,4 +149,33 @@ describe('model_componentMissing', function () {
 
         console.error = oldConsoleErr;
     });
+
+    it('Should not report timeline component missing error for media-only option without timeline', function () {
+        // See #21686: when using the full `{ baseOption, media }` form without a
+        // `timeline`, an empty `timeline` entry was injected into `baseOption`,
+        // which was wrongly reported as a missing `TimelineComponent`.
+        const chart = createChart();
+        console.error = jest.fn();
+        chart.setOption<EChartsOption>({
+            baseOption: {
+                series: [{
+                    type: 'pie'
+                }]
+            },
+            media: [{
+                query: { maxWidth: 500 },
+                option: {
+                    series: [{
+                        type: 'pie',
+                        radius: '50%'
+                    }]
+                }
+            }]
+        });
+        expect(console.error).not.toHaveBeenCalledWith(
+            makeComponentError('timeline', 'TimelineComponent')
+        );
+
+        console.error = oldConsoleErr;
+    });
 });
