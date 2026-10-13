@@ -256,7 +256,7 @@ function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
         zrUtil.each(keyValues, function (value: string, key: string) {
             result = result.replace(
                 new RegExp('\\{\\s*' + key + '\\s*\\}', 'g'),
-                value
+                () => value
             );
         });
         return result;
