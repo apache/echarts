@@ -1080,6 +1080,9 @@ function doCreateOrUpdateEl(
     // elements and use them in event handlers.
     // Update them only when user specified, otherwise, remain.
     hasOwn(elOption, 'info') && (customInnerStore(el).info = elOption.info);
+    // Save the latest element option. It is used when the element is removed
+    // later, e.g., to apply the leave transition.
+    customInnerStore(el).option = elOption;
 
     for (let i = 0; i < STATES.length; i++) {
         const stateName = STATES[i];
