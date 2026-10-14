@@ -18,7 +18,8 @@
 */
 
 import { EChartsType } from '@/src/echarts';
-import { createChart } from '../../core/utHelper';
+import { createChart, getViewGroup } from '../../core/utHelper';
+import Group from 'zrender/src/graphic/Group';
 import { ZRColor } from '@/src/util/types';
 import { CustomSeriesRenderItemAPI, CustomSeriesRenderItemParams } from '@/src/chart/custom/CustomSeries';
 
@@ -118,4 +119,98 @@ describe('custom_series', function () {
         el.dispatchEvent(e)
         expect(customInfo).toEqual({ foo: 'bar' });
     })
+
+    // https://github.com/apache/echarts/issues/18402
+    describe('remove_elements_with_leaveTo', function () {
+
+        function makeOption(data: number[][], renderItem: () => unknown) {
+            return {
+                animationDurationUpdate: 10,
+                xAxis: {},
+                yAxis: {},
+                series: {
+                    type: 'custom',
+                    data: data,
+                    renderItem: renderItem
+                }
+            };
+        }
+
+        function makeGroupOption(childNames: string[], mergeChildren?: 'byName') {
+            return makeOption([[11, 22]], function () {
+                return {
+                    type: 'group',
+                    $mergeChildren: mergeChildren,
+                    children: childNames.map((name, idx) => ({
+                        type: 'rect',
+                        name: name,
+                        leaveTo: { style: { opacity: 0 } },
+                        shape: { x: idx * 20, y: 0, width: 10, height: 10 },
+                        style: { fill: 'green' }
+                    }))
+                };
+            });
+        }
+
+        function getSeriesGroup() {
+            return getViewGroup(chart, 'series', 0);
+        }
+
+        // Elements that have `leaveTo` are kept until the leave animation ends.
+        function waitForLeaveAnimation() {
+            return new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        it('should remove a data item element that has leaveTo', async function () {
+            function renderItem() {
+                return {
+                    type: 'rect',
+                    transition: 'all',
+                    enterFrom: { style: { opacity: 0 } },
+                    leaveTo: { style: { opacity: 0 } },
+                    x: 100,
+                    y: 100,
+                    shape: { x: 0, y: 0, width: 100, height: 100 },
+                    style: { fill: 'green', opacity: 1 }
+                };
+            }
+
+            chart.setOption(makeOption([[11, 22], [33, 44]], renderItem));
+            expect(getSeriesGroup().childCount()).toEqual(2);
+
+            // Remove the second element and update the first one.
+            expect(() => chart.setOption(makeOption([[11, 22]], renderItem))).not.toThrow();
+            await waitForLeaveAnimation();
+            expect(getSeriesGroup().childCount()).toEqual(1);
+
+            // Remove the first element, which has been updated.
+            expect(() => chart.setOption(makeOption([], renderItem))).not.toThrow();
+            await waitForLeaveAnimation();
+            expect(getSeriesGroup().childCount()).toEqual(0);
+        });
+
+        it('should remove a group child that has leaveTo', async function () {
+            chart.setOption(makeGroupOption(['a', 'b', 'c']));
+            const group = getSeriesGroup().childAt(0) as Group;
+            expect(group.childCount()).toEqual(3);
+
+            expect(() => chart.setOption(makeGroupOption(['a']))).not.toThrow();
+            expect(group.childCount()).toEqual(3);
+            await waitForLeaveAnimation();
+            expect(group.childCount()).toEqual(1);
+            expect(group.childAt(0).name).toEqual('a');
+        });
+
+        it('should remove a group child that has leaveTo when merging children by name', async function () {
+            chart.setOption(makeGroupOption(['a', 'b', 'c'], 'byName'));
+            const group = getSeriesGroup().childAt(0) as Group;
+            expect(group.childCount()).toEqual(3);
+
+            expect(() => chart.setOption(makeGroupOption(['b'], 'byName'))).not.toThrow();
+            expect(group.childCount()).toEqual(3);
+            await waitForLeaveAnimation();
+            expect(group.childCount()).toEqual(1);
+            expect(group.childAt(0).name).toEqual('b');
+        });
+    });
 });
