@@ -134,8 +134,10 @@ class RadarView extends ChartView {
                 itemGroup.add(polygon);
                 itemGroup.add(symbolGroup);
 
+                // `initProps` has already set `polyline.shape.points` to the target points,
+                // so animate the symbols from the initial points to keep them in sync with the lines.
                 updateSymbols(
-                    polyline.shape.points, points, symbolGroup, data, idx, true
+                    getInitialPoints(points), points, symbolGroup, data, idx, true
                 );
 
                 data.setItemGraphicEl(idx, itemGroup);
