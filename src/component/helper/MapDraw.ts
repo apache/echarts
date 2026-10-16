@@ -808,12 +808,18 @@ function resetTooltipForRegion(
     regionModel: RegionModel
 ): void {
     if (!data) {
+        const itemTooltipOption = regionModel.get('tooltip');
+        // Skip tooltip config if the tooltip is explicitly disabled
+        // for this region (geo.tooltip.show = false)
+        if (itemTooltipOption && !isString(itemTooltipOption) && itemTooltipOption.show === false) {
+            return;
+        }
         graphic.setTooltipConfig({
             el: el,
             componentModel: mapOrGeoModel,
             itemName: regionName,
             // @ts-ignore FIXME:TS fix the "compatible with each other"?
-            itemTooltipOption: regionModel.get('tooltip')
+            itemTooltipOption: itemTooltipOption
         });
     }
 }
