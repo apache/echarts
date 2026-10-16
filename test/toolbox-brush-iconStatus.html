@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    toolbox: {
+                        itemSize: 20,
+                        iconStyle: {
+                            borderColor: '#333'
+                        },
+                        emphasis: {
+                            iconStyle: {
+                                borderColor: 'orange'
+                            }
+                        },
+                        feature: {
+                            magicType: {
+                                type: ['line', 'bar']
+                            },
+                            brush: {}
+                        }
+                    },
+                    brush: {
+                        xAxisIndex: 0
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {},
+                    series: [{
+                        type: 'bar',
+                        data: [120, 200, 150, 80, 70, 110, 130]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'The toolbox icons are **dark gray** when normal and **orange** when highlighted.',
+                        '(1) Click "Box Select" and brush an area: "Clear Selections" should become **orange** immediately.',
+                        '(2) Click "Clear Selections" and move the mouse out: it should go back to **dark gray** immediately.',
+                        '(3) Repeat (1), then click "Switch to Line Chart": "Clear Selections" should stay **orange**.',
+                        '"Box Select" should stay **orange** in all of the steps above.'
+                    ],
+                    option: option,
+                    width: 600,
+                    height: 300
+                });
+
+            }); // End of `require`
+
+
+        </script>
+
+
+    </body>
+</html>
+
