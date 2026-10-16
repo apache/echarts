@@ -267,6 +267,18 @@ class TreeView extends ChartView {
         const oldMin = this._min;
         const oldMax = this._max;
 
+        // `bbox.fromPoints` leaves `min`/`max` untouched when there is no valid point
+        // (e.g. `series.data` is empty, or no node has a layout yet). They would stay
+        // empty arrays, making `max[0] - min[0]` NaN, which the zero-size checks below
+        // do not correct, and the resulting dataRect yields a non-invertible view
+        // transform. Seed them so the checks below can expand a degenerate rect.
+        if (!points.length) {
+            min[0] = oldMin ? oldMin[0] : 0;
+            min[1] = oldMin ? oldMin[1] : 0;
+            max[0] = oldMax ? oldMax[0] : 0;
+            max[1] = oldMax ? oldMax[1] : 0;
+        }
+
         // If width or height is 0
         if (max[0] - min[0] === 0) {
             min[0] = oldMin ? oldMin[0] : min[0] - 1;
@@ -575,7 +587,9 @@ function removeNodeEdge(
     }
 
     const sourceSymbolEl = data.getItemGraphicEl(source.dataIndex) as TreeSymbol;
-    const sourceEdge = sourceSymbolEl.__edge;
+    // The source node may already have been removed in the same pass, which resets its
+    // graphic element to null (see `removeNode`). Guard it like `symbolEl` above.
+    const sourceEdge = sourceSymbolEl && sourceSymbolEl.__edge;
 
     // 1. when expand the sub tree, delete the children node should delete the edge of
     // the source at the same time. because the polyline edge shape is only owned by the source.
