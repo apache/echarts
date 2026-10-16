@@ -1004,6 +1004,14 @@ function renderNode(
         }
         const textStyle = textEl.style;
         const textPadding = normalizeCssArray(textStyle.padding || 0);
+        const textPosition = normalLabelModel.getShallow('position');
+        // An explicit rich text height becomes the block height, leaving its tokens
+        // at the top of the block even when that block is aligned to the bottom.
+        const isRichTextBottomPosition = textStyle.rich && (
+            textPosition === 'insideBottom'
+            || textPosition === 'insideBottomLeft'
+            || textPosition === 'insideBottomRight'
+        );
 
         if (upperLabelRect) {
             rectEl.setTextConfig({
@@ -1015,9 +1023,12 @@ function renderNode(
             const width = Math.max(
                 (upperLabelRect ? upperLabelRect.width : rectEl.shape.width) - textPadding[1] - textPadding[3], 0
             );
-            const height = Math.max(
-                (upperLabelRect ? upperLabelRect.height : rectEl.shape.height) - textPadding[0] - textPadding[2], 0
-            );
+            const height = isRichTextBottomPosition
+                ? null
+                : Math.max(
+                    (upperLabelRect ? upperLabelRect.height : rectEl.shape.height)
+                        - textPadding[0] - textPadding[2], 0
+                );
             if (textStyle.width !== width || textStyle.height !== height) {
                 textEl.setStyle({
                     width,
