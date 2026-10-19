@@ -26,6 +26,7 @@ import lineAnimationDiff from './lineAnimationDiff';
 import * as graphic from '../../util/graphic';
 import * as modelUtil from '../../util/model';
 import { ECPolyline, ECPolygon } from './poly';
+import { monotoneTangentScale } from './monotoneCubic';
 import ChartView from '../../view/Chart';
 import { prepareDataCoordInfo, getStackedOnPoint, isPointIllegal } from './helper';
 import { createGridClipPath, createPolarClipPath } from '../helper/createClipPathFromCoordSys';
@@ -56,6 +57,7 @@ import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
 import { convertToColorString } from '../../util/format';
 import { warnDeprecated } from '../../util/styleCompat';
+import { warn } from '../../util/log';
 import { lerp } from 'zrender/src/tool/color';
 import Element from 'zrender/src/Element';
 import { getTickValueOutermost } from '../../coord/axisHelper';
@@ -117,6 +119,37 @@ function getBoundingDiff(points1: ArrayLike<number>, points2: ArrayLike<number>)
 
 function getSmooth(smooth: number | boolean) {
     return zrUtil.isNumber(smooth) ? smooth : (smooth ? 0.5 : 0);
+}
+
+function resolveLineSmooth(
+    smoothOption: number | boolean,
+    smoothMonotone: LineSeriesOption['smoothMonotone'],
+    isCartesian: boolean
+) {
+    const monotone = smoothMonotone === 'monotoneX' || smoothMonotone === 'monotoneY';
+    if (monotone && !isCartesian) {
+        if (__DEV__) {
+            warn(
+                'smoothMonotone: \'' + smoothMonotone
+                    + '\' applies to cartesian line series only. Using the default smooth curve.',
+                true
+            );
+        }
+        return {
+            smooth: getSmooth(smoothOption),
+            smoothMonotone: 'none' as LineSeriesOption['smoothMonotone']
+        };
+    }
+    if (monotone) {
+        return {
+            smooth: monotoneTangentScale(smoothOption),
+            smoothMonotone: smoothMonotone
+        };
+    }
+    return {
+        smooth: getSmooth(smoothOption),
+        smoothMonotone: smoothMonotone
+    };
 }
 
 function getStackedOnPoints(
@@ -850,8 +883,13 @@ class LineView extends ChartView {
         getECData(polyline).seriesIndex = seriesModel.seriesIndex;
         toggleHoverEmphasis(polyline, focus, blurScope, emphasisDisabled);
 
-        const smooth = getSmooth(seriesModel.get('smooth'));
-        const smoothMonotone = seriesModel.get('smoothMonotone');
+        const resolvedSmooth = resolveLineSmooth(
+            seriesModel.get('smooth'),
+            seriesModel.get('smoothMonotone'),
+            coordSys.type === 'cartesian2d'
+        );
+        const smooth = resolvedSmooth.smooth;
+        const smoothMonotone = resolvedSmooth.smoothMonotone;
 
         polyline.setShape({
             smooth,
@@ -874,7 +912,10 @@ class LineView extends ChartView {
             ));
 
             if (stackedOnSeries) {
-                stackedOnSmooth = getSmooth(stackedOnSeries.get('smooth'));
+                const stackedSmooth = stackedOnSeries.get('smooth');
+                stackedOnSmooth = (smoothMonotone === 'monotoneX' || smoothMonotone === 'monotoneY')
+                    ? monotoneTangentScale(stackedSmooth)
+                    : getSmooth(stackedSmooth);
             }
 
             polygon.setShape({
