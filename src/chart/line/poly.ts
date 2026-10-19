@@ -215,6 +215,11 @@ class ECPolylineShape {
     smoothConstraint = true;
     smoothMonotone: 'x' | 'y' | 'none';
     connectNulls: boolean;
+    /**
+     * Parallel to `points`: true restarts smoothing at that vertex.
+     * The baseline of an area does not use this series' flags.
+     */
+    smoothBreaks: ArrayLike<boolean> | null = null;
 }
 
 interface ECPolylineProps extends PathProps {

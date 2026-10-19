@@ -64,6 +64,13 @@ export interface LineDataItemOption extends SymbolOptionMixin,
     name?: string
 
     value?: LineDataValue
+
+    /**
+     * Restart smoothing at this vertex. The stroke stays connected.
+     * A missing sample (`null`) is still what lifts the pen.
+     * Ignored while `step` is set. Dataset rows do not carry this flag.
+     */
+    smoothBreak?: boolean
 }
 
 export interface LineEndLabelOption extends SeriesLabelOption {

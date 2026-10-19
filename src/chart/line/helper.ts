@@ -18,12 +18,12 @@
 */
 
 import {isDimensionStacked} from '../../data/helper/dataStackHelper';
-import {isNumber, map} from 'zrender/src/core/util';
+import {isArray, isNumber, map} from 'zrender/src/core/util';
 import type Polar from '../../coord/polar/Polar';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import SeriesData from '../../data/SeriesData';
 import Axis from '../../coord/Axis';
-import type { LineSeriesOption } from './LineSeries';
+import type { LineDataItemOption, LineSeriesOption } from './LineSeries';
 
 interface CoordInfo {
     dataDimsForPoint: string[]
@@ -131,6 +131,18 @@ export function getStackedOnPoint(
     stackedData[1 - baseDataOffset] = value;
 
     return coordSys.dataToPoint(stackedData);
+}
+
+/**
+ * `smoothBreak` lives on the datum object. Numbers and `[x, y]` tuples cannot carry it.
+ * `getItemModel` is used for object items so the flag is read the same way as other item options.
+ */
+export function isSmoothBreakDatum(data: SeriesData, dataIndex: number): boolean {
+    const raw = data.getRawDataItem(dataIndex);
+    if (raw == null || typeof raw !== 'object' || isArray(raw)) {
+        return false;
+    }
+    return !!(data.getItemModel<Pick<LineDataItemOption, 'smoothBreak'>>(dataIndex).get('smoothBreak'));
 }
 
 export function isPointIllegal(xOrY: number, yOrX: number) {

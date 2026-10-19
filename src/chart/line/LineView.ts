@@ -27,7 +27,7 @@ import * as graphic from '../../util/graphic';
 import * as modelUtil from '../../util/model';
 import { ECPolyline, ECPolygon } from './poly';
 import ChartView from '../../view/Chart';
-import { prepareDataCoordInfo, getStackedOnPoint, isPointIllegal } from './helper';
+import { prepareDataCoordInfo, getStackedOnPoint, isPointIllegal, isSmoothBreakDatum } from './helper';
 import { createGridClipPath, createPolarClipPath } from '../helper/createClipPathFromCoordSys';
 import LineSeriesModel, { LineSeriesOption } from './LineSeries';
 import type GlobalModel from '../../model/Global';
@@ -117,6 +117,44 @@ function getBoundingDiff(points1: ArrayLike<number>, points2: ArrayLike<number>)
 
 function getSmooth(smooth: number | boolean) {
     return zrUtil.isNumber(smooth) ? smooth : (smooth ? 0.5 : 0);
+}
+
+/**
+ * One flag per layout point. `step` rebuilds the point list, so a seam index
+ * would no longer name a sample. No flags means the line is one smooth piece.
+ */
+function readSmoothBreaks(
+    data: SeriesData,
+    pointCount: number,
+    step: LineSeriesOption['step']
+): boolean[] | null {
+    if (step || pointCount <= 0 || data.count() !== pointCount) {
+        return null;
+    }
+    const breaks: boolean[] = [];
+    let any = false;
+    for (let i = 0; i < pointCount; i++) {
+        const on = isSmoothBreakDatum(data, i);
+        breaks.push(on);
+        any = any || on;
+    }
+    return any ? breaks : null;
+}
+
+function breaksOrNull(flags: ArrayLike<boolean> | null | undefined): boolean[] | null {
+    if (!flags) {
+        return null;
+    }
+    for (let i = 0; i < flags.length; i++) {
+        if (flags[i]) {
+            const out: boolean[] = [];
+            for (let j = 0; j < flags.length; j++) {
+                out.push(!!flags[j]);
+            }
+            return out;
+        }
+    }
+    return null;
 }
 
 function getStackedOnPoints(
@@ -684,6 +722,9 @@ class LineView extends ChartView {
 
         // FIXME step not support polar
         const step = !isCoordSysPolar ? seriesModel.get('step') : false;
+        // Taken from the layout points, before `step` rewrites that array.
+        const layoutBreaks = readSmoothBreaks(data, points.length / 2, step);
+        let seamFlagsFromAnimation = false;
         let clipShapeForSymbol: PolarArea | Cartesian2DArea;
         if (coordSys && coordSys.getArea && seriesModel.get('clip', true)) {
             clipShapeForSymbol = coordSys.getArea();
@@ -802,6 +843,7 @@ class LineView extends ChartView {
                     this._doUpdateAnimation(
                         data, stackedOnPoints, coordSys, api, step, valueOrigin, connectNulls
                     );
+                    seamFlagsFromAnimation = true;
                 }
                 else {
                     // Not do it in update with animation
@@ -814,11 +856,13 @@ class LineView extends ChartView {
                     }
 
                     polyline.setShape({
-                        points: points
+                        points: points,
+                        smoothBreaks: layoutBreaks
                     });
                     polygon && polygon.setShape({
                         points: points,
-                        stackedOnPoints: stackedOnPoints
+                        stackedOnPoints: stackedOnPoints,
+                        smoothBreaks: layoutBreaks
                     });
                 }
             }
@@ -853,10 +897,15 @@ class LineView extends ChartView {
         const smooth = getSmooth(seriesModel.get('smooth'));
         const smoothMonotone = seriesModel.get('smoothMonotone');
 
-        polyline.setShape({
+        polyline.setShape(seamFlagsFromAnimation ? {
             smooth,
             smoothMonotone,
             connectNulls
+        } : {
+            smooth,
+            smoothMonotone,
+            connectNulls,
+            smoothBreaks: layoutBreaks
         });
 
         if (polygon) {
@@ -877,11 +926,17 @@ class LineView extends ChartView {
                 stackedOnSmooth = getSmooth(stackedOnSeries.get('smooth'));
             }
 
-            polygon.setShape({
+            polygon.setShape(seamFlagsFromAnimation ? {
                 smooth,
                 stackedOnSmooth,
                 smoothMonotone,
                 connectNulls
+            } : {
+                smooth,
+                stackedOnSmooth,
+                smoothMonotone,
+                connectNulls,
+                smoothBreaks: layoutBreaks
             });
 
             setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');
@@ -1348,6 +1403,9 @@ class LineView extends ChartView {
         let stackedOnCurrent = diff.stackedOnCurrent;
         let next = diff.next;
         let stackedOnNext = diff.stackedOnNext;
+        // Step expands the point list, so these flags would name the wrong vertex.
+        // Otherwise use the target datum for the whole morph: booleans do not interpolate.
+        const smoothBreaks = step ? null : breaksOrNull(diff.smoothBreaks);
         if (step) {
             // TODO If stacked series is not step
             stackedOnCurrent = turnPointsIntoStep(diff.stackedOnCurrent, diff.current, coordSys, step, connectNulls);
@@ -1363,13 +1421,15 @@ class LineView extends ChartView {
         ) {
             polyline.stopAnimation();
             polyline.setShape({
-                points: next
+                points: next,
+                smoothBreaks: smoothBreaks
             });
             if (polygon) {
                 polygon.stopAnimation();
                 polygon.setShape({
                     points: next,
-                    stackedOnPoints: stackedOnNext
+                    stackedOnPoints: stackedOnNext,
+                    smoothBreaks: smoothBreaks
                 });
             }
             return;
@@ -1377,6 +1437,11 @@ class LineView extends ChartView {
 
         (polyline.shape as any).__points = diff.current;
         polyline.shape.points = current;
+        // Not part of the animation target. The flag stays on this vertex
+        // while `points` is interpolated, and it is already the target value.
+        polyline.setShape({
+            smoothBreaks: smoothBreaks
+        });
 
         const target = {
             shape: {
@@ -1397,7 +1462,8 @@ class LineView extends ChartView {
             polygon.setShape({
                 // Reuse the points with polyline.
                 points: current,
-                stackedOnPoints: stackedOnCurrent
+                stackedOnPoints: stackedOnCurrent,
+                smoothBreaks: smoothBreaks
             });
             polygon.stopAnimation();
             graphic.updateProps(polygon, {
