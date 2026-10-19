@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                line-height: 18px;
+            }
+        </style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var categories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+                var joined = [20, 55, 30, { value: 80, smoothBreak: true }, 25, 60, 35, 70];
+                var plain = [20, 55, 30, 80, 25, 60, 35, 70];
+
+                var option = {
+                    animation: false,
+                    color: ['#c0c4cc', '#5470c6'],
+                    legend: {},
+                    grid: {
+                        left: 40,
+                        right: 20,
+                        bottom: 30
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: categories
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 100
+                    },
+                    series: [{
+                        name: 'One smooth piece',
+                        type: 'line',
+                        smooth: true,
+                        showSymbol: false,
+                        data: plain
+                    }, {
+                        name: 'Seam at Apr',
+                        type: 'line',
+                        smooth: true,
+                        showSymbol: true,
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        data: joined
+                    }]
+                };
+
+                testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Bézier smoothing restarts at Apr (`smoothBreak: true`)',
+                        'The blue stroke stays connected through that sample.',
+                        'The corner is not rounded through Apr.',
+                        'The gray line is the same samples as one smooth piece.'
+                    ],
+                    option: option,
+                    width: 700,
+                    height: 360
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var categories = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+
+                var option = {
+                    animation: false,
+                    color: ['#ee6666'],
+                    legend: {},
+                    grid: {
+                        left: 40,
+                        right: 20,
+                        bottom: 30
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: categories
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 100
+                    },
+                    series: [{
+                        name: 'Missing Apr',
+                        type: 'line',
+                        smooth: true,
+                        showSymbol: true,
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        connectNulls: false,
+                        data: [20, 55, 30, null, 25, 60, 35, 70]
+                    }]
+                };
+
+                testHelper.create(echarts, 'main1', {
+                    title: [
+                        'A null sample is a gap, not a corner',
+                        'The stroke stops on either side of Apr.',
+                        '`connectNulls: false` lifts the pen. `smoothBreak` does not.'
+                    ],
+                    option: option,
+                    width: 700,
+                    height: 360
+                });
+            });
+        </script>
+
+    </body>
+</html>

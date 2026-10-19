@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {prepareDataCoordInfo, getStackedOnPoint} from './helper';
+import {prepareDataCoordInfo, getStackedOnPoint, isSmoothBreakDatum} from './helper';
 import SeriesData from '../../data/SeriesData';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
@@ -74,6 +74,9 @@ export default function lineAnimationDiff(
     const status = [];
     const sortedIndices: number[] = [];
     const rawIndices: number[] = [];
+    // Target seam flags, one per morphed vertex, in the same order as
+    // currPoints / nextPoints before sorting.
+    const nextBreaks: boolean[] = [];
 
     const newDataOldCoordInfo = prepareDataCoordInfo(oldCoordSys, newData, oldValueOrigin);
     // const oldDataNewCoordInfo = prepareDataCoordInfo(newCoordSys, oldData, newValueOrigin);
@@ -111,6 +114,7 @@ export default function lineAnimationDiff(
                 nextStackedPoints.push(newStackedOnPoints[newIdx2], newStackedOnPoints[newIdx2 + 1]);
 
                 rawIndices.push(newData.getRawIndex(diffItem.idx1));
+                nextBreaks.push(isSmoothBreakDatum(newData, diffItem.idx1));
                 break;
             case '+':
                 const newIdx = diffItem.idx;
@@ -130,6 +134,7 @@ export default function lineAnimationDiff(
                 nextStackedPoints.push(newStackedOnPoints[newIdx2], newStackedOnPoints[newIdx2 + 1]);
 
                 rawIndices.push(newData.getRawIndex(newIdx));
+                nextBreaks.push(isSmoothBreakDatum(newData, newIdx));
                 break;
             case '-':
                 pointAdded = false;
@@ -156,6 +161,7 @@ export default function lineAnimationDiff(
     const sortedNextStackedPoints = createFloat32Array(len);
 
     const sortedStatus = [];
+    const sortedBreaks: boolean[] = [];
     for (let i = 0; i < sortedIndices.length; i++) {
         const idx = sortedIndices[i];
         const i2 = i * 2;
@@ -171,6 +177,7 @@ export default function lineAnimationDiff(
         sortedNextStackedPoints[i2 + 1] = nextStackedPoints[idx2 + 1];
 
         sortedStatus[i] = status[idx];
+        sortedBreaks[i] = nextBreaks[idx];
     }
 
     return {
@@ -180,6 +187,8 @@ export default function lineAnimationDiff(
         stackedOnCurrent: sortedCurrStackedPoints,
         stackedOnNext: sortedNextStackedPoints,
 
-        status: sortedStatus
+        status: sortedStatus,
+        // Target flags for the whole animation. A boolean does not interpolate.
+        smoothBreaks: sortedBreaks
     };
 }
