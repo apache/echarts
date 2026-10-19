@@ -35,6 +35,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
 
 
@@ -103,6 +104,42 @@ under the License.
                     'Case from https://github.com/apache/echarts/issues/17643'
                 ],
                 option: option
+            });
+        });
+        </script>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                timeline: {
+                    axisType: 'category',
+                    currentIndex: 2,
+                    data: ['2019', '2020', '2021', '2022', '2023'],
+                    progress: {
+                        label: {
+                            color: 'red',
+                            formatter: '{value} done'
+                        }
+                    },
+                    emphasis: {
+                        label: {
+                            formatter: function (value) {
+                                return '[' + value + ']';
+                            }
+                        }
+                    }
+                }
+            };
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    '`progress.label.formatter` and `emphasis.label.formatter` should be applied',
+                    'Labels up to the current one should be red and read like **2021 done**, the others only the year',
+                    'Hover on a label, it should read like **[2022]**',
+                    'Click on another label, the **done** labels should follow the current one',
+                    'Case from https://github.com/apache/echarts/issues/18673'
+                ],
+                option: option,
+                height: 150
             });
         });
         </script>

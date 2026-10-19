@@ -42,7 +42,8 @@ import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis } from '../../util/states';
 import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
 import Displayable from 'zrender/src/graphic/Displayable';
-import { createScaleByModel } from '../../coord/axisHelper';
+import { createScaleByModel, makeLabelFormatter } from '../../coord/axisHelper';
+import type Axis from '../../coord/Axis';
 import { scaleCalcNiceDirectly } from '../../coord/axisNiceTicks';
 
 const PI = Math.PI;
@@ -470,7 +471,7 @@ class SliderTimelineView extends TimelineView {
 
         this._tickLabels = [];
 
-        each(labels, (labelItem) => {
+        each(labels, (labelItem, labelIndex) => {
             if (labelItem.tick.offInterval) {
                 return;
             }
@@ -496,8 +497,12 @@ class SliderTimelineView extends TimelineView {
                 })
             });
 
-            textEl.ensureState('emphasis').style = createTextStyle(hoverLabelModel);
-            textEl.ensureState('progress').style = createTextStyle(progressLabelModel);
+            textEl.ensureState('emphasis').style = createStateLabelStyle(
+                hoverLabelModel, axis, labelItem.tick, labelIndex
+            );
+            textEl.ensureState('progress').style = createStateLabelStyle(
+                progressLabelModel, axis, labelItem.tick, labelIndex
+            );
 
             group.add(textEl);
             enableHoverEmphasis(textEl);
@@ -763,6 +768,28 @@ function makeControlIcon(
     }
 
     return icon;
+}
+
+/**
+ * Text style of a label state like `emphasis` or `progress`.
+ * The `formatter` of that state is applied in the same way as `label.formatter`.
+ * If it is not specified, the text of the normal state is kept.
+ */
+function createStateLabelStyle(
+    stateLabelModel: Model<TimelineDataItemOption['label']>,
+    axis: TimelineAxis,
+    tick: ScaleTick,
+    labelIndex: number
+) {
+    const textStyle = createTextStyle(stateLabelModel);
+    if (stateLabelModel.get('formatter') != null) {
+        // The only type mismatch between `TimelineAxis` and `Axis` is `model`,
+        // which `makeLabelFormatter` does not read when a label model is given.
+        textStyle.text = makeLabelFormatter(
+            axis as unknown as Axis, stateLabelModel
+        )(tick, labelIndex);
+    }
+    return textStyle;
 }
 
 /**

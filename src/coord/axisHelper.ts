@@ -170,14 +170,19 @@ export function isOnAxisZeroDiscouraged(axis: Axis): boolean {
 
 /**
  * @param axis
+ * @param labelModel Read `formatter` from it instead of `axis.getLabelModel()`,
+ *        e.g., the label model of a state like `progress` in timeline.
  * @return Label formatter function.
  *         param: {number} tickValue,
  *         param: {number} idx, the index in all ticks.
  *                         If category axis, this param is not required.
  *         return: {string} label string.
  */
-export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) => string {
-    const labelFormatter = axis.getLabelModel().get('formatter');
+export function makeLabelFormatter(
+    axis: Axis,
+    labelModel?: Model<AxisBaseOption['axisLabel']>
+): (tick: ScaleTick, idx?: number) => string {
+    const labelFormatter = (labelModel || axis.getLabelModel()).get('formatter');
 
     if (axis.type === 'time') {
         const parsed = parseTimeAxisLabelFormatter(labelFormatter as TimeAxisLabelFormatterOption);
