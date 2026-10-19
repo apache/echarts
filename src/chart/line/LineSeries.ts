@@ -19,6 +19,7 @@
 
 import createSeriesData from '../helper/createSeriesData';
 import SeriesModel from '../../model/Series';
+import type { LineSmoothMonotone } from './monotoneCubic';
 import {
     SeriesOnCartesianOptionMixin,
     SeriesOption,
@@ -109,7 +110,15 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
 
     smooth?: boolean | number
 
-    smoothMonotone?: 'x' | 'y' | 'none'
+    /**
+     * How smoothing keeps a monotone shape.
+     * - `'x'` / `'y'`: flat tangent along that axis at every sample.
+     * - `'monotoneX'` / `'monotoneY'`: monotone cubic Hermite along that axis.
+     *   Cartesian only. `smooth: true` uses full-strength tangents; a number
+     *   in `(0, 1]` scales them, and values above `1` are clamped to `1`.
+     * - `'none'`: constrained Bézier, which may pass outside the samples.
+     */
+    smoothMonotone?: LineSmoothMonotone
 
     connectNulls?: boolean
 
