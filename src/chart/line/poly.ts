@@ -28,6 +28,13 @@ import { isPointIllegal } from './helper';
 const mathMin = Math.min;
 const mathMax = Math.max;
 
+function pointIsSmoothBreak(
+    smoothBreaks: ArrayLike<boolean> | null | undefined,
+    idx: number
+): boolean {
+    return !!(smoothBreaks && idx >= 0 && idx < smoothBreaks.length && smoothBreaks[idx]);
+}
+
 /**
  * Draw smoothed line in non-monotone, in may cause undesired curve in extreme
  * situations. This should be used when points are non-monotone neither in x or
@@ -42,7 +49,8 @@ function drawSegment(
     dir: number,
     smooth: number,
     smoothMonotone: 'x' | 'y' | 'none',
-    connectNulls: boolean
+    connectNulls: boolean,
+    smoothBreaks?: ArrayLike<boolean> | null
 ) {
     let prevX: number;
     let prevY: number;
@@ -87,11 +95,13 @@ function drawSegment(
                 let nextIdx = idx + dir;
                 let nextX = points[nextIdx * 2];
                 let nextY = points[nextIdx * 2 + 1];
+                let seam = pointIsSmoothBreak(smoothBreaks, idx);
                 // Ignore duplicate point
                 while (nextX === x && nextY === y && k < segLen) {
                     k++;
                     nextIdx += dir;
                     idx += dir;
+                    seam = seam || pointIsSmoothBreak(smoothBreaks, idx);
                     nextX = points[nextIdx * 2];
                     nextY = points[nextIdx * 2 + 1];
                     x = points[idx * 2];
@@ -116,10 +126,16 @@ function drawSegment(
                 let vy: number = 0;
                 let nextCpx0;
                 let nextCpy0;
-                // Is last point
-                if (tmpK >= segLen || isPointIllegal(nextX, nextY)) {
+                // Last point, or a seam: incoming control stops on this vertex.
+                // The outgoing control is this vertex too, so the next piece
+                // does not inherit a tangent from the previous one.
+                // A real last point leaves no following piece; setting the
+                // outgoing control here is unused in that case.
+                if (tmpK >= segLen || isPointIllegal(nextX, nextY) || seam) {
                     cpx1 = x;
                     cpy1 = y;
+                    nextCpx0 = x;
+                    nextCpy0 = y;
                 }
                 else {
                     vx = nextX - prevX;
@@ -273,7 +289,8 @@ export class ECPolyline extends Path<ECPolylineProps> {
                 ctx, points, i, len, len,
                 1,
                 shape.smooth,
-                shape.smoothMonotone, shape.connectNulls
+                shape.smoothMonotone, shape.connectNulls,
+                shape.smoothBreaks
             ) + 1;
         }
     }
@@ -397,13 +414,16 @@ export class ECPolygon extends Path {
                 ctx, points, i, len, len,
                 1,
                 shape.smooth,
-                smoothMonotone, shape.connectNulls
+                smoothMonotone, shape.connectNulls,
+                shape.smoothBreaks
             );
+            // The stacked baseline is another series. Do not copy this series' seams onto it.
             drawSegment(
                 ctx, stackedOnPoints, i + k - 1, k, len,
                 -1,
                 shape.stackedOnSmooth,
-                smoothMonotone, shape.connectNulls
+                smoothMonotone, shape.connectNulls,
+                null
             );
             i += k + 1;
 
