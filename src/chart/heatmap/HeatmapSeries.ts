@@ -58,6 +58,7 @@ interface HeatmapStatesMixin {
 export interface HeatmapDataItemOption extends HeatmapStateOption,
     StatesOptionMixin<HeatmapStateOption, HeatmapStatesMixin> {
     value: HeatmapDataValue
+    cursor?: string
 }
 
 export interface HeatmapSeriesOption

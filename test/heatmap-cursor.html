@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <script>
+            require(['echarts'], function (echarts) {
+                ['cartesian2d', 'calendar', 'matrix'].forEach(function (coordinateSystem, coordIndex) {
+                    [false, true].forEach(function (progressive, modeIndex) {
+                        var values = coordinateSystem === 'calendar'
+                            ? [['2026-01-01', 1], ['2026-01-02', 2], ['2026-01-03', 3]]
+                            : [[0, 0, 1], [1, 0, 2], [2, 0, 3]];
+                        var data = [{value: values[0], cursor: 'help'}, values[1], {value: values[2]}];
+                        var option = {
+                            animation: false,
+                            visualMap: {min: 0, max: 3, show: false},
+                            series: [{
+                                type: 'heatmap',
+                                coordinateSystem: coordinateSystem,
+                                cursor: 'crosshair',
+                                progressive: progressive ? 1 : 0,
+                                progressiveThreshold: 1,
+                                data: data
+                            }]
+                        };
+                        if (coordinateSystem === 'cartesian2d') {
+                            option.xAxis = {type: 'category', data: ['a', 'b', 'c']};
+                            option.yAxis = {type: 'category', data: ['row']};
+                        }
+                        else if (coordinateSystem === 'calendar') {
+                            option.calendar = {range: '2026-01', cellSize: 25};
+                        }
+                        else {
+                            option.matrix = {x: {data: ['a', 'b', 'c']}, y: {data: ['row']}};
+                        }
+                        var chart = testHelper.create(echarts, 'main' + (coordIndex * 2 + modeIndex), {
+                            title: [
+                                coordinateSystem + (progressive ? ' / progressive (Canvas)' : ' / normal'),
+                                'Hover value 1: **help**; values 2 and 3: **crosshair**.',
+                                'Change series: values 2 and 3 become **move**, value 1 keeps **help**.',
+                                'Reset all: every cell becomes **pointer**. Restore: initial cursors return.',
+                                'Geo raster heatmaps are silent images and are outside this test.'
+                            ],
+                            height: 260,
+                            option: option,
+                            buttons: [{
+                                text: 'Change series to move',
+                                onclick: function () {
+                                    chart.setOption({series: [{cursor: 'move'}]});
+                                }
+                            }, {
+                                text: 'Reset all to default',
+                                onclick: function () {
+                                    chart.setOption({series: [{cursor: null, data: values}]});
+                                }
+                            }, {
+                                text: 'Restore initial cursors',
+                                onclick: function () {
+                                    chart.setOption({series: [{cursor: 'crosshair', data: data}]});
+                                }
+                            }]
+                        });
+                        var cursorLog = document.createElement('div');
+                        chart.getDom().appendChild(cursorLog);
+                        chart.getDom().addEventListener('mousemove', function () {
+                            cursorLog.textContent = 'Actual cursor: '
+                                + (chart.getZr().painter.getViewportRoot().style.cursor || 'default');
+                        });
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>
