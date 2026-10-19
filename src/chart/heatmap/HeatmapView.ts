@@ -204,6 +204,7 @@ class HeatmapView extends ChartView {
         let selectStyle = seriesModel.getModel(['select', 'itemStyle']).getItemStyle();
         let borderRadius = seriesModel.get(['itemStyle', 'borderRadius']);
         let labelStatesModels = getLabelStatesModels(seriesModel);
+        let cursorStyle = seriesModel.getShallow('cursor');
         const emphasisModel = seriesModel.getModel('emphasis');
         let focus = emphasisModel.get('focus');
         let blurScope = emphasisModel.get('blurScope');
@@ -306,8 +307,10 @@ class HeatmapView extends ChartView {
                 emphasisDisabled = emphasisModel.get('disabled');
 
                 labelStatesModels = getLabelStatesModels(itemModel);
+                cursorStyle = itemModel.getShallow('cursor');
             }
 
+            cursorStyle && rect.attr('cursor', cursorStyle);
             rect.shape.r = borderRadius;
 
             const rawValue = seriesModel.getRawValue(idx) as OptionDataValue[];
