@@ -92,6 +92,17 @@ export interface TreeSeriesOption extends
 
     layout?: 'orthogonal' | 'radial'
 
+    /**
+     * Control the distance between node centres at successive depths in radial layout,
+     * in CSS pixels. Ignored in orthogonal layout. Values must be finite and non-negative.
+     * A number sets every gap. An array sets gaps by depth: index 0 is the gap from the
+     * actual data root to its children, not from the internal virtual root.
+     * Missing array entries use the existing automatic per-level gap. An empty array
+     * or an unset option preserves the default layout. The data root stays at radius 0.
+     * Explicit gaps can extend beyond the layout box and do not change node angles.
+     */
+    radialLevelGap?: number | number[]
+
     edgeShape?: 'polyline' | 'curve'
 
     /**
