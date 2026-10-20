@@ -21,12 +21,18 @@ import * as echarts from '../../../core/echarts';
 import * as zrUtil from 'zrender/src/core/util';
 import {ToolboxFeature, ToolboxFeatureOption, ToolboxFeatureModel} from '../featureManager';
 import { SeriesOption, ECUnitOption } from '../../../util/types';
-import GlobalModel from '../../../model/Global';
+import GlobalModel, { QueryConditionKindA } from '../../../model/Global';
 import ExtensionAPI from '../../../core/ExtensionAPI';
 import SeriesModel from '../../../model/Series';
-import { SINGLE_REFERRING } from '../../../util/model';
+import { SINGLE_REFERRING, makeInner } from '../../../util/model';
 
 const INNER_STACK_KEYWORD = '__ec_magicType_stack__' as const;
+
+const inner = makeInner<{
+    // The `series.stack` defined by users, keyed by series id.
+    // It is restored when switching from tiled back to stack.
+    originalStacks: zrUtil.HashMap<MegicTypeSeriesOption['stack']>
+}, GlobalModel>();
 
 const ICON_TYPES = ['line', 'bar', 'stack'] as const;
 // stack and tiled appears in pair for the title
@@ -105,11 +111,20 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
         const newOption: ECUnitOption = {
             series: []
         };
+        const seriesCondition: QueryConditionKindA = {
+            mainType: 'series',
+            query: seriesIndex == null ? null : {
+                seriesIndex: seriesIndex
+            }
+        };
+        // Whether to switch to tiled is decided by all of the target series rather than
+        // each single series, so that the stacks defined in `series.stack` can be recognized.
+        const isStack = type === 'stack' && isLineBarStacked(ecModel, seriesCondition);
         const generateNewSeriesTypes = function (seriesModel: SeriesModel<MegicTypeSeriesOption>) {
             const seriesType = seriesModel.subType;
             const seriesId = seriesModel.id;
             const newSeriesOpt = seriesOptGenreator[type](
-                seriesType, seriesId, seriesModel, model
+                seriesType, seriesId, seriesModel, model, isStack
             );
             if (newSeriesOpt) {
                 // PENDING If merge original option?
@@ -145,14 +160,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
 
         model.setIconStatus(type, 'emphasis');
 
-        ecModel.eachComponent(
-            {
-                mainType: 'series',
-                query: seriesIndex == null ? null : {
-                    seriesIndex: seriesIndex
-                }
-            }, generateNewSeriesTypes
-        );
+        ecModel.eachComponent(seriesCondition, generateNewSeriesTypes);
 
         let newTitle;
         let currentType = type as TitleType;
@@ -193,8 +201,27 @@ type SeriesOptGenreator = (
     seriesType: string,
     seriesId: string,
     seriesModel: SeriesModel<MegicTypeSeriesOption>,
-    model: ToolboxFeatureModel<ToolboxMagicTypeFeatureOption>
+    model: ToolboxFeatureModel<ToolboxMagicTypeFeatureOption>,
+    isStack: boolean
 ) => SeriesOption;
+
+/**
+ * Whether the line or bar series are stacked, either by magicType or by
+ * the `series.stack` defined by users (shared by more than one series).
+ */
+function isLineBarStacked(ecModel: GlobalModel, condition: QueryConditionKindA): boolean {
+    const stackCounts = zrUtil.createHashMap<number>();
+    let stacked = false;
+    ecModel.eachComponent(condition, function (seriesModel: SeriesModel<MegicTypeSeriesOption>) {
+        const stack = seriesModel.get('stack') as string;
+        if (stack && (seriesModel.subType === 'line' || seriesModel.subType === 'bar')) {
+            const count = (stackCounts.get(stack) || 0) + 1;
+            stackCounts.set(stack, count);
+            stacked = stacked || stack === INNER_STACK_KEYWORD || count > 1;
+        }
+    });
+    return stacked;
+}
 
 const seriesOptGenreator: Record<IconType, SeriesOptGenreator> = {
     'line': function (seriesType, seriesId, seriesModel, model) {
@@ -223,13 +250,18 @@ const seriesOptGenreator: Record<IconType, SeriesOptGenreator> = {
             }, model.get(['option', 'bar']) || {}, true);
         }
     },
-    'stack': function (seriesType, seriesId, seriesModel, model) {
-        const isStack = seriesModel.get('stack') === INNER_STACK_KEYWORD;
+    'stack': function (seriesType, seriesId, seriesModel, model, isStack) {
         if (seriesType === 'line' || seriesType === 'bar') {
+            const store = inner(seriesModel.ecModel);
+            const originalStacks = store.originalStacks || (store.originalStacks = zrUtil.createHashMap());
+            const stack = seriesModel.get('stack');
+            if (isStack && stack && stack !== INNER_STACK_KEYWORD) {
+                originalStacks.set(seriesId, stack);
+            }
             model.setIconStatus('stack', isStack ? 'normal' : 'emphasis');
             return zrUtil.merge({
                 id: seriesId,
-                stack: isStack ? '' : INNER_STACK_KEYWORD
+                stack: isStack ? '' : (originalStacks.get(seriesId) || INNER_STACK_KEYWORD)
             }, model.get(['option', 'stack']) || {}, true);
         }
     }
