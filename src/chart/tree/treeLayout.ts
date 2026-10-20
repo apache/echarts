@@ -99,9 +99,21 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
             kx = width / (right.getLayout().x + delta + tx);
             // here we use (node.depth - 1), bucause the real root's depth is 1
             ky = height / ((bottom.depth - 1) || 1);
+            const radialLevelGap = seriesModel.get('radialLevelGap');
+            let levelRadii: number[];
+            if (typeof radialLevelGap === 'number') {
+                ky = radialLevelGap;
+            }
+            else if (radialLevelGap && radialLevelGap.length) {
+                levelRadii = [0];
+                for (let depth = 1; depth < bottom.depth; depth++) {
+                    const gap = radialLevelGap[depth - 1];
+                    levelRadii[depth] = levelRadii[depth - 1] + (gap == null ? ky : gap);
+                }
+            }
             eachBefore(realRoot, function (node) {
                 coorX = (node.getLayout().x + tx) * kx;
-                coorY = (node.depth - 1) * ky;
+                coorY = levelRadii ? levelRadii[node.depth - 1] : (node.depth - 1) * ky;
                 const finalCoor = radialCoordinate(coorX, coorY);
                 node.setLayout({x: finalCoor.x, y: finalCoor.y, rawX: coorX, rawY: coorY}, true);
             });

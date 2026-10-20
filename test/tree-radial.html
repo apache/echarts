@@ -36,6 +36,7 @@ under the License.
 
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
 
         <script>
         require([
@@ -106,6 +107,67 @@ under the License.
                 });
             });
             </script>
+        <script>
+        require(['echarts'], function (echarts) {
+            const data = {
+                name: 'Root',
+                children: [{
+                    name: 'Branch',
+                    children: [{
+                        name: 'Twig',
+                        children: [{name: 'Deep leaf'}]
+                    }, {name: 'Leaf A'}]
+                }, {
+                    name: 'Short branch',
+                    children: [{name: 'Leaf B'}]
+                }, {name: 'Leaf C'}]
+            };
+
+            testHelper.create(echarts, 'main3', {
+                height: 460,
+                title: [
+                    'Radial level spacing: automatic (left) vs radialLevelGap: [90, 25, 45] (right)',
+                    'Gaps are CSS pixels between node centres, not edge lengths or label margins.',
+                    'Index 0: Root → children. Later entries control deeper levels; missing entries use automatic gaps.',
+                    'The root stays at radius 0 and angles are unchanged. Resize: explicit gaps stay fixed.'
+                ],
+                option: {
+                    animation: false,
+                    tooltip: {trigger: 'item'},
+                    title: [{
+                        text: 'Default automatic spacing',
+                        left: '25%',
+                        top: 15,
+                        textAlign: 'center',
+                        textStyle: {fontSize: 14}
+                    }, {
+                        text: 'Custom gaps: 90 / 25 / 45 px',
+                        left: '75%',
+                        top: 15,
+                        textAlign: 'center',
+                        textStyle: {fontSize: 14}
+                    }],
+                    series: [undefined, [90, 25, 45]].map(function (gap, index) {
+                        return {
+                            type: 'tree',
+                            layout: 'radial',
+                            radialLevelGap: gap,
+                            data: [data],
+                            left: index === 0 ? '5%' : '55%',
+                            width: '40%',
+                            top: 60,
+                            bottom: 40,
+                            initialTreeDepth: -1,
+                            expandAndCollapse: false,
+                            symbolSize: 9,
+                            label: {fontSize: 11},
+                            lineStyle: {width: 2}
+                        };
+                    })
+                }
+            });
+        });
+        </script>
     </body>
 </html>
 
