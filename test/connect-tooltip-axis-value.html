@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
+            }
+        </style>
+
+        <div id="main_source"></div>
+        <div id="main_zero"></div>
+        <div id="main_null"></div>
+        <div id="main_shorter"></div>
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var GROUP = 'connect-tooltip-axis-value';
+                var COUNT = 96;
+                var START = Date.UTC(2024, 0, 1);
+                var STEP = 15 * 60 * 1000;
+                var HOVER_INDEX = 40;
+
+                function makeData(getValue, from) {
+                    var data = [];
+                    for (var i = from || 0; i < COUNT; i++) {
+                        data.push([START + i * STEP, getValue(i)]);
+                    }
+                    return data;
+                }
+
+                function wave(base, amplitude, phase) {
+                    return function (i) {
+                        return Math.round(base + amplitude * Math.sin(i / 3 + phase));
+                    };
+                }
+
+                function makeOption(series) {
+                    return {
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+                        legend: {
+                            top: 5
+                        },
+                        grid: {
+                            left: 60.3,
+                            right: 30.7,
+                            top: 40.3,
+                            bottom: 40.1
+                        },
+                        xAxis: {
+                            type: 'time'
+                        },
+                        yAxis: {
+                            type: 'value'
+                        },
+                        series: series.map(function (item) {
+                            return {
+                                type: 'line',
+                                name: item.name,
+                                showSymbol: false,
+                                data: item.data
+                            };
+                        })
+                    };
+                }
+
+                function create(id, title, series, inputs) {
+                    var chart = testHelper.create(echarts, id, {
+                        title: title,
+                        height: 250.6,
+                        option: makeOption(series),
+                        inputs: inputs
+                    });
+                    if (chart) {
+                        chart.group = GROUP;
+                    }
+                    return chart;
+                }
+
+                var sourceChart = create('main_source', [
+                    'Hover this chart, or click the button to show the tooltip at the same time point.',
+                    'The other three charts are connected and **should all show the tooltip and axis pointer** at that time.'
+                ], [
+                    {name: 'requests', data: makeData(wave(800, 150, 0))}
+                ], [{
+                    // Same as what the mousemove does, see `axisPointer/globalListener`.
+                    text: 'Hover #' + HOVER_INDEX,
+                    onclick: function () {
+                        var point = sourceChart.convertToPixel(
+                            {seriesIndex: 0},
+                            [START + HOVER_INDEX * STEP, 0]
+                        );
+                        sourceChart.dispatchAction({
+                            type: 'updateAxisPointer',
+                            currTrigger: 'mousemove',
+                            x: point[0],
+                            y: sourceChart.getHeight() / 2
+                        });
+                    }
+                }, {
+                    text: 'Leave',
+                    onclick: function () {
+                        sourceChart.dispatchAction({
+                            type: 'updateAxisPointer',
+                            currTrigger: 'leave'
+                        });
+                    }
+                }]);
+
+                create('main_zero', [
+                    'The first series is always 0, so its points are on the bottom edge of the grid.',
+                    'Its pixel may be out of the grid due to the floating point error.'
+                ], [
+                    {name: 'zero', data: makeData(function () { return 0; })},
+                    {name: 'failed', data: makeData(wave(400, 60, 1))}
+                ]);
+
+                create('main_null', [
+                    'The first series is null on every other point (including #' + HOVER_INDEX + '),',
+                    'so the point found by the sample seriesIndex and dataIndex is NaN.'
+                ], [
+                    {name: 'sparse', data: makeData(function (i) { return i % 2 ? 30 : null; })},
+                    {name: 'dense', data: makeData(wave(60, 20, 2))}
+                ]);
+
+                create('main_shorter', [
+                    'The first series starts ' + (COUNT - HOVER_INDEX + 10) + ' points later,',
+                    'so the sample dataIndex is out of its range or points to another time.'
+                ], [
+                    {name: 'shorter', data: makeData(wave(500, 80, 3), COUNT - HOVER_INDEX + 10)},
+                    {name: 'full', data: makeData(wave(300, 80, 4))}
+                ]);
+
+                echarts.connect(GROUP);
+
+            }); // End of `require`
+
+        </script>
+
+    </body>
+</html>
