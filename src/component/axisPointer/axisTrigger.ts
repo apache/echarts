@@ -29,6 +29,7 @@ import AxisPointerModel, { AxisPointerOption } from './AxisPointerModel';
 import { each, curry, bind, extend, Curry1 } from 'zrender/src/core/util';
 import { ZRenderType } from 'zrender/src/zrender';
 import { isNullableNumberFinite } from '../../util/number';
+import Axis2D from '../../coord/cartesian/Axis2D';
 
 const inner = makeInner<{
     axisPointerLastHighlights: Dictionary<BatchItem>
@@ -128,9 +129,16 @@ export default function axisTrigger(
         return;
     }
 
+    let isPointFromAxesInfo = false;
     if (illegalPoint(point)) {
-        // Used in the default behavior of `connection`: use the sample seriesIndex
-        // and dataIndex. And also used in the tooltipView trigger.
+        // Used in the default behavior of `connection`. The connected charts do not
+        // necessarily share the same series layout, so the input axis values, which
+        // they do share, are preferred to the sample seriesIndex and dataIndex.
+        point = findPointFromAxesInfo(finder.axesInfo, coordSysAxesInfo);
+        isPointFromAxesInfo = !illegalPoint(point);
+    }
+    if (illegalPoint(point)) {
+        // Use the sample seriesIndex and dataIndex. Also used in the tooltipView trigger.
         point = findPointFromSeries({
             seriesIndex: finder.seriesIndex,
             // Do not use dataIndexInside from other ec instance.
@@ -163,7 +171,9 @@ export default function axisTrigger(
     // Process for triggered axes.
     each(coordSysAxesInfo.coordSysMap, function (coordSys, coordSysKey) {
         // If a point given, it must be contained by the coordinate system.
-        const coordSysContainsPoint = isIllegalPoint || coordSys.containPoint(point);
+        // A point located by the input axis values has been checked by `axis.containData`,
+        // and checking its pixel again may fail on the edge due to the floating point error.
+        const coordSysContainsPoint = isIllegalPoint || isPointFromAxesInfo || coordSys.containPoint(point);
 
         each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
             const axis = axisInfo.axis;
@@ -502,6 +512,35 @@ function dispatchHighDownActually(
         notBlur: true,
         batch: toHighlight
     } as HighlightPayload);
+}
+
+/**
+ * Locate the point by the first input value of a cartesian axis, and place it
+ * in the middle of the grid along the other axis.
+ */
+function findPointFromAxesInfo(
+    inputAxesInfo: AxisTriggerPayload['axesInfo'],
+    coordSysAxesInfo: CollectedCoordInfo
+): number[] {
+    const point: number[] = [];
+    each(coordSysAxesInfo.axesInfo, function (axisInfo) {
+        const axis = axisInfo.axis as Axis2D;
+        const inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
+        const value = inputAxisInfo && inputAxisInfo.value;
+        if (point.length
+            || (axis.dim !== 'x' && axis.dim !== 'y')
+            || value == null
+            || axis.scale.isBlank()
+            || !axis.containData(value)
+        ) {
+            return;
+        }
+        const rect = axis.grid.getRect();
+        const pixel = axis.toGlobalCoord(axis.dataToCoord(value, true));
+        point[0] = axis.dim === 'x' ? pixel : rect.x + rect.width / 2;
+        point[1] = axis.dim === 'y' ? pixel : rect.y + rect.height / 2;
+    });
+    return point;
 }
 
 function findInputAxisInfo(
