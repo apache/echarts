@@ -286,7 +286,8 @@ export function format(
     const d = date[dateGetterName(isUTC)]();
     const e = date['get' + (isUTC ? 'UTC' : '') + 'Day' as 'getDay' | 'getUTCDay']();
     const H = date[hoursGetterName(isUTC)]();
-    const h = (H - 1) % 12 + 1;
+    // 12-hour clock: 0 (midnight) and 12 (noon) are both displayed as 12.
+    const h = H % 12 || 12;
     const m = date[minutesGetterName(isUTC)]();
     const s = date[secondsGetterName(isUTC)]();
     const S = date[millisecondsGetterName(isUTC)]();

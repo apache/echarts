@@ -97,6 +97,22 @@ describe('util/time', function () {
             expect(format(anotherTime, '{h}', true)).toEqual('11');
         });
 
+        it('should format midnight and noon as 12 in 12-hour clock', function () {
+            const midnight = new Date('2023-12-19 00:05:00.000 UTC');
+            expect(format(midnight, '{hh}', true)).toEqual('12');
+            expect(format(midnight, '{h}', true)).toEqual('12');
+            expect(format(midnight, '{hh}:{mm} {A}', true)).toEqual('12:05 AM');
+
+            const noon = new Date('2023-12-19 12:05:00.000 UTC');
+            expect(format(noon, '{hh}', true)).toEqual('12');
+            expect(format(noon, '{h}', true)).toEqual('12');
+            expect(format(noon, '{hh}:{mm} {A}', true)).toEqual('12:05 PM');
+
+            const evening = new Date('2023-12-19 23:05:00.000 UTC');
+            expect(format(evening, '{hh}', true)).toEqual('11');
+            expect(format(evening, '{h}', true)).toEqual('11');
+        });
+
         // test {mm}, {m} ...
         it('should format minute', function () {
             expect(format(time, '{mm}', true)).toEqual('04');
