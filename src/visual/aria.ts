@@ -39,6 +39,12 @@ const DEFAULT_OPTION: AriaOption = {
 
 const innerSeries = makeInner<{scope: object}, SeriesModel>();
 const innerGlobal = makeInner<{scope: object}, GlobalModel>();
+const innerDom = makeInner<{attributes?: Dictionary<AriaAttributeState>}, HTMLElement>();
+
+interface AriaAttributeState {
+    originalValue: string | null;
+    value: string;
+}
 
 type SeriesTypes = keyof LocaleOption['series']['typeNames'];
 
@@ -47,9 +53,11 @@ export const ariaVisualStageHandler = createSimpleOverallStageHandler2(ariaVisua
 
 function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
     const ariaModel: Model<AriaOption> = ecModel.getModel('aria');
+    const dom = api.getZr().dom;
 
     // See "area enabled" detection code in `GlobalModel.ts`.
     if (!ariaModel.get('enabled')) {
+        clearLabelAttributes(dom);
         return;
     }
 
@@ -136,7 +144,6 @@ function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     function setLabel() {
-        const dom = api.getZr().dom;
         // TODO: support for SSR
         if (!dom) {
             return;
@@ -147,13 +154,14 @@ function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
         labelModel.option = zrUtil.defaults(labelModel.option, labelLocale);
 
         if (!labelModel.get('enabled')) {
+            clearLabelAttributes(dom);
             return;
         }
 
-        dom.setAttribute('role', 'img');
+        setLabelAttribute(dom, 'role', 'img');
 
         if (labelModel.get('description')) {
-            dom.setAttribute('aria-label', labelModel.get('description'));
+            setLabelAttribute(dom, 'aria-label', labelModel.get('description'));
             return;
         }
 
@@ -243,7 +251,7 @@ function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             const endSeparator = separatorModel.get('end');
             ariaLabel += seriesLabels.join(middleSeparator) + endSeparator;
 
-            dom.setAttribute('aria-label', ariaLabel);
+            setLabelAttribute(dom, 'aria-label', ariaLabel);
         }
     }
 
@@ -274,4 +282,34 @@ function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
         const typeNames = ecModel.getLocaleModel().get(['series', 'typeNames']);
         return typeNames[type] || typeNames.chart;
     }
+}
+
+function setLabelAttribute(dom: HTMLElement, name: string, value: string) {
+    const store = innerDom(dom);
+    const attributes = store.attributes || (store.attributes = {});
+    let attribute = attributes[name];
+    const currentValue = dom.getAttribute(name);
+    if (!attribute || currentValue !== attribute.value) {
+        attribute = attributes[name] = {originalValue: currentValue, value};
+    }
+    attribute.value = value;
+    dom.setAttribute(name, value);
+}
+
+function clearLabelAttributes(dom: HTMLElement) {
+    if (!dom) {
+        return;
+    }
+    const store = innerDom(dom);
+    zrUtil.each(store.attributes, function (attribute: AriaAttributeState, name: string) {
+        if (dom.getAttribute(name) === attribute.value) {
+            if (attribute.originalValue == null) {
+                dom.removeAttribute(name);
+            }
+            else {
+                dom.setAttribute(name, attribute.originalValue);
+            }
+        }
+    });
+    delete store.attributes;
 }
