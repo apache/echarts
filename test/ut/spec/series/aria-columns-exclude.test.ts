@@ -98,3 +98,113 @@ describe('aria, omit data', function () {
     });
 
 });
+
+describe('aria label lifecycle', function () {
+    let chart: EChartsType;
+
+    beforeEach(function () {
+        chart = createChart();
+    });
+
+    afterEach(function () {
+        chart.dispose();
+    });
+
+    function enableLabel(description = 'Generated description') {
+        chart.setOption({ aria: { enabled: true, label: { enabled: true, description } } });
+    }
+
+    it.each(['aria', 'label', 'notMerge'])('removes generated attributes after disabling %s', function (mode) {
+        enableLabel();
+        const dom = chart.getDom();
+        expect(dom.getAttribute('role')).toBe('img');
+        expect(dom.getAttribute('aria-label')).toBe('Generated description');
+
+        if (mode === 'aria') {
+            chart.setOption({ aria: { enabled: false } });
+        }
+        else if (mode === 'label') {
+            chart.setOption({ aria: { label: { enabled: false } } });
+        }
+        else {
+            chart.setOption({}, { notMerge: true });
+        }
+
+        expect(dom.hasAttribute('role')).toBe(false);
+        expect(dom.hasAttribute('aria-label')).toBe(false);
+    });
+
+    it('removes an automatically generated series description when disabled', function () {
+        chart.setOption({
+            aria: { enabled: true },
+            series: [{ type: 'pie', data: [{ name: 'Item', value: 1 }] }]
+        });
+        const dom = chart.getDom();
+        expect(dom.getAttribute('aria-label')).toContain('Item');
+        chart.setOption({ aria: { enabled: false } });
+        expect(dom.hasAttribute('role')).toBe(false);
+        expect(dom.hasAttribute('aria-label')).toBe(false);
+    });
+
+    it('restores host attributes that existed before generation', function () {
+        const dom = chart.getDom();
+        dom.setAttribute('role', 'application');
+        dom.setAttribute('aria-label', 'Host description');
+        enableLabel();
+        enableLabel('Updated generated description');
+        chart.setOption({ aria: { enabled: false } });
+        expect(dom.getAttribute('role')).toBe('application');
+        expect(dom.getAttribute('aria-label')).toBe('Host description');
+    });
+
+    it('leaves host attributes alone when ECharts never generated a label', function () {
+        const dom = chart.getDom();
+        dom.setAttribute('role', 'application');
+        dom.setAttribute('aria-label', 'Host description');
+        chart.setOption({ aria: { enabled: false } });
+        expect(dom.getAttribute('role')).toBe('application');
+        expect(dom.getAttribute('aria-label')).toBe('Host description');
+    });
+
+    it('preserves an application override while removing the other generated attribute', function () {
+        const dom = chart.getDom();
+        enableLabel();
+        dom.setAttribute('role', 'group');
+        chart.setOption({ aria: { enabled: false } });
+        expect(dom.getAttribute('role')).toBe('group');
+        expect(dom.hasAttribute('aria-label')).toBe(false);
+    });
+
+    it('preserves host changes made after label generation', function () {
+        const dom = chart.getDom();
+        enableLabel();
+        dom.setAttribute('role', 'group');
+        dom.setAttribute('aria-label', 'Replacement host description');
+        chart.setOption({ aria: { enabled: false } });
+        expect(dom.getAttribute('role')).toBe('group');
+        expect(dom.getAttribute('aria-label')).toBe('Replacement host description');
+    });
+
+    it('restores host changes captured by a later generated update', function () {
+        const dom = chart.getDom();
+        enableLabel();
+        dom.setAttribute('role', 'group');
+        dom.setAttribute('aria-label', 'Replacement host description');
+        enableLabel('Updated generated description');
+        chart.setOption({}, { notMerge: true });
+        expect(dom.getAttribute('role')).toBe('group');
+        expect(dom.getAttribute('aria-label')).toBe('Replacement host description');
+    });
+
+    it('generates the current label again after re-enabling', function () {
+        const dom = chart.getDom();
+        enableLabel();
+        chart.setOption({ aria: { label: { enabled: false } } });
+        enableLabel('Current description');
+        expect(dom.getAttribute('role')).toBe('img');
+        expect(dom.getAttribute('aria-label')).toBe('Current description');
+        chart.setOption({ aria: { enabled: false } });
+        expect(dom.hasAttribute('role')).toBe(false);
+        expect(dom.hasAttribute('aria-label')).toBe(false);
+    });
+});
