@@ -189,6 +189,7 @@ class Axis {
             this,
             preTicksCoords,
             alignWithLabel,
+            result.tickCategoryInterval,
         );
 
         return map(preTicksCoords, function (item) {
@@ -318,6 +319,7 @@ function fixOnBandTicksCoords(
         tick: ScaleTick
     }[],
     alignWithLabel: boolean,
+    tickCategoryInterval: number | NullUndefined,
     // return: whether coords are modified according to `onBand`.
 ): boolean {
     const ticksLen = preTicksCoords.length;
@@ -340,15 +342,17 @@ function fixOnBandTicksCoords(
         ticksItem.coord -= bandWidth / 2;
     });
 
-    const dataExtent = axis.scale.getExtent();
-    const oldLast = preTicksCoords[ticksLen - 1];
-    if (oldLast.tick.offInterval) {
-        preTicksCoords.pop();
+    if (tickCategoryInterval != null) {
+        const dataExtent = axis.scale.getExtent();
+        const oldLast = preTicksCoords[ticksLen - 1];
+        if (oldLast.tick.offInterval) {
+            preTicksCoords.pop();
+        }
+        preTicksCoords.push({
+            coord: oldLast.coord + bandWidth,
+            tick: {value: dataExtent[1] + 1},
+        });
     }
-    preTicksCoords.push({
-        coord: oldLast.coord + bandWidth,
-        tick: {value: dataExtent[1] + 1},
-    });
 
     return true;
 }
