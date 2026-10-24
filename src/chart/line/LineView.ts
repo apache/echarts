@@ -331,7 +331,10 @@ function getVisualGradient(
         colorStops, coordDim === 'x' ? api.getWidth() : api.getHeight()
     );
     const inRangeStopLen = colorStopsInRange.length;
-    if (!inRangeStopLen && stopLen) {
+    if (!inRangeStopLen) {
+        if (!stopLen) {
+            return outerColors[0] || outerColors[1];
+        }
         // All stops are out of range. All will be the same color.
         return colorStops[0].coord < 0
             ? (outerColors[1] ? outerColors[1] : colorStops[stopLen - 1].color)
