@@ -36,7 +36,14 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import SeriesData from '../../data/SeriesData';
-import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
+import {
+    setStatesStylesFromModel,
+    setStatesFlag,
+    setDefaultStateProxy,
+    HOVER_STATE_BLUR,
+    enterSelect,
+    leaveSelect
+} from '../../util/states';
 import { AnimationOption, ECElement, RoamPayload } from '../../util/types';
 import tokens from '../../visual/tokens';
 import {
@@ -214,6 +221,8 @@ class TreeView extends ChartView {
             })
             .execute();
 
+        updateTreeEdgeSelection(seriesModel);
+
         this._updateNodeAndLinkScale(seriesModel);
 
         if (seriesModel.get('expandAndCollapse') === true) {
@@ -230,6 +239,18 @@ class TreeView extends ChartView {
         this._data = data;
 
         this._firstRender = false;
+    }
+
+    select(seriesModel: TreeSeriesModel): void {
+        updateTreeEdgeSelection(seriesModel);
+    }
+
+    unselect(seriesModel: TreeSeriesModel): void {
+        updateTreeEdgeSelection(seriesModel);
+    }
+
+    toggleSelect(seriesModel: TreeSeriesModel): void {
+        updateTreeEdgeSelection(seriesModel);
     }
 
     __updateOnOwnRoam(
@@ -323,6 +344,16 @@ function symbolNeedsDraw(data: SeriesData, dataIndex: number) {
         && !isNaN(layout.x) && !isNaN(layout.y);
 }
 
+function updateTreeEdgeSelection(seriesModel: TreeSeriesModel) {
+    const data = seriesModel.getData();
+
+    data.eachItemGraphicEl(function (symbolEl: TreeSymbol, dataIndex) {
+        const edge = symbolEl.__edge;
+        if (edge) {
+            seriesModel.isSelected(dataIndex) ? enterSelect(edge) : leaveSelect(edge);
+        }
+    });
+}
 
 function updateNode(
     data: SeriesData,
