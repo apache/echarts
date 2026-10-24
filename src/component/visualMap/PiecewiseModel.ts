@@ -370,11 +370,27 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
                 valueState = visualMapModel.getValueState(representValue);
             }
             const color = getColorVisual(representValue, valueState);
-            if (interval[0] === -Infinity) {
+            const lowInf = interval[0] === -Infinity;
+            const highInf = interval[1] === Infinity;
+            if (lowInf) {
                 outerColors[0] = color;
             }
-            else if (interval[1] === Infinity) {
+            if (highInf) {
                 outerColors[1] = color;
+            }
+            // Emit the finite edge(s) as stops as well, so consumers know where
+            // a half-infinite interval ends (e.g. `pieces: [{lte: 10}]` should
+            // still report a boundary at 10). When the interval is fully infinite
+            // there is no finite edge to record, so only `outerColors` is set.
+            // See #18066.
+            if (lowInf && highInf) {
+                return;
+            }
+            if (lowInf) {
+                stops.push({value: interval[1], color: color});
+            }
+            else if (highInf) {
+                stops.push({value: interval[0], color: color});
             }
             else {
                 stops.push(
