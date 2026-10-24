@@ -169,6 +169,30 @@ export function dataTransform(
                 coord[i] = numCalculate(data, data.mapDimension(dims[i]), coord[i] as MarkerStatisticType);
             }
         }
+        // A plain `coord` item (no statistic type, no explicit `value`) reaches
+        // the label formatter with `params.value === undefined`, because
+        // `retrieveRawValue` falls back to the raw option object which has no
+        // `value` field. Resolve the value from the host series data at that
+        // coord so `{c}` shows the actual data value (e.g. on a time axis,
+        // where `coord[0]` may be a date string). close #20410
+        if (item.value == null) {
+            const axisInfo = getAxisInfo(item, data, coordSys, seriesModel);
+            if (axisInfo.baseAxis && axisInfo.valueAxis) {
+                const baseCoordIndex = indexOf(dims, axisInfo.baseAxis.dim);
+                const baseCoordVal = coord[baseCoordIndex];
+                if (baseCoordVal != null) {
+                    const parsed = axisInfo.baseAxis.scale.parse(baseCoordVal);
+                    const nearestIdx = seriesModel.indicesOfNearest(
+                        axisInfo.baseAxis.dim,
+                        axisInfo.baseDataDim,
+                        parsed as number
+                    )[0];
+                    if (nearestIdx != null) {
+                        item.value = data.get(axisInfo.valueDataDim, nearestIdx);
+                    }
+                }
+            }
+        }
     }
     return item;
 }
