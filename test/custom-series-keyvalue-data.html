@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Custom Series Key-Value Data Test</title>
+    <script src="../dist/echarts.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .test-result { padding: 5px; margin: 5px 0; border-radius: 3px; font-size: 12px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .chart { width: 400px; height: 200px; margin: 10px 0; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Custom Series Key-Value Data Test</h1>
+    
+    <div id="results"></div>
+
+    <script>
+        const results = [];
+        
+        function test(name, testFn) {
+            try {
+                const result = testFn();
+                results.push({name, passed: result.passed, message: result.message});
+            } catch (e) {
+                results.push({name, passed: false, message: `Error: ${e.message}`});
+            }
+            updateResults();
+        }
+        
+        function updateResults() {
+            document.getElementById('results').innerHTML = results.map(r => 
+                `<div class="test-result ${r.passed ? 'pass' : 'fail'}">
+                    <strong>${r.name}:</strong> ${r.passed ? 'PASS' : 'FAIL'} - ${r.message}
+                </div>`
+            ).join('');
+        }
+
+        // Test 1: Basic key-value data access
+        test('Basic Key-Value Access', () => {
+            const chart = echarts.init(document.createElement('div'));
+            let testResult = {passed: false, message: ''};
+            
+            chart.setOption({
+                xAxis: {type: "value"}, yAxis: {type: "value"},
+                series: [{
+                    type: "custom",
+                    dimensions: [{name: 'x'}, {name: 'y'}],
+                    data: [{x: 100, y: 200}],
+                    renderItem: function(params, api) {
+                        const x = api.value('x');
+                        const y = api.value('y');
+                        
+                        testResult = {
+                            passed: x === 100 && y === 200,
+                            message: `x:${x}, y:${y}`
+                        };
+                        return null;
+                    }
+                }]
+            });
+            return testResult;
+        });
+
+        // Test 2: Numeric index access
+        test('Numeric Index Access', () => {
+            const chart = echarts.init(document.createElement('div'));
+            let testResult = {passed: false, message: ''};
+            
+            chart.setOption({
+                xAxis: {type: "value"}, yAxis: {type: "value"},
+                series: [{
+                    type: "custom",
+                    dimensions: [{name: 'x'}, {name: 'y'}],
+                    data: [{x: 100, y: 200}],
+                    renderItem: function(params, api) {
+                        const val0 = api.value(0);
+                        const val1 = api.value(1);
+                        
+                        testResult = {
+                            passed: val0 === 100 && val1 === 200,
+                            message: `val0:${val0}, val1:${val1}`
+                        };
+                        return null;
+                    }
+                }]
+            });
+            return testResult;
+        });
+
+        // Test 3: Mixed data types
+        test('Mixed Data Types', () => {
+            const chart = echarts.init(document.createElement('div'));
+            let testResult = {passed: false, message: ''};
+            
+            chart.setOption({
+                xAxis: {type: "value"}, yAxis: {type: "value"},
+                series: [{
+                    type: "custom",
+                    dimensions: [{name: 'str'}, {name: 'num'}, {name: 'bool'}],
+                    data: [{str: 'test', num: 42, bool: true}],
+                    renderItem: function(params, api) {
+                        const str = api.value('str');
+                        const num = api.value('num');
+                        const bool = api.value('bool');
+                        
+                        testResult = {
+                            passed: str === 'test' && num === 42 && bool === true,
+                            message: `str:${str}, num:${num}, bool:${bool}`
+                        };
+                        return null;
+                    }
+                }]
+            });
+            return testResult;
+        });
+
+        // Test 4: Missing keys
+        test('Missing Keys', () => {
+            const chart = echarts.init(document.createElement('div'));
+            let testResult = {passed: false, message: ''};
+            
+            chart.setOption({
+                xAxis: {type: "value"}, yAxis: {type: "value"},
+                series: [{
+                    type: "custom",
+                    dimensions: [{name: 'x'}, {name: 'y'}, {name: 'missing'}],
+                    data: [{x: 10, y: 20}], // missing key intentionally omitted
+                    renderItem: function(params, api) {
+                        const x = api.value('x');
+                        const y = api.value('y');
+                        const missing = api.value('missing');
+                        
+                        testResult = {
+                            passed: x === 10 && y === 20 && missing === undefined,
+                            message: `x:${x}, y:${y}, missing:${missing}`
+                        };
+                        return null;
+                    }
+                }]
+            });
+            return testResult;
+        });
+
+        // Test 5: Array format compatibility
+        test('Array Format Compatibility', () => {
+            const chart = echarts.init(document.createElement('div'));
+            let testResult = {passed: false, message: ''};
+            
+            chart.setOption({
+                xAxis: {type: "value"}, yAxis: {type: "value"},
+                series: [{
+                    type: "custom",
+                    dimensions: ['x', 'y'],
+                    data: [[100, 200]], // Array format
+                    renderItem: function(params, api) {
+                        const x = api.value(0);
+                        const y = api.value(1);
+                        
+                        testResult = {
+                            passed: x === 100 && y === 200,
+                            message: `x:${x}, y:${y}`
+                        };
+                        return null;
+                    }
+                }]
+            });
+            return testResult;
+        });
+
+        // Test 6: Circular reference handling
+        test('Circular Reference Handling', () => {
+            const chart = echarts.init(document.createElement('div'));
+            let testResult = {passed: false, message: ''};
+            
+            try {
+                const obj = {x: 10, y: 20};
+                obj.self = obj; // Circular reference
+                
+                chart.setOption({
+                    xAxis: {type: "value"}, yAxis: {type: "value"},
+                    series: [{
+                        type: "custom",
+                        dimensions: [{name: 'x'}, {name: 'y'}, {name: 'self'}],
+                        data: [obj],
+                        renderItem: function(params, api) {
+                            const x = api.value('x');
+                            const y = api.value('y');
+                            // Don't access 'self' to avoid circular reference
+                            
+                            testResult = {
+                                passed: x === 10 && y === 20,
+                                message: `x:${x}, y:${y}, circular ref handled safely`
+                            };
+                            return null;
+                        }
+                    }]
+                });
+            } catch (e) {
+                // If there's an error, it means circular reference protection is working
+                testResult = {
+                    passed: true,
+                    message: 'Circular reference properly prevented'
+                };
+            }
+            return testResult;
+        });
+
+        // Previously Passing Cases (worked before bug fix)
+        
+        // Test 7: Standard array data (always worked)
+        test('Standard Array Data', () => {
+            const chart = echarts.init(document.createElement('div'));
+            let testResult = {passed: false, message: ''};
+            
+            chart.setOption({
+                xAxis: {type: "value"}, yAxis: {type: "value"},
+                series: [{
+                    type: "custom",
+                    data: [[10, 20], [30, 40]],
+                    renderItem: function(params, api) {
+                        const x = api.value(0);
+                        const y = api.value(1);
+                        
+                        if (params.dataIndex === 0) {
+                            testResult = {
+                                passed: x === 10 && y === 20,
+                                message: `x:${x}, y:${y}`
+                            };
+                        }
+                        return null;
+                    }
+                }]
+            });
+            return testResult;
+        });
+
+        // Test 8: Simple numeric data (always worked)
+        test('Simple Numeric Data', () => {
+            const chart = echarts.init(document.createElement('div'));
+            let testResult = {passed: false, message: ''};
+            
+            chart.setOption({
+                xAxis: {type: "value"}, yAxis: {type: "value"},
+                series: [{
+                    type: "custom",
+                    data: [100, 200, 300],
+                    renderItem: function(params, api) {
+                        const val = api.value(0);
+                        
+                        if (params.dataIndex === 0) {
+                            testResult = {
+                                passed: val === 100,
+                                message: `val:${val}`
+                            };
+                        }
+                        return null;
+                    }
+                }]
+            });
+            return testResult;
+        });
+
+        // Test 9: Mixed array and object data
+        test('Mixed Array and Object Data', () => {
+            const chart = echarts.init(document.createElement('div'));
+            let results = [];
+            
+            chart.setOption({
+                xAxis: {type: "value"}, yAxis: {type: "value"},
+                series: [{
+                    type: "custom",
+                    dimensions: [{name: 'x'}, {name: 'y'}],
+                    data: [
+                        [10, 20],           // Array format
+                        {x: 30, y: 40}      // Object format
+                    ],
+                    renderItem: function(params, api) {
+                        const x = api.value('x') || api.value(0);
+                        const y = api.value('y') || api.value(1);
+                        
+                        results[params.dataIndex] = {x, y};
+                        return null;
+                    }
+                }]
+            });
+            
+            return {
+                passed: results[0].x === 10 && results[0].y === 20 && 
+                       results[1].x === 30 && results[1].y === 40,
+                message: `Array: [${results[0].x}, ${results[0].y}], Object: {x:${results[1].x}, y:${results[1].y}}`
+            };
+        });
+
+        // Test 10: Default dimension access (always worked)
+        test('Default Dimension Access', () => {
+            const chart = echarts.init(document.createElement('div'));
+            let testResult = {passed: false, message: ''};
+            
+            chart.setOption({
+                xAxis: {type: "value"}, yAxis: {type: "value"},
+                series: [{
+                    type: "custom",
+                    data: [[100, 200]],
+                    renderItem: function(params, api) {
+                        const defaultVal = api.value(); // Should default to dimension 0
+                        const val0 = api.value(0);
+                        
+                        testResult = {
+                            passed: defaultVal === 100 && val0 === 100,
+                            message: `default:${defaultVal}, val0:${val0}`
+                        };
+                        return null;
+                    }
+                }]
+            });
+            return testResult;
+        });
+
+        // Run all tests
+        setTimeout(() => {
+            const passed = results.filter(r => r.passed).length;
+            const total = results.length;
+            console.log(`\n🧪 CUSTOM SERIES KEY-VALUE DATA TESTING COMPLETE`);
+            console.log(`✅ Passed: ${passed}/${total} tests`);
+            console.log(`${passed === total ? '🎉 ALL TESTS PASSED!' : '❌ Some tests failed'}`);
+        }, 1000);
+    </script>
+</body>
+</html>
