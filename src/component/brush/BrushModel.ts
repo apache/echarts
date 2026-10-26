@@ -136,7 +136,7 @@ class BrushModel extends ComponentModel<BrushOption> {
     static defaultOption: BrushOption = {
         seriesIndex: 'all',
         brushType: 'rect',
-        brushMode: 'single',
+        brushMode: 'multiple',
         transformable: true,
         brushStyle: {
             borderWidth: 1,
