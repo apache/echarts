@@ -1,0 +1,85 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .case {
+                display: inline-block;
+                vertical-align: top;
+                margin: 12px;
+            }
+            .title {
+                text-align: center;
+                font: bold 16px sans-serif;
+            }
+            .chart {
+                width: 420px;
+                height: 420px;
+            }
+        </style>
+        <div class="case">
+            <div class="title">Nearby handles (49, 51)</div>
+            <div id="nearby" class="chart"></div>
+        </div>
+        <div class="case">
+            <div class="title">Coincident handles (50, 50)</div>
+            <div id="coincident" class="chart"></div>
+        </div>
+        <script>
+            require(['echarts'], function (echarts) {
+                const data = [
+                    [0, 0, 10], [0, 1, 20],
+                    [1, 0, 80], [1, 1, 90]
+                ];
+
+                function render(id, range) {
+                    const chart = echarts.init(document.getElementById(id));
+                    chart.setOption({
+                        xAxis: {type: 'category', data: ['A', 'B']},
+                        yAxis: {type: 'category', data: ['C', 'D']},
+                        visualMap: {
+                            type: 'continuous',
+                            orient: 'vertical',
+                            right: 30,
+                            top: 'middle',
+                            itemWidth: 20,
+                            itemHeight: 200,
+                            min: 0,
+                            max: 100,
+                            range,
+                            dimension: 2,
+                            calculable: true
+                        },
+                        series: [{type: 'heatmap', data}]
+                    });
+                }
+
+                render('nearby', [49, 51]);
+                render('coincident', [50, 50]);
+            });
+        </script>
+    </body>
+</html>

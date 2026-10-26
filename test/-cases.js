@@ -46,6 +46,7 @@
             'dataZoom-axis-type.html',
             'dataZoom-dynamic.html',
             'visualMap-continuous.html',
+            'visualMap-handle-label-overlap.html',
             'visualMap-opacity.html',
             'brush.html',
             'brush2.html'
