@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -27,14 +26,18 @@ under the License.
     </head>
     <body>
         <style>
-            html, body, #main {
+            html,
+            body,
+            #main {
                 width: 100%;
                 height: 100%;
                 margin: 0;
             }
+
             #main {
                 background: #fff;
             }
+
             #btn-dispose {
                 position: absolute;
                 left: 10px;
@@ -45,8 +48,7 @@ under the License.
         <button type="button" id="btn-dispose">Dispose chart</button>
         <div id="main"></div>
         <script>
-
-            require(['echarts'], function (echarts) {
+            require(['echarts'], function(echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
 
@@ -58,7 +60,34 @@ under the License.
                         enterable: true,
                         // position: [100, 100],
                         trigger: 'axis',
-                        z: 100
+                        z: 100,
+                        formatter: (e) => {
+                            return e.map((v, i) => {
+                                return `{label|${v.axisValueLabel}} = {c${i}|${v.value}}`
+                            }).join('\n')
+                        },
+                        textStyle: {
+                            rich: {
+                                label: {
+                                    color: 'red',
+                                },
+                                c0: {
+                                    color: 'orange',
+                                },
+                                c1: {
+                                    color: 'yellow',
+                                    backgroundColor: 'green',
+                                    padding: 5,
+                                    borderColor: 'red',
+                                    borderWidth: 1,
+                                },
+                                c2: {
+                                    color: 'orange',
+                                    fontSize: 30,
+                                    height: 50
+                                },
+                            },
+                        }
                     },
                     yAxis: {
                         type: 'value'
@@ -85,7 +114,7 @@ under the License.
                 window.onresize = chart.resize;
 
                 // fix #12607: to dispose the rich tooltip
-                document.getElementById('btn-dispose').addEventListener('click', function () {
+                document.getElementById('btn-dispose').addEventListener('click', function() {
                     chart.dispose();
                 });
             });
