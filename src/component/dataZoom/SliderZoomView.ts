@@ -1156,7 +1156,7 @@ function formatLabel(
     return isFunction(labelFormatter)
         ? labelFormatter(value, valueStr)
         : isString(labelFormatter)
-            ? labelFormatter.replace('{value}', valueStr)
+            ? labelFormatter.replace('{value}', () => valueStr)
             : valueStr;
 }
 

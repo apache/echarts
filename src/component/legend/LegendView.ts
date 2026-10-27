@@ -458,7 +458,7 @@ class LegendView extends ComponentView {
         const formatter = legendModel.get('formatter');
         let content = name;
         if (zrUtil.isString(formatter) && formatter) {
-            content = formatter.replace('{name}', name != null ? name : '');
+            content = formatter.replace('{name}', () => (name != null ? name : ''));
         }
         else if (zrUtil.isFunction(formatter)) {
             content = formatter(name);

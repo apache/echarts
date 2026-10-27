@@ -190,7 +190,7 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
             // For category axis, get raw value; for numeric axis,
             // get formatted label like '1,333,444'.
             const label = axis.scale.getLabel(tick);
-            const text = labelFormatter.replace('{value}', label != null ? label : '');
+            const text = labelFormatter.replace('{value}', () => (label != null ? label : ''));
             return text;
         };
     }

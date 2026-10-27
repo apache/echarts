@@ -307,7 +307,7 @@ class GeoModel extends ComponentModel<GeoOption> implements RoamHostModel {
             return formatter(params);
         }
         else if (zrUtil.isString(formatter)) {
-            return formatter.replace('{a}', name != null ? name : '');
+            return formatter.replace('{a}', () => (name != null ? name : ''));
         }
     }
 

@@ -181,7 +181,8 @@ export function getValueLabel(
         });
 
         if (zrUtil.isString(formatter)) {
-            text = formatter.replace('{value}', text);
+            const value = text;
+            text = formatter.replace('{value}', () => value);
         }
         else if (zrUtil.isFunction(formatter)) {
             text = formatter(params);

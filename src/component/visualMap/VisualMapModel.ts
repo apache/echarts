@@ -369,8 +369,8 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
 
         if (zrUtil.isString(formatter)) {
             return formatter
-                .replace('{value}', isMinMax ? (textValue as string[])[0] : textValue as string)
-                .replace('{value2}', isMinMax ? (textValue as string[])[1] : textValue as string);
+                .replace('{value}', () => (isMinMax ? (textValue as string[])[0] : textValue as string))
+                .replace('{value2}', () => (isMinMax ? (textValue as string[])[1] : textValue as string));
         }
         else if (zrUtil.isFunction(formatter)) {
             return isMinMax
