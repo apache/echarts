@@ -40,6 +40,7 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
 
 
 
@@ -369,6 +370,69 @@ under the License.
         </script>
 
 
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var names = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo'];
+
+            var option = {
+                animationDuration: 5000,
+                animationEasing: 'linear',
+                series: [{
+                    type: 'graph',
+                    layout: 'none',
+                    roam: true,
+                    left: 120,
+                    right: 200,
+                    symbolSize: 20,
+                    label: {
+                        show: true,
+                        position: 'right',
+                        fontSize: 16
+                    },
+                    data: names.map(function (name, i) {
+                        return {
+                            name: name,
+                            x: i * 100,
+                            y: (i % 2) * 60
+                        };
+                    }),
+                    links: names.slice(1).map(function (name, i) {
+                        return {
+                            source: names[i],
+                            target: name
+                        };
+                    })
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'Labels fade in for 5 seconds. Click **Zoom in** **before the fade finished**.',
+                    'Labels should become fully opaque, rather than stay half transparent.',
+                    'Click **Replay** to start the fade in again.'
+                ],
+                option: option,
+                height: 300,
+                buttons: [{
+                    text: 'Zoom in',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'graphRoam',
+                            zoom: 1.2,
+                            originX: chart.getWidth() / 2,
+                            originY: chart.getHeight() / 2
+                        });
+                    }
+                }, {
+                    text: 'Replay',
+                    onclick: function () {
+                        chart.clear();
+                        chart.setOption(option);
+                    }
+                }]
+            });
+        });
+        </script>
 
 
 

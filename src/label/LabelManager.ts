@@ -27,6 +27,7 @@ import {
     initProps,
     isElementRemoved
 } from '../util/graphic';
+import { getAnimationConfig } from '../animation/basicTransition';
 import { getECData } from '../util/innerStore';
 import ExtensionAPI from '../core/ExtensionAPI';
 import {
@@ -573,6 +574,12 @@ class LabelManager {
                     if (indexOf(prevStates, 'emphasis') >= 0) {
                         textEl.attr(layoutStore.oldLayoutEmphasis);
                     }
+                }
+                // An instant update (e.g., on roam) stops all animations,
+                // which would freeze an unfinished fade in animation.
+                const updateConfig = getAnimationConfig('update', seriesModel, dataIndex);
+                if (!(updateConfig && updateConfig.duration > 0)) {
+                    textEl.stopAnimation('enter', true);
                 }
                 updateProps(textEl, newProps, seriesModel, dataIndex);
             }
