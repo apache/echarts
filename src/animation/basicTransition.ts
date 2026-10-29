@@ -83,7 +83,7 @@ export function getAnimationConfig(
         if (extraOpts) {
             duration = retrieve2(extraOpts.duration, 200);
             easing = retrieve2(extraOpts.easing, 'cubicOut');
-            delay = 0;
+            delay = retrieve2(extraOpts.delay, 0);
         }
         else {
             duration = animatableModel.getShallow(

@@ -45,7 +45,7 @@ import {
 import {
     AxisBandWidthResult, calcBandWidth
 } from '../coord/axisBand';
-import { BaseBarSeriesSubType, getStartValue, requireAxisStatisticsForBaseBar } from './barCommon';
+import { BaseBarSeriesSubType, getValueAxisStart, requireAxisStatisticsForBaseBar } from './barCommon';
 import { COORD_SYS_TYPE_CARTESIAN_2D } from '../coord/cartesian/GridModel';
 import { createBandWidthBasedAxisContainShapeHandler, makeAxisStatKey2 } from '../chart/helper/axisSnippets';
 
@@ -401,7 +401,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
             const stacked = isDimensionStacked(data, valueDim) && !!data.getCalculationInfo('stackedOnSeries');
             const isValueAxisH = valueAxis.isHorizontal();
 
-            const valueAxisStart = valueAxis.toGlobalCoord(valueAxis.dataToCoord(getStartValue(valueAxis)));
+            const valueAxisStart = getValueAxisStart(valueAxis);
 
             const isLarge = isInLargeMode(seriesModel);
             const barMinHeight = seriesModel.get('barMinHeight') || 0;

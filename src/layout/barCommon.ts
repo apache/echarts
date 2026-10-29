@@ -20,6 +20,7 @@
 import { assert } from 'zrender/src/core/util';
 import { createMetricsNonOrdinalLinearPositiveMinGap } from '../chart/helper/axisSnippets';
 import type Axis from '../coord/Axis';
+import type Axis2D from '../coord/cartesian/Axis2D';
 import { AxisStatKey, requireAxisStatistics } from '../coord/axisStatistics';
 import { EChartsExtensionInstallRegisters } from '../extension';
 import { isNullableNumberFinite } from '../util/number';
@@ -59,3 +60,6 @@ export function getStartValue(baseAxis: Axis): number {
     return val;
 }
 
+export function getValueAxisStart(valueAxis: Axis2D): number {
+    return valueAxis.toGlobalCoord(valueAxis.dataToCoord(getStartValue(valueAxis)));
+}

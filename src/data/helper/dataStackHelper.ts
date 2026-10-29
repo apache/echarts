@@ -235,3 +235,14 @@ export function getStackedDimension(data: SeriesData, targetDim: string): Dimens
         ? data.getCalculationInfo('stackResultDimension')
         : targetDim;
 }
+
+// Use the same predecessor eligibility for stack calculation and animation.
+export function canStackOn(
+    strategy: SeriesStackOptionMixin['stackStrategy'], value: number, previous: number
+): boolean {
+    return strategy === 'all'
+        || (strategy === 'positive' && previous > 0)
+        || (strategy === 'negative' && previous < 0)
+        || (strategy === 'samesign' && value >= 0 && previous > 0)
+        || (strategy === 'samesign' && value <= 0 && previous < 0);
+}

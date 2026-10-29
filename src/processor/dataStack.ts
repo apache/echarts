@@ -24,6 +24,7 @@ import { SeriesOption, SeriesStackOptionMixin } from '../util/types';
 import SeriesData, { DataCalculationInfo } from '../data/SeriesData';
 import { addSafe } from '../util/number';
 import { createSimpleOverallStageHandler2 } from '../util/model';
+import { canStackOn } from '../data/helper/dataStackHelper';
 
 type StackInfo = Pick<
     DataCalculationInfo<SeriesOption & SeriesStackOptionMixin>,
@@ -149,13 +150,7 @@ function calculateStack(stackInfoList: StackInfo[]) {
                     ) as number;
 
                     // Considering positive stack, negative stack and empty data
-                    if (
-                        stackStrategy === 'all' // single stack group
-                        || (stackStrategy === 'positive' && val > 0)
-                        || (stackStrategy === 'negative' && val < 0)
-                        || (stackStrategy === 'samesign' && sum >= 0 && val > 0) // All positive stack
-                        || (stackStrategy === 'samesign' && sum <= 0 && val < 0) // All negative stack
-                    ) {
+                    if (canStackOn(stackStrategy, sum, val)) {
                         // The sum has to be very small to be affected by the
                         // floating arithmetic problem. An incorrect result will probably
                         // cause axis min/max to be filtered incorrectly.

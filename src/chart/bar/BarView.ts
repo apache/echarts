@@ -19,7 +19,7 @@
 
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
-import {extend, each, map} from 'zrender/src/core/util';
+import {extend, each, map, isFunction} from 'zrender/src/core/util';
 import {BuiltinTextPosition} from 'zrender/src/core/types';
 import {SectorProps} from 'zrender/src/graphic/shape/Sector';
 import {RectProps} from 'zrender/src/graphic/shape/Rect';
@@ -28,6 +28,7 @@ import {
     Sector,
     updateProps,
     initProps,
+    removeElement,
     removeElementWithFadeOut,
     traverseElements
 } from '../../util/graphic';
@@ -66,11 +67,12 @@ import {LayoutRect} from '../../util/layout';
 import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
 import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRotation} from '../../label/sectorLabel';
-import { saveOldStyle } from '../../animation/basicTransition';
+import { getAnimationConfig, saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
 import { getIncrementalId } from '../../util/model';
-import { SERIES_TYPE_BAR } from '../../layout/barCommon';
+import { getValueAxisStart, SERIES_TYPE_BAR } from '../../layout/barCommon';
+import { canStackOn } from '../../data/helper/dataStackHelper';
 
 const mathMax = Math.max;
 const mathMin = Math.min;
@@ -100,6 +102,7 @@ class BarView extends ChartView {
     readonly type = SERIES_TYPE_BAR;
 
     private _data: SeriesData;
+    private _isRemoved = false;
 
     private _isLargeDraw: boolean;
 
@@ -121,7 +124,6 @@ class BarView extends ChartView {
 
     render(seriesModel: BarSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
         this._model = seriesModel;
-
         this._removeOnRenderedListener(api);
 
         this._updateDrawMode(seriesModel);
@@ -141,6 +143,7 @@ class BarView extends ChartView {
         else if (__DEV__) {
             warn('Only cartesian2d and polar supported for bar.');
         }
+        this._isRemoved = false;
     }
 
     incrementalPrepareRender(seriesModel: BarSeriesModel): void {
@@ -181,6 +184,10 @@ class BarView extends ChartView {
         const oldData = this._data;
 
         const coord = seriesModel.coordinateSystem;
+        const isStacked = coord.type === 'cartesian2d' && !!seriesModel.get('stack');
+        // remove() also runs for a series deselected before its first render.
+        const isStackUpdate = isStacked && this._isRemoved;
+        const stackBaseline = isStacked ? getStackBaseline(seriesModel) : null;
         const baseAxis = coord.getBaseAxis();
         let isHorizontalOrRadial: boolean;
 
@@ -219,6 +226,27 @@ class BarView extends ChartView {
 
         const isInitSort = payload && payload.isInitSort;
         const isChangeOrder = payload && payload.type === 'changeAxisOrder';
+
+        // Compare entrance timings only when a new bar needs them, once per render.
+        let sameEnterTiming: boolean;
+        const getStackStart = (dataIndex: number, isUpdate: boolean) => {
+            if (!isStacked || !animationModel) {
+                return;
+            }
+            if (!isUpdate) {
+                if (sameEnterTiming == null) {
+                    sameEnterTiming = hasSameStackTiming(seriesModel, ecModel);
+                }
+                // Independent entrance timings retain the original in-place entrance.
+                if (!sameEnterTiming) {
+                    return;
+                }
+            }
+            const previous = isUpdate && this._getStackedOnShape(data, dataIndex, api, true);
+            return previous
+                ? (isHorizontalOrRadial ? previous.y + previous.height : previous.x + previous.width)
+                : stackBaseline;
+        };
 
         function createBackground(dataIndex: number) {
             const bgLayout = getLayout[coord.type](data, dataIndex);
@@ -269,8 +297,9 @@ class BarView extends ChartView {
                     isHorizontalOrRadial,
                     animationModel,
                     baseAxis.model,
-                    false,
-                    roundCap
+                    isStackUpdate,
+                    roundCap,
+                    getStackStart(dataIndex, isStackUpdate)
                 );
                 if (realtimeSortCfg) {
                     /**
@@ -304,7 +333,7 @@ class BarView extends ChartView {
                     );
                 }
                 else {
-                    initProps(el, {shape: layout} as any, seriesModel, dataIndex);
+                    (isStackUpdate ? updateProps : initProps)(el, {shape: layout} as any, seriesModel, dataIndex);
                 }
 
                 data.setItemGraphicEl(dataIndex, el);
@@ -373,7 +402,8 @@ class BarView extends ChartView {
                         animationModel,
                         baseAxis.model,
                         true,
-                        roundCap
+                        roundCap,
+                        getStackStart(newIndex, true)
                     );
                 }
                 else {
@@ -636,8 +666,103 @@ class BarView extends ChartView {
     }
 
     remove(ecModel: GlobalModel, api: ExtensionAPI) {
-        this._clear(this._model);
+        this._isRemoved = true;
+        const model = this._model;
+        if (model && ecModel.isSeriesFiltered(model) && model.get('stack')
+            && model.coordinateSystem && isCoordinateSystemType<Cartesian2D>(model.coordinateSystem, 'cartesian2d')
+            && !this._isLargeDraw
+            && model.isAnimationEnabled()
+        ) {
+            this._removeStackedBars(model, api);
+        }
+        else {
+            this._clear(model);
+        }
         this._removeOnRenderedListener(api);
+    }
+
+    private _removeStackedBars(model: BarSeriesModel, api: ExtensionAPI): void {
+        // Keep the shrinking bars available for a legend selection that interrupts
+        // their exit. Fading them independently would expose a gap before the rest
+        // of the stack has finished moving into the vacated space.
+        const data = this._data;
+        if (!data) {
+            return;
+        }
+        this._removeBackground();
+        this._backgroundEls = [];
+        this._isFirstFrame = true;
+
+        const coord = model.coordinateSystem as Cartesian2D;
+        const baseAxis = coord.getBaseAxis();
+        const horizontal = baseAxis.isHorizontal();
+        const position = horizontal ? 'y' : 'x';
+        const size = horizontal ? 'height' : 'width';
+        const baseline = getStackBaseline(model);
+        data.eachItemGraphicEl((el: Rect, index: number) => {
+            // A later update may move the stack again while this series is hidden.
+            el.stopAnimation('leave');
+            const previous = this._getStackedOnShape(data, index, api, false);
+            const shape = extend({}, el.shape);
+            shape[position] = previous ? previous[position] + previous[size] : baseline;
+            shape[size] = 0;
+            if (previous) {
+                const crossPosition = horizontal ? 'x' : 'y';
+                const crossSize = horizontal ? 'width' : 'height';
+                shape[crossPosition] = previous[crossPosition];
+                shape[crossSize] = previous[crossSize];
+            }
+            el.removeTextContent();
+            el.removeTextGuideLine();
+            const animation = getAnimationConfig('update', model, index);
+            removeElement(el, {shape}, model, {
+                dataIndex: index,
+                removeOpt: animation,
+                cb: () => {
+                    this.group.remove(el);
+                    data.setItemGraphicEl(index, null);
+                }
+            });
+        });
+    }
+
+    private _getStackedOnShape(
+        data: SeriesData, dataIndex: number, api: ExtensionAPI, firstFrame: boolean
+    ): RectShape {
+        const value = data.get(data.getCalculationInfo('stackedDimension'), dataIndex) as number;
+        const strategy = (data.hostModel as BarSeriesModel).get('stackStrategy') || 'samesign';
+        let stackedOnSeries = data.getCalculationInfo('stackedOnSeries');
+        while (stackedOnSeries) {
+            const stackedModel = stackedOnSeries as SeriesModel;
+            const stackedData = stackedModel.getData();
+            const view = api.getViewOfSeriesModel(stackedModel) as BarView;
+            const renderedData = view && view._data;
+            const ecModel = stackedModel.ecModel;
+            const filtered = ecModel.getSeriesByIndex(stackedModel.componentIndex) !== stackedModel
+                || ecModel.isSeriesFiltered(stackedModel);
+            const index = getStackDataIndex(data, dataIndex, stackedData);
+            const result = stackedData.get(stackedData.getCalculationInfo('stackResultDimension'), index) as number;
+            if (!filtered && index >= 0 && canStackOn(strategy, value, result)) {
+                const currentEl = stackedData.getItemGraphicEl(index) as Rect;
+                // Descending stacks may depend on a view that has not rendered this update yet.
+                const el = currentEl || renderedData && renderedData.getItemGraphicEl(
+                    getStackDataIndex(data, dataIndex, renderedData)
+                ) as Rect;
+                if (el && el.type === 'rect') {
+                    const shape = extend({}, el.shape);
+                    if (!firstFrame || currentEl) {
+                        each(el.animators, animator => {
+                            if (animator.targetName === 'shape') {
+                                animator.saveTo(shape, null, firstFrame);
+                            }
+                        });
+                    }
+                    return shape;
+                }
+            }
+            // Filtered data is not restacked; its last rendered chain retains lower neighbors.
+            stackedOnSeries = (filtered && renderedData || stackedData).getCalculationInfo('stackedOnSeries');
+        }
     }
 
     dispose(ecModel: GlobalModel, api: ExtensionAPI) {
@@ -761,7 +886,8 @@ interface ElementCreator {
         animationModel: BarSeriesModel,
         axisModel: CartesianAxisModel | AngleAxisModel | RadiusAxisModel,
         isUpdate: boolean,
-        roundCap?: boolean
+        roundCap?: boolean,
+        stackStart?: number
     ): BarPossiblePath
 }
 
@@ -771,7 +897,7 @@ const elementCreator: {
 
     cartesian2d(
         seriesModel, data, newIndex, layout: RectLayout, isHorizontal,
-        animationModel, axisModel, isUpdate, roundCap
+        animationModel, axisModel, isUpdate, roundCap, stackStart
     ) {
         const rect = new Rect({
             shape: extend({}, layout),
@@ -785,6 +911,10 @@ const elementCreator: {
             const rectShape = rect.shape;
             const animateProperty = isHorizontal ? 'height' : 'width' as 'width' | 'height';
             rectShape[animateProperty] = 0;
+            if (stackStart != null) {
+                const position = isHorizontal ? 'y' : 'x';
+                rectShape[position] = stackStart;
+            }
         }
         return rect;
     },
@@ -822,6 +952,54 @@ const elementCreator: {
         return sector;
     }
 };
+
+// Share the layout's resolved start value, including log axes and explicit startValue.
+function getStackBaseline(seriesModel: BarSeriesModel): number {
+    const coord = seriesModel.coordinateSystem as Cartesian2D;
+    const valueAxis = coord.getOtherAxis(coord.getBaseAxis());
+    const start = getValueAxisStart(valueAxis);
+    const extent = valueAxis.getGlobalExtent(true);
+    return seriesModel.get('clip', true) ? mathMax(extent[0], mathMin(start, extent[1])) : start;
+}
+
+function getStackDataIndex(data: SeriesData, index: number, other: SeriesData): number {
+    const rawIndex = data.getCalculationInfo('isStackedByIndex')
+        ? data.getRawIndex(index)
+        : other.rawIndexOf(other.getCalculationInfo('stackedByDimension'),
+            data.get(data.getCalculationInfo('stackedByDimension'), index) as number);
+    return other.indexOfRawIndex(rawIndex);
+}
+
+function hasSameStackTiming(seriesModel: BarSeriesModel, ecModel: GlobalModel): boolean {
+    // Shared callbacks are compared by reference, so they are not invoked here.
+    const duration = seriesModel.getShallow('animationDuration');
+    const easing = seriesModel.getShallow('animationEasing');
+    const delay = seriesModel.getShallow('animationDelay');
+    const usesCallback = isFunction(duration) || isFunction(delay);
+    const data = seriesModel.getData();
+    let same = seriesModel.isAnimationEnabled();
+    ecModel.eachSeries(other => {
+        if (same && other !== seriesModel && other.subType === 'bar'
+            && other.coordinateSystem === seriesModel.coordinateSystem
+            && (other as BarSeriesModel).get('stack') === seriesModel.get('stack')
+        ) {
+            same = other.isAnimationEnabled()
+                && other.getShallow('animationDuration') === duration
+                && other.getShallow('animationEasing') === easing
+                && other.getShallow('animationDelay') === delay;
+            // A shared callback can still produce different timings when matching
+            // categories have different data indices. Do not call it to find out.
+            if (same && usesCallback) {
+                const otherData = other.getData();
+                for (let index = 0; same && index < data.count(); index++) {
+                    const otherIndex = getStackDataIndex(data, index, otherData);
+                    same = otherIndex < 0 || otherIndex === index;
+                }
+            }
+        }
+    });
+    return same;
+}
 
 function shouldRealtimeSort(
     seriesModel: BarSeriesModel,
