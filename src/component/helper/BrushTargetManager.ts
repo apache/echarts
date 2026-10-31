@@ -454,6 +454,9 @@ const coordConvert: Record<BrushType, ConvertCoord> = {
             return p;
         });
         return {values: values, xyMinMax: xyMinMax};
+    },
+    circle: function (to, coordSys, rangeOrCoordRange: any) {
+        return { values: rangeOrCoordRange, xyMinMax: [] };
     }
 };
 
@@ -514,6 +517,9 @@ const diffProcessor: Record<BrushType, DiffProcess> = {
         return map(values, function (item, idx) {
             return [item[0] - scales[0] * refer[idx][0], item[1] - scales[1] * refer[idx][1]];
         });
+    },
+    circle: function (values: any, refer: any, scales: any) {
+        return values;
     }
 };
 

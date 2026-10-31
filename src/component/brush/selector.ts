@@ -87,6 +87,51 @@ export function makeBrushCommonSelectorForSeries(
 const selector: Record<BrushType, BrushSelectorOnBrushType> = {
     lineX: getLineSelectors(0),
     lineY: getLineSelectors(1),
+
+    circle: {
+        point: function (itemLayout, selectors, area) {
+            if (!itemLayout) {
+                return false;
+            }
+            const range = area.range as number[]; // [cx, cy, r]
+            const cx = range[0];
+            const cy = range[1];
+            const r = range[2];
+
+            const dx = itemLayout[0] - cx;
+            const dy = itemLayout[1] - cy;
+
+            // First pass: quick bounding box rejection
+            // Second pass: precise Euclidean squared distance
+            return area.boundingRect.contain(itemLayout[0], itemLayout[1])
+                && (dx * dx + dy * dy <= r * r);
+        },
+        rect: function (itemLayout, selectors, area) {
+            if (!itemLayout) {
+                return false;
+            }
+            const range = area.range as number[];
+            const cx = range[0];
+            const cy = range[1];
+            const r = range[2];
+
+            const x = itemLayout.x;
+            const y = itemLayout.y;
+            const width = itemLayout.width;
+            const height = itemLayout.height;
+
+            // Find the closest point to the circle's center within the rectangle bounds
+            const closestX = Math.max(x, Math.min(cx, x + width));
+            const closestY = Math.max(y, Math.min(cy, y + height));
+
+            const dx = cx - closestX;
+            const dy = cy - closestY;
+
+            // Check if the distance from the closest point to the center is <= radius
+            return dx * dx + dy * dy <= r * r;
+        }
+    },
+
     rect: {
         point: function (itemLayout, selectors, area) {
             return itemLayout && area.boundingRect.contain(itemLayout[0], itemLayout[1]);
