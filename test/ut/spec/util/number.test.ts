@@ -274,6 +274,14 @@ describe('util/number', function () {
             expect(+parseDate('2012-03-04T05:06:07.123-07:00')).toEqual(1330862767123);
             expect(+parseDate('2012-03-04T5:6:7.123-07:00')).toEqual(1330862767123);
             expect(+parseDate('2012-03-04T05:06:07.123000Z')).toEqual(+new Date('2012-03-04T05:06:07.123Z'));
+            // Time zone offset with non-zero minutes
+            expect(+parseDate('2012-03-04T05:06:07.123+05:30')).toEqual(+new Date('2012-03-03T23:36:07.123Z'));
+            expect(+parseDate('2012-03-04T05:06:07.123+0530')).toEqual(+new Date('2012-03-03T23:36:07.123Z'));
+            expect(+parseDate('2012-03-04T05:06:07.123+05:45')).toEqual(+new Date('2012-03-03T23:21:07.123Z'));
+            expect(+parseDate('2012-03-04T05:06:07.123-03:30')).toEqual(+new Date('2012-03-04T08:36:07.123Z'));
+            expect(+parseDate('2012-03-04T05:06:07.123-0930')).toEqual(+new Date('2012-03-04T14:36:07.123Z'));
+            expect(+parseDate('2012-03-04T05:06:07.123-00:30')).toEqual(+new Date('2012-03-04T05:36:07.123Z'));
+            expect(+parseDate('2012-03-04 05:06+09:30')).toEqual(+new Date('2012-03-03T19:36:00Z'));
 
             // Other string
             expect(+parseDate('2012')).toEqual(+new Date('2012-01-01T00:00:00'));

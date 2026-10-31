@@ -490,7 +490,8 @@ const TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(
  *   + Or string in a subset of ISO 8601, only including:
  *     + only year, month, date: '2012-03', '2012-03-01', '2012-03-01 05', '2012-03-01 05:06',
  *     + separated with T or space: '2012-03-01T12:22:33.123', '2012-03-01 12:22:33.123',
- *     + time zone: '2012-03-01T12:22:33Z', '2012-03-01T12:22:33+8000', '2012-03-01T12:22:33-05:00',
+ *     + time zone: '2012-03-01T12:22:33Z', '2012-03-01T12:22:33+0800', '2012-03-01T12:22:33-05:00',
+ *       '2012-03-01T12:22:33+05:30',
  *     all of which will be treated as local time if time zone is not specified
  *     (see <https://momentjs.com/>).
  *   + Or other string format, including (all of which will be treated as local time):
@@ -539,15 +540,21 @@ export function parseDate(value: unknown): Date {
         // So we should not use `new Date`, but use `Date.UTC`.
         else {
             let hour = +match[4] || 0;
-            if (match[8].toUpperCase() !== 'Z') {
-                hour -= +match[8].slice(0, 3);
+            let minute = +(match[5] || 0);
+            const timeZoneOffset = match[8];
+            if (timeZoneOffset.toUpperCase() !== 'Z') {
+                // The offset is '+hh:mm' or '+hhmm'. Its minutes part is non-zero in some
+                // time zones, such as '+05:30' and '-03:30'.
+                const sign = timeZoneOffset.charAt(0) === '-' ? -1 : 1;
+                hour -= sign * +timeZoneOffset.slice(1, 3);
+                minute -= sign * +timeZoneOffset.slice(-2);
             }
             return new Date(Date.UTC(
                 +match[1],
                 +(match[2] || 1) - 1,
                 +match[3] || 1,
                 hour,
-                +(match[5] || 0),
+                minute,
                 +match[6] || 0,
                 match[7] ? +match[7].substring(0, 3) : 0
             ));
