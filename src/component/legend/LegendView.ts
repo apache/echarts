@@ -461,7 +461,7 @@ class LegendView extends ComponentView {
             content = formatter.replace('{name}', name != null ? name : '');
         }
         else if (zrUtil.isFunction(formatter)) {
-            content = formatter(name);
+            content = formatter(name, seriesModel.name);
         }
 
         const textColor = isSelected
