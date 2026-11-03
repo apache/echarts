@@ -109,7 +109,7 @@ export interface LegendStyleOption {
     /**
      * Legend label formatter
      */
-    formatter?: string | ((name: string) => string)
+    formatter?: string | ((name: string, seriesName?: string) => string)
 
     itemStyle?: LegendItemStyleOption
 
