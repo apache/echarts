@@ -149,4 +149,35 @@ describe('model_componentMissing', function () {
 
         console.error = oldConsoleErr;
     });
+
+
+    it('Should not report timeline component missing error when media is used without timeline', function () {
+        // Regression test for #21686: with the `{ baseOption, media }` form and
+        // no timeline configured anywhere, `parseRawOption` used to assign an
+        // undefined `timeline` entry to `baseOption`, which was then wrongly
+        // reported as a missing `TimelineComponent`.
+        const chart = createChart();
+        console.error = jest.fn();
+        chart.setOption<EChartsOption>({
+            baseOption: {
+                title: {},
+                series: [{
+                    type: 'pie'
+                }]
+            },
+            media: [{
+                query: {
+                    maxWidth: 600
+                },
+                option: {
+                    title: {
+                        text: 'Narrow'
+                    }
+                }
+            }]
+        });
+        expect(console.error).not.toBeCalled();
+
+        console.error = oldConsoleErr;
+    });
 });
