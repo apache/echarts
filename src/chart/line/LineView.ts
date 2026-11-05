@@ -337,6 +337,12 @@ function getVisualGradient(
             ? (outerColors[1] ? outerColors[1] : colorStops[stopLen - 1].color)
             : (outerColors[0] ? outerColors[0] : colorStops[0].color);
     }
+    if (!inRangeStopLen) {
+        // No color stops at all (stopLen is 0), e.g. a single visualMap
+        // piece covering the whole range. There is no gradient to build;
+        // fall back to an outer color if one was provided. See #21174.
+        return outerColors[0] || outerColors[1] || undefined;
+    }
 
     const tinyExtent = 10; // Arbitrary value: 10px
     const minCoord = colorStopsInRange[0].coord - tinyExtent;

@@ -372,9 +372,19 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
             const color = getColorVisual(representValue, valueState);
             if (interval[0] === -Infinity) {
                 outerColors[0] = color;
+                if (interval[1] !== Infinity) {
+                    // An edge interval still needs a stop at its finite
+                    // boundary. Otherwise a visualMap whose pieces only
+                    // cover the edges (e.g. two pieces `<= 400` and
+                    // `> 400`) produces no stops at all, losing the
+                    // transition point and breaking the line gradient
+                    // rendering. See #21174.
+                    stops.push({value: interval[1], color: color});
+                }
             }
             else if (interval[1] === Infinity) {
                 outerColors[1] = color;
+                stops.push({value: interval[0], color: color});
             }
             else {
                 stops.push(
