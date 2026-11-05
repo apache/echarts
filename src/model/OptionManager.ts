@@ -314,7 +314,7 @@ function parseRawOption(
     if (declaredBaseOption) {
         baseOption = declaredBaseOption;
         // For merge option.
-        if (!baseOption.timeline) {
+        if (!baseOption.timeline && timelineOnRoot) {
             baseOption.timeline = timelineOnRoot;
         }
     }
