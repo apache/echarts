@@ -263,6 +263,25 @@ function mergeNewElOptionToExist(
 
             // Copy clipPath
             newElOption.clipPath = existElOption.clipPath;
+
+            // Copy the properties of `shape`, `style` and `extra` that the
+            // new option does not specify from the existing option, so that
+            // the view can render the merged result.
+            // (`copyTransitionInfo` above has already created an empty object
+            // for each of them on the new option when it is missing and the
+            // existing option has one; that placeholder must not shadow the
+            // existing values.)
+            // This is necessary when the view has not consumed the pending
+            // element options of the previous `setOption` yet, which happens
+            // with `lazyUpdate: true`: the next `setOption` then restores the
+            // component option from the option backup, where those nested
+            // properties were never merged into the element options, so
+            // without this copy the update that reaches the view would only
+            // contain the newly specified properties and previously set ones
+            // (e.g. `style`) would be lost.
+            copyUnspecifiedNestedProps(newElOption, existElOption, 'shape');
+            copyUnspecifiedNestedProps(newElOption, existElOption, 'style');
+            copyUnspecifiedNestedProps(newElOption, existElOption, 'extra');
         }
         else {
             existList[index] = newElOptCopy;
@@ -274,6 +293,23 @@ function mergeNewElOptionToExist(
     else if ($action === 'remove') {
         // null will be cleaned later.
         existElOption && (existList[index] = null);
+    }
+}
+
+function copyUnspecifiedNestedProps(
+    target: GraphicComponentElementOption,
+    source: GraphicComponentElementOption,
+    prop: 'shape' | 'style' | 'extra'
+): void {
+    const targetProp = (target as any)[prop];
+    const sourceProp = (source as any)[prop];
+    if (!targetProp || !sourceProp) {
+        return;
+    }
+    for (const key in sourceProp) {
+        if (targetProp[key] == null && sourceProp[key] != null) {
+            targetProp[key] = sourceProp[key];
+        }
     }
 }
 

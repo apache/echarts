@@ -344,6 +344,72 @@ describe('graphic_setOption', function () {
         });
 
 
+        it('lazyUpdateKeepsElementStyle', function () {
+
+            chart.setOption({
+                xAxis: {},
+                yAxis: {},
+                series: [{
+                    type: 'line',
+                    data: [[10, 1], [3, 5]]
+                }]
+            });
+
+            // Step 1 of the issue #20924 demo: add the graphic rect
+            // with `notMerge: true` and `lazyUpdate: true`.
+            chart.setOption({
+                graphic: {
+                    elements: [{
+                        type: 'rect',
+                        id: 'grid_boundary_indicator',
+                        shape: {x: 50, y: 50, width: 330, height: 310},
+                        style: {fill: 'rgba(0,150,0,0.5)'},
+                        silent: true
+                    }]
+                },
+                xAxis: {},
+                yAxis: {},
+                series: [{
+                    type: 'line',
+                    data: [[10, 1], [3, 5]]
+                }]
+            }, {notMerge: true, lazyUpdate: true});
+
+            // Step 2: update only the shape, still with `lazyUpdate: true`.
+            // The style set in step 1 must be kept.
+            const step2Option = {
+                graphic: {
+                    elements: [{
+                        id: 'grid_boundary_indicator',
+                        shape: {x: 60, y: 50, width: 330, height: 310}
+                    }]
+                }
+            };
+            chart.setOption(step2Option, {lazyUpdate: true});
+
+            // Model-level check (synchronous; this is where the loss happens):
+            // the merged option of the graphic element must keep `type` and `style`
+            // from step 1 while taking the new `shape` from step 2.
+            const graphicOptions = chart.getOption().graphic as GraphicComponentOption[];
+            expect(graphicOptions.length === 1).toEqual(true);
+            const optElements = graphicOptions[0].elements;
+            expect(optElements && optElements.length === 1).toEqual(true);
+            const elOption = optElements[0] as any;
+            expect(elOption.id === 'grid_boundary_indicator').toEqual(true);
+            expect(elOption.type === 'rect').toEqual(true);
+            expect(elOption.shape.x === 60).toEqual(true);
+            expect(elOption.style && elOption.style.fill === 'rgba(0,150,0,0.5)').toEqual(true);
+
+            // View-level check: force the pending lazy update to be applied
+            // (a non-lazy `setOption` flushes it) and inspect the rendered element.
+            chart.setOption({});
+            const els = getGraphicElements(chart, 'graphic');
+            expect(els.length === 2).toEqual(true);
+            expect(els[1].type === 'rect').toEqual(true);
+            expect((els[1] as any).shape.x === 60).toEqual(true);
+            expect((els[1] as any).style.fill === 'rgba(0,150,0,0.5)').toEqual(true);
+        });
+
         it('replace', function () {
 
 
