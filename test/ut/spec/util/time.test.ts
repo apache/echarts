@@ -19,8 +19,9 @@
 */
 
 import {
-    format, roundTime
+    format, leveledFormat, parseTimeAxisLabelFormatter, roundTime
 } from '@/src/util/time';
+import {TimeScaleTick} from '@/src/util/types';
 
 describe('util/time', function () {
 
@@ -139,6 +140,89 @@ describe('util/time', function () {
             expect(format(time, '{A}', true)).toEqual('AM');
             expect(format(anotherTime, '{A}', true)).toEqual('AM');
             expect(format(oneMoreTime, '{A}', true)).toEqual('PM');
+        });
+    });
+
+    describe('leveledFormat', function () {
+
+        const dayTick: TimeScaleTick = {
+            value: new Date('2024-06-13T10:20:30.000Z').getTime(),
+            time: {level: 0, lowerTimeUnit: 'day', upperTimeUnit: 'day'}
+        };
+        const monthTick: TimeScaleTick = {
+            value: new Date('2024-06-13T10:20:30.000Z').getTime(),
+            time: {level: 0, lowerTimeUnit: 'month', upperTimeUnit: 'month'}
+        };
+        const yearTick: TimeScaleTick = {
+            value: new Date('2024-01-01T00:00:00.000Z').getTime(),
+            time: {level: 0, lowerTimeUnit: 'year', upperTimeUnit: 'year'}
+        };
+
+        // See https://github.com/apache/echarts/issues/20027
+        it('should support formatter functions for each time unit', function () {
+            const formatter = parseTimeAxisLabelFormatter({
+                year: (value: number) => value + ' {yyyy}',
+                month: (value: number) => value + '{MMM}',
+                day: (value: number) => value + '{d}. {MMM}',
+                hour: (value: number) => value + '{HH}:{mm}\n{d}. {MMM}',
+                minute: (value: number) => value + '{HH}:{mm}\n{d}. {MMM}',
+                second: (value: number) => value + '{HH}:{mm}:{ss}\n{d}. {MMM}',
+                millisecond: (value: number) => value + '{hh}:{mm}:{ss} {SSS}\n{d}. {MMM}'
+            });
+            expect(leveledFormat(dayTick, 0, formatter, 'en', true))
+                .toEqual('171827403000013. Jun');
+            expect(leveledFormat(yearTick, 0, formatter, 'en', true))
+                .toEqual('1704067200000 2024');
+        });
+
+        it('should support formatter functions in leveled template arrays', function () {
+            const formatter = parseTimeAxisLabelFormatter({
+                day: ['{d}', (value: number) => 'LEVEL1:' + value]
+            });
+            expect(leveledFormat(dayTick, 0, formatter, 'en', true)).toEqual('13');
+            const level1Tick: TimeScaleTick = {
+                value: dayTick.value,
+                time: {level: 1, lowerTimeUnit: 'day', upperTimeUnit: 'day'}
+            };
+            expect(leveledFormat(level1Tick, 0, formatter, 'en', true))
+                .toEqual('LEVEL1:1718274030000');
+        });
+
+        it('should support formatter functions in the nested dictionary form', function () {
+            const formatter = parseTimeAxisLabelFormatter({
+                day: {year: (value: number) => 'Y:' + value}
+            });
+            // The day tick itself still uses the default day template.
+            expect(leveledFormat(dayTick, 0, formatter, 'en', true)).toEqual('13');
+            const breakTick: TimeScaleTick = {
+                value: dayTick.value,
+                time: {level: 0, lowerTimeUnit: 'day', upperTimeUnit: 'year'}
+            };
+            expect(leveledFormat(breakTick, 0, formatter, 'en', true))
+                .toEqual('Y:1718274030000');
+        });
+
+        it('should pass value, index and extra params to formatter functions', function () {
+            const formatter = parseTimeAxisLabelFormatter({
+                day: (value: number, index: number, extra: any) =>
+                    'v' + value + ' i' + index + ' l' + extra.level
+            });
+            const level1Tick: TimeScaleTick = {
+                value: dayTick.value,
+                time: {level: 1, lowerTimeUnit: 'day', upperTimeUnit: 'day'}
+            };
+            expect(leveledFormat(level1Tick, 2, formatter, 'en', true))
+                .toEqual('v1718274030000 i2 l1');
+        });
+
+        it('should keep default templates for units without a formatter function', function () {
+            const formatter = parseTimeAxisLabelFormatter({
+                day: (value: number) => 'D:' + value
+            });
+            expect(leveledFormat(dayTick, 0, formatter, 'en', true))
+                .toEqual('D:1718274030000');
+            expect(leveledFormat(monthTick, 0, formatter, 'en', true)).toEqual('Jun');
+            expect(leveledFormat(yearTick, 0, formatter, 'en', true)).toEqual('2024');
         });
     });
 
