@@ -45,16 +45,54 @@ function legacyLayOutGridByContained(axesList: Axis2D[], gridRect: LayoutRect): 
             if (labelUnionRect) {
                 const dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
                 const margin = axis.model.get(['axisLabel', 'margin']);
-                gridRect[dim] -= labelUnionRect[dim] + margin;
+                const outerLabelSize = estimateOuterLabelSize(axis, labelUnionRect[dim]);
+                gridRect[dim] -= outerLabelSize + margin;
                 if (axis.position === 'top') {
-                    gridRect.y += labelUnionRect.height + margin;
+                    gridRect.y += outerLabelSize + margin;
                 }
                 else if (axis.position === 'left') {
-                    gridRect.x += labelUnionRect.width + margin;
+                    gridRect.x += outerLabelSize + margin;
                 }
             }
         }
     });
+}
+
+/**
+ * Estimate how much of the axis labels actually lies outside the axis
+ * line, i.e. on the far side of the label anchor point, which is placed
+ * `axisLabel.margin` away from the axis line. `axisLabel.align` (for a
+ * vertical axis) and `axisLabel.verticalAlign` (for a horizontal axis)
+ * decide that: e.g. `align: 'left'` on a left y-axis makes the labels
+ * extend from the anchor towards the plot area, so only the margin
+ * itself has to be reserved outside the axis line, not the whole label
+ * width; the default alignment extends the labels fully outwards.
+ * When `axisLabel.rotate` is set, the alignment direction no longer
+ * coincides with the direction perpendicular to the axis, so the full
+ * label size is returned, as before.
+ */
+function estimateOuterLabelSize(axis: Axis2D, labelSize: number): number {
+    const axisLabelModel = axis.getLabelModel();
+    if (axisLabelModel.get('rotate')) {
+        return labelSize;
+    }
+    if (axis.isHorizontal()) {
+        const verticalAlign = axisLabelModel.get('verticalAlign')
+            || axisLabelModel.get('baseline')
+            || (axis.position === 'top' ? 'bottom' : 'top');
+        return verticalAlign === 'middle'
+            ? labelSize / 2
+            : verticalAlign === (axis.position === 'top' ? 'bottom' : 'top')
+            ? labelSize
+            : 0;
+    }
+    const align = axisLabelModel.get('align')
+        || (axis.position === 'right' ? 'left' : 'right');
+    return align === 'center'
+        ? labelSize / 2
+        : align === (axis.position === 'right' ? 'left' : 'right')
+        ? labelSize
+        : 0;
 }
 
 /**
