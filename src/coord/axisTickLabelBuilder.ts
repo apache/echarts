@@ -395,6 +395,19 @@ export function calculateCategoryInterval(axis: Axis, ctx: AxisLabelsComputingCo
         width = rect.width * 1.3;
         height = rect.height * 1.3;
 
+        // If the label content is wrapped or truncated into the fixed
+        // `axisLabel.width` (see `overflow: 'break' | 'truncate'`), the
+        // room a label occupies along the axis is bounded by that width
+        // rather than by its unwrapped content width; otherwise the
+        // interval is overestimated and labels are dropped even though
+        // they would not overlap. Long labels rotated to be (nearly)
+        // vertical are not affected, since their occupied width is
+        // governed by the content height instead.
+        const labelWidth = params.labelWidth;
+        if (labelWidth != null && labelWidth > 0 && Math.abs(Math.cos(rotation)) > 0.1) {
+            width = Math.min(width, labelWidth * 1.3);
+        }
+
         // Min size, void long loop.
         maxW = Math.max(maxW, width, 7);
         maxH = Math.max(maxH, height, 7);
@@ -465,6 +478,15 @@ function calculateCategoryIntervalDealCache(
 
 function fetchAutoCategoryIntervalCalculationParams(axis: Axis) {
     const labelModel = axis.getLabelModel();
+    // `width` only takes effect together with `overflow: 'break' | 'truncate'`
+    // (see `createTextStyle` in labelStyle); in other cases the label is
+    // laid out at its natural content width.
+    const overflow = labelModel.get('overflow');
+    const optionWidth = labelModel.get('width');
+    const labelWidth = (overflow === 'break' || overflow === 'truncate')
+        && zrUtil.isNumber(optionWidth)
+        ? optionWidth as number
+        : null;
     return {
         axisRotate: axis.getRotate
             ? axis.getRotate()
@@ -472,7 +494,8 @@ function fetchAutoCategoryIntervalCalculationParams(axis: Axis) {
             ? 90
             : 0,
         labelRotate: labelModel.get('rotate') || 0,
-        font: labelModel.getFont()
+        font: labelModel.getFont(),
+        labelWidth: labelWidth
     };
 }
 
