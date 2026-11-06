@@ -299,7 +299,9 @@ export type TimeAxisLabelFormatterExtraParams = {
     level: number,
 } & AxisLabelFormatterExtraParams;
 
-export type TimeAxisLabelLeveledFormatterOption = string[] | string;
+export type TimeAxisLabelLeveledFormatterOption = string
+    | AxisLabelTimeFormatter
+    | (string | AxisLabelTimeFormatter)[];
 export type TimeAxisLabelFormatterUpperDictionaryOption =
     {[key in PrimaryTimeUnit]?: TimeAxisLabelLeveledFormatterOption};
 /**
@@ -318,7 +320,7 @@ export type TimeAxisLabelFormatterParsed = string
 
 // This is the parsed result from TimeAxisLabelFormatterDictionaryOption.
 export type TimeAxisLabelFormatterDictionary = {[key in PrimaryTimeUnit]: TimeAxisLabelFormatterUpperDictionary};
-export type TimeAxisLabelFormatterUpperDictionary = {[key in PrimaryTimeUnit]: string[]};
+export type TimeAxisLabelFormatterUpperDictionary = {[key in PrimaryTimeUnit]: (string | AxisLabelTimeFormatter)[]};
 
 type LabelFormatters = {
     value: AxisLabelValueFormatter | string

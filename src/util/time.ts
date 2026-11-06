@@ -19,12 +19,14 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import {
+    AxisLabelTimeFormatter,
     TimeAxisLabelFormatterDictionary,
     TimeAxisLabelFormatterDictionaryOption,
     TimeAxisLabelFormatterExtraParams,
     TimeAxisLabelFormatterOption,
     TimeAxisLabelFormatterParsed,
     TimeAxisLabelFormatterUpperDictionary,
+    TimeAxisLabelFormatterUpperDictionaryOption,
     TimeAxisLabelLeveledFormatterOption,
 } from './../coord/axisCommonTypes';
 import * as numberUtil from './number';
@@ -137,6 +139,9 @@ export function parseTimeAxisLabelFormatter(
  *  {formatter: {
  *      year: '{yyyy}', // Or an array of leveled templates: `['{yyyy}', '{bold1|{yyyy}}', ...]`,
  *                      // corresponding to `[level0, level1, level2, ...]`.
+ *                      // A formatter function `(value, index, extra) => string` can be
+ *                      // used in place of a string template at any of these positions;
+ *                      // its return value is then used as the template.
  *      month: '{MMM}',
  *      day: '{d}',
  *      hour: '{HH}:{mm}',
@@ -181,20 +186,27 @@ function parseTimeAxisLabelFormatterDictionary(
         const upperDictOption = dictOption[lowestUnit];
         dict[lowestUnit] = {} as TimeAxisLabelFormatterUpperDictionary;
 
-        let lowerTpl: string | null = null;
+        let lowerTpl: string | AxisLabelTimeFormatter | null = null;
         for (let upperUnitIdx = lowestUnitIdx; upperUnitIdx >= 0; upperUnitIdx--) {
             const upperUnit = primaryTimeUnits[upperUnitIdx];
             const upperDictItemOption: TimeAxisLabelLeveledFormatterOption =
-                (zrUtil.isObject(upperDictOption) && !zrUtil.isArray(upperDictOption))
-                    ? upperDictOption[upperUnit]
+                (zrUtil.isObject(upperDictOption) && !zrUtil.isArray(upperDictOption)
+                    && !zrUtil.isFunction(upperDictOption))
+                    ? (upperDictOption as TimeAxisLabelFormatterUpperDictionaryOption)[upperUnit]
                     : upperDictOption;
 
-            let tplArr: string[];
+            let tplArr: (string | AxisLabelTimeFormatter)[];
             if (zrUtil.isArray(upperDictItemOption)) {
                 tplArr = upperDictItemOption.slice();
                 lowerTpl = tplArr[0] || '';
             }
             else if (zrUtil.isString(upperDictItemOption)) {
+                lowerTpl = upperDictItemOption;
+                tplArr = [lowerTpl];
+            }
+            else if (zrUtil.isFunction(upperDictItemOption)) {
+                // A formatter function is kept as-is and called at formatting
+                // time, the same as a top-level formatter function.
                 lowerTpl = upperDictItemOption;
                 tplArr = [lowerTpl];
             }
@@ -221,11 +233,13 @@ function parseTimeAxisLabelFormatterDictionary(
                 // This strategy is convinient for user configurating and works for most cases.
                 // If bad cases encountered, users can specify the entire dictionary themselves
                 // instead of going through this logic.
-                else if (!primaryTimeUnitFormatterMatchers[upperUnit].test(lowerTpl)) {
+                else if (zrUtil.isString(lowerTpl)
+                    && zrUtil.isString(dict[upperUnit][upperUnit][0])
+                    && !primaryTimeUnitFormatterMatchers[upperUnit].test(lowerTpl)) {
                     lowerTpl = `${dict[upperUnit][upperUnit][0]} ${lowerTpl}`;
                 }
                 tplArr = [lowerTpl];
-                if (canAddHighlight) {
+                if (canAddHighlight && zrUtil.isString(lowerTpl)) {
                     tplArr[1] = `{primary|${lowerTpl}}`;
                 }
             }
@@ -341,15 +355,7 @@ export function leveledFormat(
         template = formatter;
     }
     else if (zrUtil.isFunction(formatter)) {
-        const extra: TimeAxisLabelFormatterExtraParams = {
-            time: tick.time,
-            level: tick.time ? tick.time.level : 0,
-        };
-        const scaleBreakHelper = getScaleBreakHelper();
-        if (scaleBreakHelper) {
-            scaleBreakHelper.makeAxisLabelFormatterParamBreak(extra, tick.break);
-        }
-        template = formatter(tick.value, idx, extra);
+        template = formatter(tick.value, idx, getTimeAxisLabelFormatterExtraParams(tick));
     }
     else {
         const tickTime = tick.time;
@@ -362,9 +368,27 @@ export function leveledFormat(
             const unit = getUnitFromValue(tick.value, isUTC);
             template = formatter[unit][unit][0];
         }
+        if (zrUtil.isFunction(template)) {
+            // A formatter function specified for a single time unit or level
+            // is called the same as a top-level formatter function, and its
+            // return value is used as the template for `format`.
+            template = template(tick.value, idx, getTimeAxisLabelFormatterExtraParams(tick));
+        }
     }
 
     return format(new Date(tick.value), template, isUTC, lang);
+}
+
+function getTimeAxisLabelFormatterExtraParams(tick: ScaleTick): TimeAxisLabelFormatterExtraParams {
+    const extra: TimeAxisLabelFormatterExtraParams = {
+        time: tick.time,
+        level: tick.time ? tick.time.level : 0,
+    };
+    const scaleBreakHelper = getScaleBreakHelper();
+    if (scaleBreakHelper) {
+        scaleBreakHelper.makeAxisLabelFormatterParamBreak(extra, tick.break);
+    }
+    return extra;
 }
 
 export function getUnitFromValue(
