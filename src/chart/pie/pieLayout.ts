@@ -50,16 +50,12 @@ function pieLayout(
 
         const minAngle = seriesModel.get('minAngle') * RADIAN;
 
-        const minAndPadAngle = minAngle + padAngle;
-
         let validDataCount = 0;
         data.each(valueDim, function (value: number) {
             !isNaN(value) && validDataCount++;
         });
 
         const sum = data.getSum(valueDim);
-        // Sum may be 0
-        let unitRadian = Math.PI / (sum || validDataCount) * 2;
 
         const clockwise = seriesModel.get('clockwise');
 
@@ -88,9 +84,118 @@ function pieLayout(
 
         const angleRange = Math.abs(endAngle - startAngle);
 
-        // In the case some sector angle is smaller than minAngle
-        let restAngle = angleRange;
-        let valueSumLargerThanMinAngle = 0;
+        // The angle of each sector (not including `padAngle`), by data
+        // index. `padAngle` is reserved for the gaps between the sectors
+        // first, and the remaining angle is then distributed over the
+        // sectors, so that the sector angles stay proportional to the
+        // values and `minAngle` applies to the sector angles themselves.
+        // (See #20603: previously the angles were distributed over the
+        // whole range and `padAngle` was carved out of each sector
+        // afterwards, which shrank sectors down to `minAngle` even when
+        // their fair angle was larger than it.)
+        const availableAngle = angleRange - padAngle * validDataCount;
+
+        // The weight each sector gets in the distribution: its value, or
+        // 1 for every sector when the angles are distributed evenly
+        // (roseType 'area', or a zero sum still shown by
+        // `stillShowZeroSum`).
+        const distributeByValue = roseType !== 'area'
+            && !(sum === 0 && stillShowZeroSum);
+        const weights: number[] = [];
+        let weightSum = 0;
+        data.each(valueDim, function (value: number) {
+            const weight = isNaN(value) ? NaN
+                : distributeByValue ? value : 1;
+            weights.push(weight);
+            if (!isNaN(weight)) {
+                weightSum += weight;
+            }
+        });
+
+        const sectorAngles: number[] = [];
+        if (validDataCount) {
+            const unitAngle = availableAngle > 0 && weightSum > 0
+                ? availableAngle / weightSum : 0;
+            for (let i = 0; i < weights.length; i++) {
+                const weight = weights[i];
+                sectorAngles.push(isNaN(weight) ? NaN : weight * unitAngle);
+            }
+
+            if (availableAngle > 0) {
+                // Raise the sectors smaller than `minAngle` to
+                // `minAngle` and distribute the remaining angle over
+                // the other sectors. This is repeated because
+                // redistributing can push another sector below
+                // `minAngle` again.
+                const fixed: boolean[] = [];
+                for (let i = 0; i < weights.length; i++) {
+                    fixed.push(isNaN(weights[i]));
+                }
+                let fixedCount = 0;
+                while (fixedCount < validDataCount) {
+                    let restAngle = availableAngle;
+                    let restWeight = 0;
+                    let restCount = 0;
+                    for (let i = 0; i < weights.length; i++) {
+                        if (fixed[i]) {
+                            restAngle -= minAngle;
+                        }
+                        else if (!isNaN(weights[i])) {
+                            restWeight += weights[i];
+                            restCount++;
+                        }
+                    }
+                    if (restAngle < 0) {
+                        // `minAngle` cannot be satisfied for every
+                        // sector: fall back to distributing the angle
+                        // evenly over the sectors.
+                        for (let i = 0; i < weights.length; i++) {
+                            if (!isNaN(weights[i])) {
+                                sectorAngles[i] = availableAngle / validDataCount;
+                            }
+                        }
+                        break;
+                    }
+                    let raised = false;
+                    for (let i = 0; i < weights.length; i++) {
+                        if (fixed[i] || isNaN(weights[i])) {
+                            continue;
+                        }
+                        const angle = restWeight > 0
+                            ? weights[i] * restAngle / restWeight
+                            : restAngle / restCount;
+                        sectorAngles[i] = angle;
+                        if (angle < minAngle) {
+                            sectorAngles[i] = minAngle;
+                            fixed[i] = true;
+                            fixedCount++;
+                            raised = true;
+                        }
+                    }
+                    if (!raised) {
+                        break;
+                    }
+                }
+
+                // If every sector had to be raised to `minAngle` and
+                // together they exceed the available angle, `minAngle`
+                // cannot be satisfied either: fall back to distributing
+                // the angle evenly over the sectors.
+                let totalAngle = 0;
+                for (let i = 0; i < weights.length; i++) {
+                    if (!isNaN(weights[i])) {
+                        totalAngle += sectorAngles[i];
+                    }
+                }
+                if (totalAngle - availableAngle > 1e-10) {
+                    for (let i = 0; i < weights.length; i++) {
+                        if (!isNaN(weights[i])) {
+                            sectorAngles[i] = availableAngle / validDataCount;
+                        }
+                    }
+                }
+            }
+        }
 
         let currentAngle = startAngle;
 
@@ -98,7 +203,6 @@ function pieLayout(
         data.setLayout({ viewRect, r });
 
         data.each(valueDim, function (value: number, idx: number) {
-            let angle;
             if (isNaN(value)) {
                 data.setItemLayout(idx, {
                     angle: NaN,
@@ -115,23 +219,9 @@ function pieLayout(
                 return;
             }
 
-            // FIXME 兼容 2.0 但是 roseType 是 area 的时候才是这样？
-            if (roseType !== 'area') {
-                angle = (sum === 0 && stillShowZeroSum)
-                    ? unitRadian : (value * unitRadian);
-            }
-            else {
-                angle = angleRange / validDataCount;
-            }
-
-
-            if (angle < minAndPadAngle) {
-                angle = minAndPadAngle;
-                restAngle -= minAndPadAngle;
-            }
-            else {
-                valueSumLargerThanMinAngle += value;
-            }
+            // The span this sector takes on the whole circle, including
+            // the `padAngle` gap reserved after it.
+            const angle = sectorAngles[idx] + padAngle;
 
             const endAngle = currentAngle + dir * angle;
 
@@ -163,64 +253,6 @@ function pieLayout(
 
             currentAngle = endAngle;
         });
-
-        // Some sector is constrained by minAngle and padAngle
-        // Rest sectors needs recalculate angle
-        if (restAngle < PI2 && validDataCount) {
-            // Average the angle if rest angle is not enough after all angles is
-            // Constrained by minAngle and padAngle
-            if (restAngle <= 1e-3) {
-                const angle = angleRange / validDataCount;
-                data.each(valueDim, function (value: number, idx: number) {
-                    if (!isNaN(value)) {
-                        const layout = data.getItemLayout(idx);
-                        layout.angle = angle;
-
-                        let actualStartAngle = 0;
-                        let actualEndAngle = 0;
-
-                        if (angle < padAngle) {
-                            actualStartAngle = startAngle + dir * (idx + 1 / 2) * angle;
-                            actualEndAngle = actualStartAngle;
-                        }
-                        else {
-                            actualStartAngle = startAngle + dir * idx * angle + halfPadAngle;
-                            actualEndAngle = startAngle + dir * (idx + 1) * angle - halfPadAngle;
-                        }
-
-                        layout.startAngle = actualStartAngle;
-                        layout.endAngle = actualEndAngle;
-                    }
-                });
-            }
-            else {
-                unitRadian = restAngle / valueSumLargerThanMinAngle;
-                currentAngle = startAngle;
-                data.each(valueDim, function (value: number, idx: number) {
-                    if (!isNaN(value)) {
-                        const layout = data.getItemLayout(idx);
-                        const angle = layout.angle === minAndPadAngle
-                            ? minAndPadAngle : value * unitRadian;
-
-                        let actualStartAngle = 0;
-                        let actualEndAngle = 0;
-
-                        if (angle < padAngle) {
-                            actualStartAngle = currentAngle + dir * angle / 2;
-                            actualEndAngle = actualStartAngle;
-                        }
-                        else {
-                            actualStartAngle = currentAngle + halfPadAngle;
-                            actualEndAngle = currentAngle + dir * angle - halfPadAngle;
-                        }
-
-                        layout.startAngle = actualStartAngle;
-                        layout.endAngle = actualEndAngle;
-                        currentAngle += dir * angle;
-                    }
-                });
-            }
-        }
     });
 }
 
