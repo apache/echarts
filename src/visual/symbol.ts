@@ -125,12 +125,24 @@ const dataSymbolTask: StageHandler = {
 
         function dataEach(data: SeriesData, idx: number) {
             const itemModel = data.getItemModel<SymbolOptionMixin>(idx);
+            const rawValue = seriesModel.getRawValue(idx);
+            const params = seriesModel.getDataParams(idx);
 
             for (let i = 0; i < SYMBOL_PROPS.length; i++) {
                 const symbolPropName = SYMBOL_PROPS[i];
                 const val = itemModel.getShallow(symbolPropName, true);
                 if (val != null) {
-                    data.setItemVisual(idx, symbolPropName, val);
+                    // Item-level symbol options may be callbacks just like
+                    // series-level ones. Invoke them per data item instead
+                    // of storing the raw function as the item visual,
+                    // otherwise views pass a function to createSymbol and
+                    // crash on `symbolType.indexOf`.
+                    data.setItemVisual(
+                        idx, symbolPropName,
+                        isFunction(val)
+                            ? (val as unknown as SymbolCallback<CallbackDataParams>)(rawValue, params)
+                            : val
+                    );
                 }
             }
         }
