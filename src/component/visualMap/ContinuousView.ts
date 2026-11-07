@@ -220,6 +220,7 @@ class ContinuousView extends VisualMapView {
 
         // Bar
         gradientBarGroup.add(shapes.outOfRange = createPolygon());
+        shapes.outOfRange.setClipPath(new graphic.Polygon());
         gradientBarGroup.add(shapes.inRange = createPolygon(
             null,
             useHandle ? getCursor(this._orient) : null
@@ -510,6 +511,16 @@ class ContinuousView extends VisualMapView {
                 // opacity: visualOutOfRange.opacity
             })
             .setShape('points', visualOutOfRange.barPoints);
+
+        // Keep the out-of-range gradient and geometry intact, but do not draw
+        // it underneath the selected area, where translucent colors would mix.
+        const inPoints = visualInRange.barPoints;
+        const width = visualMapModel.itemSize[0];
+        const height = visualMapModel.itemSize[1];
+        (shapes.outOfRange.getClipPath() as graphic.Polygon).setShape('points', [
+            [0, 0], [width, 0], [width, inPoints[0][1]], inPoints[0], inPoints[3],
+            [width, inPoints[3][1]], [width, height], [0, height]
+        ]);
 
         this._updateHandle(inRangeHandleEnds, visualInRange);
     }
