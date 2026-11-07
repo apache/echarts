@@ -30,6 +30,7 @@ import type { ZRRawEvent } from 'zrender/src/core/types';
 import type { ZRColor } from '../../util/types';
 import type CanvasPainter from 'zrender/src/canvas/Painter';
 import type SVGPainter from 'zrender/src/svg/Painter';
+import type HandlerDomProxy from 'zrender/src/dom/HandlerProxy';
 import {
     shouldTooltipConfine,
     toCSSVendorPrefix,
@@ -297,6 +298,7 @@ class TooltipHTMLContent {
     private _longHideTimeout: number;
 
     private _enableDisplayTransition: boolean;
+    private _clearPendingMouseUp: () => void;
 
     constructor(
         api: ExtensionAPI,
@@ -333,6 +335,47 @@ class TooltipHTMLContent {
         // the browser do not support `pointer-events: none`.
 
         const self = this;
+        el.addEventListener(env.pointerEventsSupported ? 'pointerup' : 'mouseup', function (e) {
+            const handler = zr.handler;
+            const proxy = handler && handler.proxy as HandlerDomProxy;
+            // The tooltip belongs to zrender, so its document listener skips this event.
+            // Finish only a press started in the renderer, leaving tooltip controls alone.
+            if (!proxy || !proxy.dom || !isFunction(proxy.__togglePointerCapture)
+                || !(proxy.__pointerCapturing || proxy.__mayPointerCapture)
+            ) {
+                return;
+            }
+            const release = function () {
+                if (self.el && zr.handler === handler && handler.proxy === proxy
+                    && (proxy.__pointerCapturing || proxy.__mayPointerCapture)
+                ) {
+                    normalizeEvent(zr.painter.getViewportRoot(), e as ZRRawEvent, true);
+                    proxy.__togglePointerCapture(false);
+                    proxy.trigger('mouseup', e);
+                }
+            };
+            if (proxy.dom.contains(el)) {
+                // Let the renderer handle normal bubbling first. A child may stop propagation,
+                // so finish the release afterwards if the renderer did not receive it.
+                self._clearPendingMouseUp && self._clearPendingMouseUp();
+                const clear = self._clearPendingMouseUp = function () {
+                    clearTimeout(timer);
+                    proxy.off('mousedown', clear);
+                    proxy.off('mouseup', clear);
+                    self._clearPendingMouseUp = null;
+                };
+                const timer = setTimeout(function () {
+                    clear();
+                    release();
+                }, 0);
+                // Do not end a new gesture or retain a release after the native path handled it.
+                proxy.on('mousedown', clear);
+                proxy.on('mouseup', clear);
+            }
+            else {
+                release();
+            }
+        }, true);
         el.onmouseenter = function () {
             // clear the timeout in hideLater and keep showing tooltip
             if (self._enterable) {
@@ -547,6 +590,7 @@ class TooltipHTMLContent {
     }
 
     dispose() {
+        this._clearPendingMouseUp && this._clearPendingMouseUp();
         clearTimeout(this._hideTimeout);
         clearTimeout(this._longHideTimeout);
 
