@@ -119,8 +119,8 @@ const dataZoomProcessor: StageHandler = {
         });
 
         ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
-            // Fullfill all of the range props so that user
-            // is able to get them from chart.getOption().
+            // Update the output range while preserving the value-mode inputs
+            // needed to recover all target axes from chart.getOption().
             const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
             if (axisProxy) {
                 const {percent, value} = axisProxy.getWindow();

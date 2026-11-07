@@ -496,9 +496,22 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
     setCalculatedRange(opt: RangeOption): void {
         const option = this.option;
-        each(['start', 'startValue', 'end', 'endValue'] as const, function (name) {
-            (option as any)[name] = opt[name];
-        });
+        const settledOption = this.settledOption;
+        // A representative axis cannot supply value inputs for every target axis.
+        // Keep value-mode bounds (including unspecified bounds) so getOption can
+        // recover each axis independently, even when the representative range is clamped.
+        each([['start', 'startValue'], ['end', 'endValue']] as const, function (names, index) {
+            if (this._rangePropMode[index] === 'value') {
+                option[names[0]] = null;
+                option[names[1]] = settledOption[names[1]];
+            }
+            else {
+                option[names[0]] = opt[names[0]];
+                option[names[1]] = opt[names[1]];
+            }
+        }, this);
+        // Actions can change the mode without changing the user-specified rangeMode.
+        option.rangeMode = this.getRangePropMode();
     }
 
     getPercentRange(): number[] {
