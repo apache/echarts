@@ -170,10 +170,14 @@ under the License.
                 console.log('!!! ' + ctx.hint + ' !!!\n' + '(from chart.getOption())\n' + JSON.stringify(states, null, 2));
 
                 validateStates(states, btnDef, 'GET_OPTION');
+                validateStates([0, 1].map(function (idx) {
+                    var range = ctx.chart.getModel().getComponent('dataZoom', idx).getValueRange();
+                    return {startValue: range[0], endValue: range[1]};
+                }), btnDef, 'VALUE_RANGE');
             }
 
             function validateStates(actualStates, btnDef, btnDefExpectKey) {
-                if (!btnDef.expect) {
+                if (!btnDef.expect || !btnDef.expect[btnDefExpectKey]) {
                     return;
                 }
                 testHelper.printAssert(ctx.chart, function (assert) {
@@ -228,6 +232,16 @@ under the License.
                 })
             });
             ctx.valueButtons.forEach(function (item) {
+                if (item.expect && item.expect.GET_OPTION) {
+                    item.expect.VALUE_RANGE = item.expect.GET_OPTION;
+                    item.expect.GET_OPTION = [{
+                        startValue: item.startValue,
+                        endValue: item.endValue
+                    }, {
+                        startValue: item.startValue,
+                        endValue: item.endValue
+                    }];
+                }
                 buttons.push({
                     text: item.text,
                     onclick: function () {
@@ -832,6 +846,11 @@ under the License.
                     + '"(' + special[1] + ') ' + extra;
             }
 
+            function getInputTimestamp(value) {
+                var parts = fmt2Str(value).split('-');
+                return +new Date(+parts[0], +parts[1] - 1, +parts[2]);
+            }
+
             var ctx = {
                 hint: 'time axis value should be integer',
                 percentButttons: getDefaultPercentButtons({minSpan: undefined, maxSpan: undefined}),
@@ -841,11 +860,11 @@ under the License.
                     endValue: fmt2Str(specialNormal[1]),
                     expect: {
                         GET_OPTION: [{
-                            startValue: specialNormal[0],
-                            endValue: specialNormal[1],
+                            startValue: getInputTimestamp(specialNormal[0]),
+                            endValue: getInputTimestamp(specialNormal[1]),
                         }, {
-                            startValue: specialNormal[0],
-                            endValue: specialNormal[1],
+                            startValue: getInputTimestamp(specialNormal[0]),
+                            endValue: getInputTimestamp(specialNormal[1]),
                         }]
                     }
                 }, {
@@ -855,8 +874,10 @@ under the License.
                     expect: {
                         GET_OPTION: (function () {
                             const startValue = xDataMin;
+                            const inputSpan = getInputTimestamp(specialOverXDataMin[1])
+                                - getInputTimestamp(specialOverXDataMin[0]);
                             const endValue = Math.min(
-                                xDataMin + (specialOverXDataMin[1] - specialOverXDataMin[0]),
+                                xDataMin + inputSpan,
                                 xDataMax
                             );
                             return [{
@@ -875,8 +896,10 @@ under the License.
                     expect: {
                         GET_OPTION: (function () {
                             const endValue = xDataMax;
+                            const inputSpan = getInputTimestamp(specialOverXDataMax[1])
+                                - getInputTimestamp(specialOverXDataMax[0]);
                             const startValue = Math.max(
-                                xDataMax - (specialOverXDataMax[1] - specialOverXDataMax[0]),
+                                xDataMax - inputSpan,
                                 xDataMin
                             );
                             return [{
