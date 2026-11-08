@@ -180,6 +180,31 @@ describe('dataTransform', function () {
         });
     });
 
+    it('print_inherited_header_and_dimensions', function () {
+        const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+            const option: EChartsOption = {
+                dataset: [{
+                    source: makeDatasetSourceDetection()
+                }, {
+                    transform: { type: 'filter', config: { dimension: 'product', ne: 'BBB' }, print: true }
+                }],
+                xAxis: { type: 'category' },
+                yAxis: {},
+                series: { type: 'bar', datasetIndex: 1 }
+            };
+
+            chart.setOption(option);
+            const printed = logSpy.mock.calls.map(args => args.join(' ')).join('\n');
+            const header = JSON.stringify(['product', '2012', '2013', '2014', '2015']);
+            expect(printed).toContain('- transform result data:\n[' + header + ',');
+            expect(printed).toContain('- transform result dimensions:\n' + header);
+        }
+        finally {
+            logSpy.mockRestore();
+        }
+    });
+
 
 });
 

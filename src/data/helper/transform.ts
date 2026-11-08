@@ -431,23 +431,7 @@ function applySingleDataTransform(
         })
     );
 
-    if (__DEV__) {
-        if (transOption.print) {
-            const printStrArr = map(resultList, extSource => {
-                const pipeIndexStr = pipeIndex != null ? ' === pipe index: ' + pipeIndex : '';
-                return [
-                    '=== dataset index: ' + infoForPrint.datasetIndex + pipeIndexStr + ' ===',
-                    '- transform result data:',
-                    makePrintable(extSource.data),
-                    '- transform result dimensions:',
-                    makePrintable(extSource.dimensions)
-                ].join('\n');
-            }).join('\n');
-            log(printStrArr);
-        }
-    }
-
-    return map(resultList, function (result, resultIndex) {
+    const resultSourceList = map(resultList, function (result, resultIndex) {
         let errMsg = '';
 
         if (!isObject(result)) {
@@ -536,6 +520,24 @@ function applySingleDataTransform(
             null
         );
     });
+
+    if (__DEV__) {
+        if (transOption.print) {
+            const printStrArr = map(resultSourceList, source => {
+                const pipeIndexStr = pipeIndex != null ? ' === pipe index: ' + pipeIndex : '';
+                return [
+                    '=== dataset index: ' + infoForPrint.datasetIndex + pipeIndexStr + ' ===',
+                    '- transform result data:',
+                    makePrintable(source.data),
+                    '- transform result dimensions:',
+                    makePrintable(map(source.dimensionsDefine, dimDef => dimDef.name))
+                ].join('\n');
+            }).join('\n');
+            log(printStrArr);
+        }
+    }
+
+    return resultSourceList;
 }
 
 function isSupportedSourceFormat(sourceFormat: SourceFormat): boolean {
