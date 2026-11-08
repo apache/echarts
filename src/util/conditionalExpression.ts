@@ -188,9 +188,8 @@ class RegExpEvaluator implements FilterComparator {
     }
 
     evaluate(lVal: unknown): boolean {
-        const type = typeof lVal;
-        return isString(type) ? this._condVal.test(lVal as string)
-            : isNumber(type) ? this._condVal.test(lVal + '')
+        return isString(lVal) ? this._condVal.test(lVal)
+            : isNumber(lVal) ? this._condVal.test(lVal + '')
             : false;
     }
 }
