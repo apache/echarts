@@ -175,8 +175,9 @@ class RegExpEvaluator implements FilterComparator {
 
     constructor(rVal: unknown) {
         // Support condVal: RegExp | string
+        // Keep the evaluator's lastIndex separate from the caller's regexp.
         const condValue = this._condVal = isString(rVal) ? new RegExp(rVal)
-            : isRegExp(rVal) ? rVal as RegExp
+            : isRegExp(rVal) ? new RegExp(rVal)
             : null;
         if (condValue == null) {
             let errMsg = '';
@@ -188,6 +189,8 @@ class RegExpEvaluator implements FilterComparator {
     }
 
     evaluate(lVal: unknown): boolean {
+        // Global and sticky regexps must test each data value independently.
+        this._condVal.lastIndex = 0;
         const type = typeof lVal;
         return isString(type) ? this._condVal.test(lVal as string)
             : isNumber(type) ? this._condVal.test(lVal + '')
