@@ -149,17 +149,7 @@ function calculateStack(stackInfoList: StackInfo[]) {
                     ) as number;
 
                     // Considering positive stack, negative stack and empty data
-                    if (
-                        // A null/NaN value in a lower series must be excluded from the
-                        // stack, otherwise it corrupts the sum. The other strategies
-                        // already reject it via their `val > 0`/`val < 0` checks, but
-                        // `all` needs an explicit guard. See #21685.
-                        (stackStrategy === 'all' && !isNaN(val)) // single stack group
-                        || (stackStrategy === 'positive' && val > 0)
-                        || (stackStrategy === 'negative' && val < 0)
-                        || (stackStrategy === 'samesign' && sum >= 0 && val > 0) // All positive stack
-                        || (stackStrategy === 'samesign' && sum <= 0 && val < 0) // All negative stack
-                    ) {
+                    if (isStackedOn(stackStrategy, sum, val)) {
                         // The sum has to be very small to be affected by the
                         // floating arithmetic problem. An incorrect result will probably
                         // cause axis min/max to be filtered incorrectly.
@@ -176,4 +166,57 @@ function calculateStack(stackInfoList: StackInfo[]) {
             return resultVal;
         });
     });
+}
+
+function isStackedOn(
+    stackStrategy: SeriesStackOptionMixin['stackStrategy'],
+    sum: number,
+    val: number
+): boolean {
+    return (
+        // A null/NaN value in a lower series must be excluded from the
+        // stack, otherwise it corrupts the sum. The other strategies
+        // already reject it via their `val > 0`/`val < 0` checks, but
+        // `all` needs an explicit guard. See #21685.
+        (stackStrategy === 'all' && !isNaN(val)) // single stack group
+        || (stackStrategy === 'positive' && val > 0)
+        || (stackStrategy === 'negative' && val < 0)
+        || (stackStrategy === 'samesign' && sum >= 0 && val > 0) // All positive stack
+        || (stackStrategy === 'samesign' && sum <= 0 && val < 0) // All negative stack
+    );
+}
+
+export function findStackedOnItem(
+    data: SeriesData,
+    rawIndex: number
+): { data: SeriesData, rawIndex: number } | null {
+    const sum = data.getByRawIndex(data.getCalculationInfo('stackedDimension'), rawIndex) as number;
+    if (isNaN(sum)) {
+        return null;
+    }
+    const isStackedByIndex = data.getCalculationInfo('isStackedByIndex');
+    const byValue = isStackedByIndex
+        ? null
+        : data.getByRawIndex(data.getCalculationInfo('stackedByDimension'), rawIndex) as number;
+    const stackStrategy = (data.hostModel as SeriesModel<SeriesOption & SeriesStackOptionMixin>)
+        .get('stackStrategy') || 'samesign';
+
+    let stackedOnSeries = data.getCalculationInfo('stackedOnSeries') as SeriesModel;
+    while (stackedOnSeries) {
+        const stackedOnData = stackedOnSeries.getData();
+        const stackedOnRawIndex = isStackedByIndex
+            ? rawIndex
+            : stackedOnData.rawIndexOf(stackedOnData.getCalculationInfo('stackedByDimension'), byValue);
+        if (stackedOnRawIndex >= 0 && isStackedOn(
+            stackStrategy,
+            sum,
+            stackedOnData.getByRawIndex(
+                stackedOnData.getCalculationInfo('stackResultDimension'), stackedOnRawIndex
+            ) as number
+        )) {
+            return { data: stackedOnData, rawIndex: stackedOnRawIndex };
+        }
+        stackedOnSeries = stackedOnData.getCalculationInfo('stackedOnSeries');
+    }
+    return null;
 }

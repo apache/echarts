@@ -48,6 +48,9 @@ import {
 import { BaseBarSeriesSubType, getStartValue, requireAxisStatisticsForBaseBar } from './barCommon';
 import { COORD_SYS_TYPE_CARTESIAN_2D } from '../coord/cartesian/GridModel';
 import { createBandWidthBasedAxisContainShapeHandler, makeAxisStatKey2 } from '../chart/helper/axisSnippets';
+import { findStackedOnItem } from '../processor/dataStack';
+import type SeriesData from '../data/SeriesData';
+import type SeriesModel from '../model/Series';
 
 
 const callOnlyOnce = makeCallOnlyOnce();
@@ -405,6 +408,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
 
             const isLarge = isInLargeMode(seriesModel);
             const barMinHeight = seriesModel.get('barMinHeight') || 0;
+            const stackedOnBarMinHeight = stacked && hasStackedOnBarMinHeight(seriesType, data);
 
             const stackedDimIdx = stackResultDim && data.getDimensionIndex(stackResultDim);
 
@@ -431,11 +435,17 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         const baseValue = store.get(baseDimIdx, dataIndex) as number;
                         let baseCoord = valueAxisStart;
                         let stackStartValue;
+                        let barMinHeightOffset = 0;
 
                         // Because of the barMinHeight, we can not use the value in
                         // stackResultDimension directly.
                         if (stacked) {
                             stackStartValue = +value - (store.get(valueDimIdx, dataIndex) as number);
+                            if (stackedOnBarMinHeight) {
+                                barMinHeightOffset = getStackedBarMinHeightOffset(
+                                    seriesType, data, data.getRawIndex(dataIndex)
+                                );
+                            }
                         }
 
                         let x;
@@ -446,38 +456,26 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         if (isValueAxisH) {
                             const coord = cartesian.dataToPoint([value, baseValue]);
                             if (stacked) {
-                                const stackStartCoord = cartesian.dataToPoint([stackStartValue, baseValue])[0];
-                                // On a log axis, a `stackStartValue` that is out of the log domain
-                                // (e.g., 0, resulting from stacking over a null value) maps to a
-                                // non-finite coordinate. Draw the bar from the axis start in that
-                                // case, as if it were the first bar in the stack.
-                                baseCoord = isFinite(stackStartCoord) ? stackStartCoord : valueAxisStart;
+                                baseCoord = getStackStartCoord(
+                                    cartesian, isValueAxisH, valueAxisStart, stackStartValue, baseValue
+                                );
                             }
-                            x = baseCoord;
+                            x = baseCoord + barMinHeightOffset;
                             y = coord[1] + columnOffset;
-                            width = coord[0] - baseCoord;
+                            width = applyBarMinHeight(coord[0] - baseCoord, barMinHeight, isValueAxisH);
                             height = columnWidth;
-
-                            if (mathAbs(width) < barMinHeight) {
-                                width = (width < 0 ? -1 : 1) * barMinHeight;
-                            }
                         }
                         else {
                             const coord = cartesian.dataToPoint([baseValue, value]);
                             if (stacked) {
-                                const stackStartCoord = cartesian.dataToPoint([baseValue, stackStartValue])[1];
-                                // See the comment in the horizontal case above.
-                                baseCoord = isFinite(stackStartCoord) ? stackStartCoord : valueAxisStart;
+                                baseCoord = getStackStartCoord(
+                                    cartesian, isValueAxisH, valueAxisStart, stackStartValue, baseValue
+                                );
                             }
                             x = coord[0] + columnOffset;
-                            y = baseCoord;
+                            y = baseCoord + barMinHeightOffset;
                             width = columnWidth;
-                            height = coord[1] - baseCoord;
-
-                            if (mathAbs(height) < barMinHeight) {
-                                // Include zero to has a positive bar
-                                height = (height <= 0 ? -1 : 1) * barMinHeight;
-                            }
+                            height = applyBarMinHeight(coord[1] - baseCoord, barMinHeight, isValueAxisH);
                         }
 
                         if (!isLarge) {
@@ -516,6 +514,85 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
 
 function isInLargeMode(seriesModel: BaseBarSeriesModel) {
     return seriesModel.pipelineContext && seriesModel.pipelineContext.large;
+}
+
+function getStackStartCoord(
+    cartesian: Cartesian2D,
+    isValueAxisH: boolean,
+    valueAxisStart: number,
+    stackStartValue: number,
+    baseValue: number
+): number {
+    const stackStartCoord = isValueAxisH
+        ? cartesian.dataToPoint([stackStartValue, baseValue])[0]
+        : cartesian.dataToPoint([baseValue, stackStartValue])[1];
+    // On a log axis, a `stackStartValue` that is out of the log domain
+    // (e.g., 0, resulting from stacking over a null value) maps to a
+    // non-finite coordinate. Draw the bar from the axis start in that
+    // case, as if it were the first bar in the stack.
+    return isFinite(stackStartCoord) ? stackStartCoord : valueAxisStart;
+}
+
+function applyBarMinHeight(size: number, barMinHeight: number, isValueAxisH: boolean): number {
+    if (mathAbs(size) < barMinHeight) {
+        // Include zero to has a positive bar
+        return (isValueAxisH ? (size < 0 ? -1 : 1) : (size <= 0 ? -1 : 1)) * barMinHeight;
+    }
+    return size;
+}
+
+function hasStackedOnBarMinHeight(seriesType: string, data: SeriesData): boolean {
+    let stackedOnSeries = data.getCalculationInfo('stackedOnSeries') as SeriesModel;
+    while (stackedOnSeries) {
+        if (stackedOnSeries.subType === seriesType && (stackedOnSeries as BaseBarSeriesModel).get('barMinHeight')) {
+            return true;
+        }
+        stackedOnSeries = stackedOnSeries.getData().getCalculationInfo('stackedOnSeries');
+    }
+    return false;
+}
+
+function getStackedBarMinHeightOffset(seriesType: string, data: SeriesData, rawIndex: number): number {
+    let offset = 0;
+    let stackedOnItem = findStackedOnItem(data, rawIndex);
+    while (stackedOnItem) {
+        const stackedOnSeries = stackedOnItem.data.hostModel as BaseBarSeriesModel;
+        if (stackedOnSeries.subType !== seriesType || !isCartesian2DInjectedAsDataCoordSys(stackedOnSeries)) {
+            break;
+        }
+        offset += getBarMinHeightExtension(stackedOnSeries, stackedOnItem.rawIndex);
+        stackedOnItem = findStackedOnItem(stackedOnItem.data, stackedOnItem.rawIndex);
+    }
+    return offset;
+}
+
+function getBarMinHeightExtension(seriesModel: BaseBarSeriesModel, rawIndex: number): number {
+    const barMinHeight = seriesModel.get('barMinHeight') || 0;
+    if (!barMinHeight) {
+        return 0;
+    }
+    const data = seriesModel.getData();
+    const cartesian = seriesModel.coordinateSystem as Cartesian2D;
+    const baseAxis = cartesian.getBaseAxis();
+    const valueAxis = cartesian.getOtherAxis(baseAxis);
+    const isValueAxisH = valueAxis.isHorizontal();
+    const valueDim = data.mapDimension(valueAxis.dim);
+    const valueAxisStart = valueAxis.toGlobalCoord(valueAxis.dataToCoord(getStartValue(valueAxis)));
+    const baseValue = data.getByRawIndex(data.mapDimension(baseAxis.dim), rawIndex) as number;
+    let value = data.getByRawIndex(valueDim, rawIndex) as number;
+    let baseCoord = valueAxisStart;
+
+    if (isDimensionStacked(data, valueDim) && data.getCalculationInfo('stackedOnSeries')) {
+        const stackResult = data.getByRawIndex(data.getCalculationInfo('stackResultDimension'), rawIndex) as number;
+        baseCoord = getStackStartCoord(cartesian, isValueAxisH, valueAxisStart, stackResult - value, baseValue);
+        value = stackResult;
+    }
+
+    const size = (isValueAxisH
+        ? cartesian.dataToPoint([value, baseValue])[0]
+        : cartesian.dataToPoint([baseValue, value])[1]
+    ) - baseCoord;
+    return applyBarMinHeight(size, barMinHeight, isValueAxisH) - size;
 }
 
 function barGridCreateAxisContainShapeHandler(seriesType: BaseBarSeriesSubType): AxisContainShapeHandler {
