@@ -23,6 +23,9 @@ declare global {
 
   const __DEV__: boolean;
 
+  // Set by `core/environment.js`. Restores the original time zone if `timezone` is not given.
+  function setTimezone(timezone?: string): void;
+
   namespace jest {
     interface Matchers<R> {
         toBeFinite(): R

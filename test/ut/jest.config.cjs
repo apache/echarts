@@ -22,7 +22,7 @@ const { compilerOptions } = require('./tsconfig')
 
 module.exports = {
     preset: 'ts-jest',
-    testEnvironment: 'jsdom',
+    testEnvironment: '<rootDir>/core/environment.js',
     rootDir: __dirname,
     collectCoverage: true,
     setupFiles: [

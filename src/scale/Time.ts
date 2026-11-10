@@ -81,7 +81,7 @@ import {TimeAxisLabelFormatterParsed} from '../coord/axisCommonTypes';
 import { warn } from '../util/log';
 import { LocaleOption } from '../core/locale';
 import Model from '../model/Model';
-import { each, filter, indexOf, isNumber, map } from 'zrender/src/core/util';
+import { each, filter, indexOf, isNumber } from 'zrender/src/core/util';
 import { BreakScaleMapper, getBreaksUnsafe, getScaleBreakHelper, simplyParseBreakOption } from './break';
 import type { ScaleCalcNiceMethod } from '../coord/axisNiceTicks';
 import { getMinorTicks } from './minorTicks';
@@ -508,6 +508,16 @@ function createIntervalTicks(
         //     d -= 1; // Starts with 0;   PENDING
         // }
 
+        function stepDate(step: number): number {
+            date[setMethodName](date[getMethodName]() + step);
+            if (isDate) {
+                // If local midnight does not exist on a day (DST change), the date is moved to
+                // 01:00 and would stay at 01:00 in the following days. So reset to the start of day.
+                date[hoursSetterName(isUTC)](0);
+            }
+            return date.getTime();
+        }
+
         while (dateTime < maxTimestamp && dateTime <= extent[1]) {
             out.push({
                 value: dateTime
@@ -520,14 +530,12 @@ function createIntervalTicks(
                 break;
             }
 
-            date[setMethodName](date[getMethodName]() + interval);
-            dateTime = date.getTime();
+            dateTime = stepDate(interval);
 
             if (brk) {
                 const moreMultiple = brk.calcNiceTickMultiple(dateTime, estimateNiceMultiple);
                 if (moreMultiple > 0) {
-                    date[setMethodName](date[getMethodName]() + moreMultiple * interval);
-                    dateTime = date.getTime();
+                    dateTime = stepDate(moreMultiple * interval);
                 }
             }
         }
@@ -640,6 +648,7 @@ function createIntervalTicks(
     }
 
     const levelsTicks: InnerTimeTick[][] = [];
+    const levelsUnits: PrimaryTimeUnit[] = [];
     let currentLevelTicks: InnerTimeTick[] = [];
 
     let tickCount = 0;
@@ -676,6 +685,7 @@ function createIntervalTicks(
 
                 // Only treat primary time unit as one level.
                 levelsTicks.push(levelTicksRemoveDuplicated);
+                levelsUnits.push(primaryTimeUnit);
 
                 if (tickCount > targetTickNum || bottomUnitName === unitNames[i]) {
                     break;
@@ -688,17 +698,31 @@ function createIntervalTicks(
 
     }
 
-    const levelsTicksInExtent = filter(map(levelsTicks, levelTicks => {
-        return filter(levelTicks, tick => tick.value >= extent[0] && tick.value <= extent[1] && !tick.notAdd);
-    }), levelTicks => levelTicks.length > 0);
+    const levelsTicksInExtent: InnerTimeTick[][] = [];
+    const levelsUnitsInExtent: PrimaryTimeUnit[] = [];
+    each(levelsTicks, (levelTicks, idx) => {
+        const levelTicksInExtent = filter(
+            levelTicks, tick => tick.value >= extent[0] && tick.value <= extent[1] && !tick.notAdd
+        );
+        if (levelTicksInExtent.length > 0) {
+            levelsTicksInExtent.push(levelTicksInExtent);
+            levelsUnitsInExtent.push(levelsUnits[idx]);
+        }
+    });
 
     const maxLevel = levelsTicksInExtent.length - 1;
     const ticks: TimeScaleTick[] = [];
 
     for (let i = 0; i < levelsTicksInExtent.length; ++i) {
         const levelTicks = levelsTicksInExtent[i];
+        const levelUnitIdx = indexOf(primaryTimeUnits, levelsUnitsInExtent[i]);
         for (let k = 0; k < levelTicks.length; ++k) {
-            const unit = getUnitFromValue(levelTicks[k].value, isUTC);
+            // The unit of a tick should not be finer than its level, e.g., a day tick may be at
+            // 01:00 rather than 00:00 if local midnight does not exist on that day (DST change).
+            const unit = primaryTimeUnits[Math.min(
+                indexOf(primaryTimeUnits, getUnitFromValue(levelTicks[k].value, isUTC)),
+                levelUnitIdx
+            )];
             ticks.push({
                 value: levelTicks[k].value,
                 time: {
