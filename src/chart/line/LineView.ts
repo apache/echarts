@@ -1037,6 +1037,11 @@ class LineView extends ChartView {
         // Remove previous created polyline
         if (polyline) {
             this._lineGroup.remove(polyline);
+            // endLabel is attached to the previous polyline, recreate it on the new one.
+            if (this._endLabel) {
+                polyline.removeTextContent();
+                this._endLabel = null;
+            }
         }
 
         polyline = new ECPolyline({
