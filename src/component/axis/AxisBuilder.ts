@@ -851,22 +851,25 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
         const nameDirection = cfg.nameDirection;
         const textStyleModel = axisModel.getModel('nameTextStyle');
         const gap = (axisModel.get('nameGap') || 0);
+        // When nameMoveOverlap is enabled, apply nameGap after overlap
+        // resolution so it acts as offset from the auto-resolved position.
+        const initialGap = cfg.shouldNameMoveOverlap ? 0 : gap;
 
         const extent = axisModel.axis.getExtent();
         const gapStartEndSignal = axisModel.axis.inverse ? -1 : 1;
         const pos = new Point(0, 0);
         const nameMoveDirVec = new Point(0, 0);
         if (nameLocation === 'start') {
-            pos.x = extent[0] - gapStartEndSignal * gap;
+            pos.x = extent[0] - gapStartEndSignal * initialGap;
             nameMoveDirVec.x = -gapStartEndSignal;
         }
         else if (nameLocation === 'end') {
-            pos.x = extent[1] + gapStartEndSignal * gap;
+            pos.x = extent[1] + gapStartEndSignal * initialGap;
             nameMoveDirVec.x = gapStartEndSignal;
         }
         else { // 'middle' or 'center'
             pos.x = (extent[0] + extent[1]) / 2;
-            pos.y = cfg.labelOffset + nameDirection * gap;
+            pos.y = cfg.labelOffset + nameDirection * initialGap;
             nameMoveDirVec.y = nameDirection;
         }
         const mt = matrixUtil.create();
@@ -976,6 +979,12 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
                 assert(record.labelInfoList);
             }
             shared.resolveAxisNameOverlap(cfg, shared, axisModel, nameLayout, nameMoveDirVec, record);
+            if (gap > 0) {
+                labelLayoutApplyTranslation(
+                    nameLayout,
+                    new Point(gap * nameMoveDirVec.x, gap * nameMoveDirVec.y)
+                );
+            }
         }
     }
 
