@@ -61,22 +61,23 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     };
     nameTextStyle?: AxisNameTextStyleOption;
     /**
-     * This is the offset of axis name from:
+     * The offset of axis name:
      * - If `nameMoveOverlap: false`: offset from axisLine.
-     * - If `nameMoveOverlap: true`: offset from axisLine+axisLabels.
-     *
-     * PENDING: should it named as "nameOffset" or support `[offsetX, offsetY]`?
+     * - If `nameMoveOverlap: true`: additional offset applied after automatic
+     *   overlap resolution, i.e. offset from axisLine+axisLabels.
      */
     nameGap?: number;
     /**
      * Whether to auto move axis name to avoid overlap with axis labels.
      * The procedure of axis name layout:
-     * 1. Firstly apply `nameRotate`, `nameTruncate`, `nameLocation`, `nameGap`.
-     *  Note that if `nameGap` is applied after the overlap handling, it may still
-     *  cause overlap and confuse users.
-     * 2. If `nameMoveOverlap: true`, move the name util it does not overlap with
-     *  axis lables. `nameTextStyle.textMargin` can be used to adjust its gap from
+     * 1. Firstly apply `nameRotate`, `nameTruncate`, `nameLocation`.
+     * 2. If `nameMoveOverlap: true`, move the name until it does not overlap with
+     *  axis labels, then apply `nameGap` as additional offset from the resolved
+     *  position. Negative `nameGap` is ignored in this case to prevent reintroducing
+     *  overlap. `nameTextStyle.textMargin` can be used to adjust its gap from
      *  others in this case.
+     *  If `nameMoveOverlap: false`, `nameGap` is applied in step 1 as offset
+     *  from the axis line.
      * - If 'auto'/null/undefined, use `nameMoveOverlap`, except when `grid.containLabel` is
      *  true. This is for backward compat - users have tuned the position based on no name moved.
      */
