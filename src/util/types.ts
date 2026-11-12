@@ -980,6 +980,14 @@ export interface CallbackDataParams {
     dimensionIndex?: number;
     percent?: number; // Only for chart like 'pie'
 
+    // Axis context properties (provided in axis callbacks or axis-triggered tooltips)
+    axisDim?: string;
+    axisIndex?: number;
+    axisType?: string;
+    axisId?: string;
+    axisValue?: string | number;
+    axisValueLabel?: string;
+
     // Param name list for mapping `a`, `b`, `c`, `d`, `e`
     $vars: string[];
 }

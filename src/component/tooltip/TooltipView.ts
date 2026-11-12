@@ -20,7 +20,7 @@ import { bind, each, clone, trim, isString, isFunction, isArray, isObject, exten
 import env from 'zrender/src/core/env';
 import TooltipHTMLContent from './TooltipHTMLContent';
 import TooltipRichContent from './TooltipRichContent';
-import { convertToColorString, encodeHTML, formatTpl, TooltipMarker } from '../../util/format';
+import { convertToColorString, encodeHTML, formatTpl } from '../../util/format';
 import { parsePercent } from '../../util/number';
 import { Rect } from '../../util/graphic';
 import findPointFromSeries from '../axisPointer/findPointFromSeries';
@@ -124,16 +124,7 @@ interface TryShowParams {
     positionDefault?: TooltipOption['position']
 }
 
-type TooltipCallbackDataParams = CallbackDataParams & {
-    axisDim?: string
-    axisIndex?: number
-    axisType?: string
-    axisId?: string
-    // TODO: TYPE Value type
-    axisValue?: string | number
-    axisValueLabel?: string
-    marker?: TooltipMarker
-};
+type TooltipCallbackDataParams = CallbackDataParams;
 
 class TooltipView extends ComponentView {
     static type = 'tooltip' as const;
