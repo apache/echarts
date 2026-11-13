@@ -82,6 +82,16 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      */
     nameMoveOverlap?: boolean | 'auto' | NullUndefined;
 
+    /**
+     * Additional pixel offset applied to the axis name AFTER `nameGap` and
+     * automatic overlap resolution (`nameMoveOverlap`).
+     * - number: signed offset along the direction in which the name moves away
+     *   from the axis line. Positive = farther from the axis, negative = closer.
+     * - [dx, dy]: offset in screen pixels (x right, y down).
+     * @default 0
+     */
+    nameOffset?: number | [number, number];
+
     silent?: boolean;
     triggerEvent?: boolean;
 

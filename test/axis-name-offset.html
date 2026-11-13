@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            html {
+                line-height: 18px;
+            }
+            .chart {
+                display: inline-block;
+                width: 48%;
+                height: 300px;
+            }
+        </style>
+        <div class="chart" id="main1"></div>
+        <div class="chart" id="main2"></div>
+        <div class="chart" id="main3"></div>
+        <div class="chart" id="main4"></div>
+        <div class="chart" id="main5"></div>
+        <div class="chart" id="main6"></div>
+        <div class="chart" id="main7"></div>
+        <div class="chart" id="main8"></div>
+        <div class="chart" id="main9"></div>
+        <div class="chart" id="main10"></div>
+        <div class="chart" id="main11"></div>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var categories = ['Very long category label 0001', 'Very long category label 0002',
+                    'Very long category label 0003', 'Very long category label 0004'];
+                var values = [120, 240, 180, 300];
+                var wideValues = [1200000, 2400000, 1800000, 3000000];
+
+                function optionFor(offset, axisName, axisOption) {
+                    return {
+                        grid: {left: 110, right: 80, bottom: 70, top: 45},
+                        title: {text: axisName, left: 'center'},
+                        xAxis: {
+                            type: 'category',
+                            name: axisOption && axisOption.name || 'X axis name',
+                            nameLocation: axisOption && axisOption.nameLocation || 'middle',
+                            nameMoveOverlap: axisOption && axisOption.nameMoveOverlap,
+                            nameGap: axisOption && axisOption.nameGap != null ? axisOption.nameGap : 10,
+                            nameOffset: offset,
+                            data: categories,
+                            axisLabel: {rotate: 25}
+                        },
+                        yAxis: {
+                            type: 'value',
+                            name: 'Y axis name',
+                            nameLocation: 'middle',
+                            nameMoveOverlap: true,
+                            nameGap: 10,
+                            nameOffset: offset,
+                            axisLabel: {
+                                formatter: function (value) {
+                                    return value + ' units with a long label';
+                                }
+                            }
+                        },
+                        series: [{type: 'bar', data: values}]
+                    };
+                }
+
+                testHelper.create(echarts, 'main1', {
+                    title: '1a. yAxis middle, nameOffset 0',
+                    option: optionFor(0, 'yAxis middle, offset 0', {name: 'Y offset 0'})
+                });
+                testHelper.create(echarts, 'main2', {
+                    title: '1b. yAxis middle, nameOffset 15',
+                    option: optionFor(15, 'yAxis middle, offset 15', {name: 'Y offset 15'})
+                });
+                testHelper.create(echarts, 'main3', {
+                    title: '1c. yAxis middle, nameOffset -10',
+                    option: optionFor(-10, 'yAxis middle, offset -10', {name: 'Y offset -10'})
+                });
+                testHelper.create(echarts, 'main4', {
+                    title: '2a. xAxis middle, nameOffset 0',
+                    option: optionFor(0, 'xAxis middle, offset 0', {name: 'X offset 0'})
+                });
+                testHelper.create(echarts, 'main5', {
+                    title: '2b. xAxis middle, nameOffset 15',
+                    option: optionFor(15, 'xAxis middle, offset 15', {name: 'X offset 15'})
+                });
+                testHelper.create(echarts, 'main6', {
+                    title: '2c. xAxis middle, nameOffset -10',
+                    option: optionFor(-10, 'xAxis middle, offset -10', {name: 'X offset -10'})
+                });
+                testHelper.create(echarts, 'main7', {
+                    title: '3. nameMoveOverlap false, nameOffset 20',
+                    option: optionFor(20, 'overlap false, offset 20', {
+                        name: 'No overlap move',
+                        nameMoveOverlap: false,
+                        nameGap: 10
+                    })
+                });
+                testHelper.create(echarts, 'main8', {
+                    title: '4. tuple nameOffset [10, -5] on both axes',
+                    option: optionFor([10, -5], 'tuple offset', {name: 'Tuple offset'})
+                });
+                testHelper.create(echarts, 'main9', {
+                    title: '5. nameLocation start/end, nameOffset 15',
+                    option: {
+                        grid: {left: 110, right: 80, bottom: 70, top: 45},
+                        title: {text: 'start/end, offset 15', left: 'center'},
+                        xAxis: {
+                            type: 'category',
+                            name: 'X start',
+                            nameLocation: 'start',
+                            nameOffset: 15,
+                            data: categories
+                        },
+                        yAxis: {
+                            type: 'value',
+                            name: 'Y end',
+                            nameLocation: 'end',
+                            nameOffset: 15
+                        },
+                        series: [{type: 'line', data: values}]
+                    }
+                });
+
+                var dynamicChart = testHelper.create(echarts, 'main10', {
+                    title: '6. dynamic wider labels keep a constant offset',
+                    option: optionFor(15, 'dynamic offset 15', {name: 'Dynamic name'}),
+                    button: {
+                        text: 'Swap to wider labels',
+                        onClick: function () {
+                            dynamicChart.setOption({
+                                xAxis: {data: categories.map(function (item, index) {
+                                    return item + ' / wider value ' + wideValues[index];
+                                })},
+                                series: [{data: wideValues}]
+                            });
+                        }
+                    }
+                });
+                testHelper.create(echarts, 'main11', {
+                    title: '7. grid.containLabel with large positive nameOffset',
+                    option: {
+                        grid: {containLabel: true, left: 30, right: 30, bottom: 30, top: 45},
+                        title: {text: 'containLabel, offset 60', left: 'center'},
+                        xAxis: {
+                            type: 'category',
+                            name: 'Contained X axis name',
+                            nameLocation: 'middle',
+                            nameMoveOverlap: true,
+                            nameGap: 10,
+                            nameOffset: 60,
+                            data: categories
+                        },
+                        yAxis: {
+                            type: 'value',
+                            name: 'Contained Y axis name',
+                            nameLocation: 'middle',
+                            nameMoveOverlap: true,
+                            nameGap: 10,
+                            nameOffset: 60
+                        },
+                        series: [{type: 'bar', data: values}]
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
