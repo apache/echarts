@@ -1077,14 +1077,34 @@ class ECharts extends Eventful<ECEventDefinition> {
                     content += '<g transform="translate(' + x + ','
                         + y + ')">' + item.dom + '</g>';
                 });
-                (zr.painter as SVGPainter).getSvgRoot().innerHTML = content;
 
+                const svgPainter = zr.painter as SVGPainter;
                 if (opts.connectedBackgroundColor) {
-                    (zr.painter as SVGPainter).setBackgroundColor(opts.connectedBackgroundColor as string);
+                    svgPainter.setBackgroundColor(opts.connectedBackgroundColor as string);
                 }
 
+                // The svg painter creates its root `<g>` element only when it
+                // paints, so refresh the throwaway instance first. Otherwise
+                // `getSvgRoot()` returns undefined and the assignment below
+                // throws (see #19278).
                 zr.refreshImmediately();
-                return (zr.painter as SVGPainter).toDataURL();
+                svgPainter.getSvgRoot().innerHTML = content;
+
+                // `toDataURL()` re-renders from the (empty) display list and
+                // would drop the injected content, so serialize the composed
+                // svg element directly instead.
+                // `refresh()` above leaves a positioning style on the root
+                // element; drop it so the export matches a plain
+                // `renderToSVGString()` output. Removing the attribute from
+                // this detached svg element can still leave a stale empty
+                // `style=""` behind in the serialized string in some
+                // browsers, so strip that as well.
+                const svgDom = svgPainter.getSvgDom();
+                svgDom.removeAttribute('style');
+                svgDom.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+                const svgString = svgDom.outerHTML.replace(' style=""', '');
+                return 'data:image/svg+xml;charset=UTF-8,'
+                    + encodeURIComponent(svgString);
             }
             else {
                 // Background between the charts
