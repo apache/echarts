@@ -18,7 +18,7 @@
 */
 
 import {
-    retrieve, defaults, extend, each, isObject, isString, isNumber, isFunction, retrieve2,
+    retrieve, defaults, extend, each, isObject, isString, isNumber, isArray, isFunction, retrieve2,
     assert,
     map,
     retrieve3,
@@ -977,6 +977,19 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
             }
             shared.resolveAxisNameOverlap(cfg, shared, axisModel, nameLayout, nameMoveDirVec, record);
         }
+
+        const nameOffset = normalizeNameOffset(axisModel.get('nameOffset'));
+        if (nameLayout && (nameOffset.scalar || nameOffset.vector)) {
+            // Order is nameGap -> overlap resolution -> nameOffset. For start/end,
+            // the scalar uses the same outward direction as overlap resolution.
+            const offset = nameOffset.vector
+                ? new Point(nameOffset.vector[0], nameOffset.vector[1])
+                : new Point(
+                    nameMoveDirVec.x * nameOffset.scalar,
+                    nameMoveDirVec.y * nameOffset.scalar
+                );
+            labelLayoutApplyTranslation(nameLayout, offset);
+        }
     }
 
 };
@@ -1583,6 +1596,20 @@ const _tmpLayoutElReset = new graphic.Rect();
 
 function hasAxisName(axisName: AxisBuilderCfgDetermined['axisName']): boolean {
     return !!axisName;
+}
+
+// Normalize the additional offset applied after overlap resolution.
+function normalizeNameOffset(
+    raw: number | number[] | null | undefined
+): { scalar: number; vector: [number, number] | null } {
+    if (isNumber(raw) && isFinite(raw)) {
+        return {scalar: raw, vector: null};
+    }
+    if (isArray(raw) && raw.length >= 2 && isNumber(raw[0]) && isFinite(raw[0])
+        && isNumber(raw[1]) && isFinite(raw[1])) {
+        return {scalar: 0, vector: [raw[0], raw[1]]};
+    }
+    return {scalar: 0, vector: null};
 }
 
 function addBreakEventHandler(
