@@ -45,6 +45,7 @@ const defaultOption: AxisBaseOption = {
     },
     // The gap between axisName and axisLine.
     nameGap: 15,
+    nameOffset: 0,
 
     // Default `false` to support tooltip.
     silent: false,
