@@ -979,7 +979,8 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
         }
 
         const nameOffset = normalizeNameOffset(axisModel.get('nameOffset'));
-        if (nameLayout && (nameOffset.scalar || nameOffset.vector)) {
+        const hasVector = nameOffset.vector && (nameOffset.vector[0] || nameOffset.vector[1]);
+        if (nameLayout && (nameOffset.scalar || hasVector)) {
             // Order is nameGap -> overlap resolution -> nameOffset. For start/end,
             // the scalar uses the same outward direction as overlap resolution.
             const offset = nameOffset.vector
@@ -1605,7 +1606,7 @@ function normalizeNameOffset(
     if (isNumber(raw) && isFinite(raw)) {
         return {scalar: raw, vector: null};
     }
-    if (isArray(raw) && raw.length >= 2 && isNumber(raw[0]) && isFinite(raw[0])
+    if (isArray(raw) && raw.length === 2 && isNumber(raw[0]) && isFinite(raw[0])
         && isNumber(raw[1]) && isFinite(raw[1])) {
         return {scalar: 0, vector: [raw[0], raw[1]]};
     }
