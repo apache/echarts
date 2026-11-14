@@ -884,6 +884,14 @@ function layOutGridByOuterBounds(
                     let proportion = axis.scale.normalize(
                         getTickValueOutermost(axis.scale, getLabelInner(labelInfo.label).labelInfo.tick)
                     );
+                    // `normalize` is in data space and does not account for
+                    // `inverse`, while the proportion below is measured in
+                    // pixel space from the min edge of the grid. Flip it for
+                    // inverse axes, otherwise a tick near one edge is treated
+                    // as near the other edge and the grid collapses.
+                    if (axis.inverse) {
+                        proportion = 1 - proportion;
+                    }
                     proportion = xyIdx === 1 ? 1 - proportion : proportion;
                     // xAxis use proportion on x, yAxis use proprotion on y, otherwise not.
                     fillMarginOnOneDimension(labelInfo.rect, xyIdx, proportion);
