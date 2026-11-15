@@ -113,6 +113,14 @@ const wrapVar = function (varName: string, seriesIdx?: number): string {
     return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
 };
 
+/**
+ * Replace all occurrences of `search` in `str`, inserting `replacement` literally.
+ * (`String.prototype.replace` with a string pattern only replaces the first one.)
+ */
+function replaceAll(str: string, search: string, replacement: string): string {
+    return str.split(search).join(replacement + '');
+}
+
 export interface TplFormatterParam extends Dictionary<any> {
     // Param name list for mapping `a`, `b`, `c`, `d`, `e`
     $vars: string[];
@@ -137,14 +145,15 @@ export function formatTpl(
     const $vars = paramsList[0].$vars || [];
     for (let i = 0; i < $vars.length; i++) {
         const alias = TPL_VAR_ALIAS[i];
-        tpl = tpl.replace(wrapVar(alias), wrapVar(alias, 0));
+        tpl = replaceAll(tpl, wrapVar(alias), wrapVar(alias, 0));
     }
     for (let seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
         for (let k = 0; k < $vars.length; k++) {
             const val = paramsList[seriesIdx][$vars[k]];
-            tpl = tpl.replace(
+            tpl = replaceAll(
+                tpl,
                 wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
-                () => (encode ? encodeHTML(val) : val)
+                encode ? encodeHTML(val) : val
             );
         }
     }
@@ -157,9 +166,10 @@ export function formatTpl(
  */
 export function formatTplSimple(tpl: string, param: Dictionary<any>, encode?: boolean) {
     zrUtil.each(param, function (value, key) {
-        tpl = tpl.replace(
+        tpl = replaceAll(
+            tpl,
             '{' + key + '}',
-            () => (encode ? encodeHTML(value) : value)
+            encode ? encodeHTML(value) : value
         );
     });
     return tpl;

@@ -18,6 +18,7 @@
 */
 
 import { formatTpl, formatTplSimple, encodeHTML } from '@/src/util/format';
+import { createChart } from '../../core/utHelper';
 
 describe('template values', function () {
     const values = ['Price $&', 'Price $$', 'Price $\'', 'Price $`', '<b>$&</b>'];
@@ -49,5 +50,58 @@ describe('template values', function () {
             {$vars: ['seriesName', 'name', 'value'], seriesName: '$&', value: 34}
         ])).toBe('$$: 12; $&: 34');
         expect(formatTplSimple('{value}', {value: 12})).toBe('12');
+    });
+});
+
+describe('repeated template variables', function () {
+    const $vars = ['seriesName', 'name', 'value'];
+
+    it('replaces every occurrence of a variable', function () {
+        const params = {$vars, seriesName: 'Sales', name: 'Mon', value: 120};
+        expect(formatTpl('{b}: {c} | {b}: {c}', params)).toBe('Mon: 120 | Mon: 120');
+        expect(formatTpl('{a} {a0} {a} {a0}', params)).toBe('Sales Sales Sales Sales');
+        expect(formatTpl('<b>{b}</b> {b}', {$vars, seriesName: 'S', name: '<i>', value: 1}, true))
+            .toBe('<b>&lt;i&gt;</b> &lt;i&gt;');
+        expect(formatTpl('{b} {b}', {$vars, seriesName: 'S', name: 'Price $&', value: 1}))
+            .toBe('Price $& Price $&');
+    });
+
+    it('replaces every occurrence of an indexed variable', function () {
+        expect(formatTpl('{a0}={c0}, {a1}={c1}; {a0}={c0}, {a1}={c1}', [
+            {$vars, seriesName: 'A', name: 'Mon', value: 1},
+            {$vars, seriesName: 'B', name: 'Mon', value: 2}
+        ])).toBe('A=1, B=2; A=1, B=2');
+    });
+
+    it('keeps unknown variables', function () {
+        expect(formatTpl('{a} {d} {a2} {d}', {$vars: ['seriesName'], seriesName: 'S'}))
+            .toBe('S {d} {a2} {d}');
+    });
+
+    it('replaces every occurrence of a simple key', function () {
+        expect(formatTplSimple('{name}-{value}-{name}', {name: 'x', value: 1})).toBe('x-1-x');
+    });
+
+    it('replaces repeated variables in series label formatter', function () {
+        const chart = createChart();
+        try {
+            chart.setOption({
+                animation: false,
+                xAxis: {type: 'category', data: ['Mon', 'Tue']},
+                yAxis: {},
+                series: [{
+                    type: 'bar',
+                    name: 'Sales',
+                    data: [120, 200],
+                    label: {show: true, formatter: '{b}: {c} | {b}: {c}'}
+                }]
+            });
+            const series = (chart as any).getModel().getSeriesByIndex(0);
+            expect(series.getFormattedLabel(0, 'normal')).toBe('Mon: 120 | Mon: 120');
+            expect(series.getFormattedLabel(1, 'normal')).toBe('Tue: 200 | Tue: 200');
+        }
+        finally {
+            chart.dispose();
+        }
     });
 });
