@@ -909,8 +909,20 @@ export function isHighDownPayload(payload: Payload): payload is HighlightPayload
 
 export function savePathStates(el: Path) {
     const store = getSavedStates(el);
-    store.normalFill = el.style.fill;
-    store.normalStroke = el.style.stroke;
+    const normalStyle: PathStyleProps = {
+        fill: el.style.fill,
+        stroke: el.style.stroke
+    };
+    // The style may still be animating from the previous values (e.g. `animateFrom` in universal transition
+    // sets them to the element at once), so save the final values of the animation instead.
+    for (let i = 0; i < el.animators.length; i++) {
+        const animator = el.animators[i];
+        if (!animator.__fromStateTransition && animator.targetName === 'style') {
+            animator.saveTo(normalStyle, ['fill', 'stroke']);
+        }
+    }
+    store.normalFill = normalStyle.fill;
+    store.normalStroke = normalStyle.stroke;
 
     const selectState = el.states.select || {};
     store.selectFill = (selectState.style && selectState.style.fill) || null;

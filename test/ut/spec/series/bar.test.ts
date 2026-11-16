@@ -17,7 +17,9 @@
 * under the License.
 */
 
-import { createChart } from '../../core/utHelper';
+import { createChart, getGraphicElements } from '../../core/utHelper';
+import { liftColor } from 'zrender/src/tool/color';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 
 describe('bar', function () {
@@ -56,6 +58,44 @@ describe('bar', function () {
             expect(yDim).toBe('GSWY');
             expect(isNaN(data.get(yDim, 0))).toBe(true);
             expect(data.get(yDim, 1)).toBe(1332.5333333333333);
+        }
+        finally {
+            chart.dispose();
+        }
+    });
+
+    it('should lift emphasis color from the updated color with universalTransition', function () {
+        const chart = createChart({width: 400, height: 300});
+
+        function build(data: (number | { value: number, itemStyle: { color: string } })[]) {
+            return {
+                xAxis: { type: 'category', data: ['a', 'b', 'c'] },
+                yAxis: {},
+                series: [{
+                    id: 's',
+                    type: 'bar',
+                    universalTransition: true,
+                    itemStyle: { color: '#1f5fd6' },
+                    data: data
+                }]
+            } as const;
+        }
+
+        try {
+            chart.setOption(build([3, 5, 7]));
+            chart.setOption(
+                build([3, 5, 7].map(value => ({ value, itemStyle: { color: '#14a04a' } }))),
+                { replaceMerge: ['series'] }
+            );
+
+            const bars = getGraphicElements(chart, 'series', 0).filter(
+                el => (el as Displayable).states && (el as Displayable).states.emphasis
+            ) as Displayable[];
+            expect(bars.length).toBe(3);
+
+            // The fill is still animating from the previous color here.
+            bars[0].useState('emphasis', false, true);
+            expect(bars[0].style.fill).toBe(liftColor('#14a04a'));
         }
         finally {
             chart.dispose();
