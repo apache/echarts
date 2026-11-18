@@ -167,7 +167,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
             } as InnerIndicatorAxisOption, false);
             if (zrUtil.isString(nameFormatter)) {
                 const indName = innerIndicatorOpt.name;
-                innerIndicatorOpt.name = nameFormatter.replace('{value}', indName != null ? indName : '');
+                innerIndicatorOpt.name = nameFormatter.replace('{value}', () => (indName != null ? indName : ''));
             }
             else if (zrUtil.isFunction(nameFormatter)) {
                 innerIndicatorOpt.name = nameFormatter(
