@@ -511,9 +511,10 @@ function createIntervalTicks(
         function stepDate(step: number): number {
             date[setMethodName](date[getMethodName]() + step);
             if (isDate) {
-                // If local midnight does not exist on a day (DST change), the date is moved to
-                // 01:00 and would stay at 01:00 in the following days. So reset to the start of day.
-                date[hoursSetterName(isUTC)](0);
+                // If local midnight does not exist on a day (DST or offset change), the date is
+                // moved to e.g. 01:00 or 00:15 and would stay there in the following days.
+                // So reset to the start of day.
+                date[hoursSetterName(isUTC)](0, 0, 0, 0);
             }
             return date.getTime();
         }
