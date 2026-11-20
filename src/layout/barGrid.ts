@@ -383,7 +383,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
 
         plan: createRenderPlanner(),
 
-        reset: function (seriesModel: BaseBarSeriesModel) {
+        reset: function (seriesModel: BaseBarSeriesModel, ecModel) {
             if (!isCartesian2DInjectedAsDataCoordSys(seriesModel)) {
                 return;
             }
@@ -407,6 +407,61 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
             const barMinHeight = seriesModel.get('barMinHeight') || 0;
 
             const stackedDimIdx = stackResultDim && data.getDimensionIndex(stackResultDim);
+
+            const stackGap = (seriesModel as BarSeriesModel).get('stackGap') || 0;
+            const stackName = (seriesModel as BarSeriesModel).get('stack');
+            const stackedOverDim = data.getCalculationInfo('stackedOverDimension');
+            const stackedByDim = data.getCalculationInfo('stackedByDimension');
+            const stackedDim = data.getCalculationInfo('stackedDimension');
+            const stackByIndex = data.getCalculationInfo('isStackedByIndex');
+            const stackGapPeerInfos: {
+                data: ReturnType<BarSeriesModel['getData']>;
+                stackedByDim?: string;
+                stackedDim: string;
+                stackResultDim: string;
+                stackedOverDim: string;
+            }[] = [];
+
+            if (stackGap > 0 && stackName && stackResultDim && stackedOverDim && stackedDim
+                && (stackByIndex || stackedByDim)
+            ) {
+                ecModel.eachSeriesByType(seriesType, function (peerSeriesModel) {
+                    const peerBarSeriesModel = peerSeriesModel as BarSeriesModel;
+                    if (peerBarSeriesModel === seriesModel || peerBarSeriesModel.get('stack') !== stackName
+                        || !isCartesian2DInjectedAsDataCoordSys(peerBarSeriesModel)
+                    ) {
+                        return;
+                    }
+
+                    const peerCartesian = peerBarSeriesModel.coordinateSystem as Cartesian2D;
+                    if (peerCartesian.getBaseAxis().model !== baseAxis.model
+                        || peerCartesian.getOtherAxis(peerCartesian.getBaseAxis()).model !== valueAxis.model
+                    ) {
+                        return;
+                    }
+
+                    const peerData = peerBarSeriesModel.getData();
+                    const peerStackedByDim = peerData.getCalculationInfo('stackedByDimension');
+                    const peerStackedDim = peerData.getCalculationInfo('stackedDimension');
+                    const peerStackResultDim = peerData.getCalculationInfo('stackResultDimension');
+                    const peerStackedOverDim = peerData.getCalculationInfo('stackedOverDimension');
+                    if (peerStackedDim && peerStackResultDim && peerStackedOverDim
+                        && (stackByIndex || peerStackedByDim)
+                    ) {
+                        stackGapPeerInfos.push({
+                            data: peerData,
+                            stackedByDim: peerStackedByDim,
+                            stackedDim: peerStackedDim,
+                            stackResultDim: peerStackResultDim,
+                            stackedOverDim: peerStackedOverDim
+                        });
+                    }
+                });
+            }
+
+            const stackResultDimIdx = stackResultDim && data.getDimensionIndex(stackResultDim);
+            const stackedOverDimIdx = stackedOverDim && data.getDimensionIndex(stackedOverDim);
+            const stackedDimIdxForGap = stackedDim && data.getDimensionIndex(stackedDim);
 
             // Layout info.
             const columnWidth = data.getLayout('size');
@@ -473,6 +528,79 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                             }
                         }
 
+                        if (stackGap > 0 && stackName && stackResultDimIdx >= 0
+                            && stackedOverDimIdx >= 0 && stackedDimIdxForGap >= 0
+                            && (stackByIndex || stackedByDim)
+                        ) {
+                            const rawValue = store.get(valueDimIdx, dataIndex) as number;
+                            const stackResultValue = store.get(stackResultDimIdx, dataIndex) as number;
+                            const stackedOverValue = store.get(stackedOverDimIdx, dataIndex) as number;
+                            let hasPreviousNeighbor = false;
+                            let hasNextNeighbor = false;
+
+                            if (isFinite(rawValue) && rawValue !== 0) {
+                                const baseValue = stackByIndex
+                                    ? null
+                                    : data.get(stackedByDim, dataIndex);
+                                const currentRawIndex = stackByIndex ? data.getRawIndex(dataIndex) : -1;
+
+                                for (let i = 0; i < stackGapPeerInfos.length; i++) {
+                                    const peerInfo = stackGapPeerInfos[i];
+                                    const peerData = peerInfo.data;
+                                    const peerRawIndex = stackByIndex
+                                        ? currentRawIndex
+                                        : peerInfo.stackedByDim
+                                            ? peerData.rawIndexOf(peerInfo.stackedByDim, baseValue as any)
+                                            : -1;
+                                    const peerDataIndex = peerData.indexOfRawIndex(peerRawIndex);
+                                    if (peerDataIndex < 0) {
+                                        continue;
+                                    }
+
+                                    const peerValue = peerData.get(peerInfo.stackedDim, peerDataIndex) as number;
+                                    if (!isFinite(peerValue) || peerValue === 0
+                                        || (peerValue > 0) !== (rawValue > 0)
+                                    ) {
+                                        continue;
+                                    }
+
+                                    const peerStackResultValue = peerData.get(
+                                        peerInfo.stackResultDim, peerDataIndex
+                                    ) as number;
+                                    const peerStackedOverValue = peerData.get(
+                                        peerInfo.stackedOverDim, peerDataIndex
+                                    ) as number;
+
+                                    if (peerStackResultValue === stackedOverValue) {
+                                        hasPreviousNeighbor = true;
+                                    }
+                                    if (peerStackedOverValue === stackResultValue) {
+                                        hasNextNeighbor = true;
+                                    }
+                                    if (hasPreviousNeighbor && hasNextNeighbor) {
+                                        break;
+                                    }
+                                }
+
+                                const valueSpan = isValueAxisH ? width : height;
+                                const gapLayout = shrinkStackedBarForGap(
+                                    valueSpan,
+                                    stackGap,
+                                    hasPreviousNeighbor,
+                                    hasNextNeighbor,
+                                    mathMax(1, barMinHeight)
+                                );
+                                if (isValueAxisH) {
+                                    x += gapLayout.offset;
+                                    width = gapLayout.span;
+                                }
+                                else {
+                                    y += gapLayout.offset;
+                                    height = gapLayout.span;
+                                }
+                            }
+                        }
+
                         if (!isLarge) {
                             data.setItemLayout(dataIndex, { x, y, width, height });
                         }
@@ -504,6 +632,29 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                 }
             };
         }
+    };
+}
+
+function shrinkStackedBarForGap(
+    span: number,
+    stackGap: number,
+    hasPreviousNeighbor: boolean,
+    hasNextNeighbor: boolean,
+    minSize: number
+): { offset: number; span: number } {
+    const edgeCount = Number(hasPreviousNeighbor) + Number(hasNextNeighbor);
+    if (edgeCount === 0 || !isFinite(stackGap) || stackGap <= 0) {
+        return { offset: 0, span };
+    }
+
+    const direction = span < 0 ? -1 : 1;
+    const maxInsetPerEdge = mathMax(0, (mathAbs(span) - minSize) / edgeCount);
+    const inset = mathMin(stackGap / 2, maxInsetPerEdge);
+    const offset = hasPreviousNeighbor ? direction * inset : 0;
+
+    return {
+        offset,
+        span: span - direction * inset * edgeCount
     };
 }
 
