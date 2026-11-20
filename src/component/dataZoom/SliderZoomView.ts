@@ -400,7 +400,8 @@ class SliderZoomView extends DataZoomView {
             const areaPoints = [[size[0], 0], [0, 0]];
             const linePoints: number[][] = [];
             const step = thisShadowExtent[1] / (Math.max(1, data.count() - 1));
-            const normalizationConstant = size[0] / (thisDataExtent[1] - thisDataExtent[0]);
+            const thisDataRange = thisDataExtent[1] - thisDataExtent[0];
+            const normalizationConstant = thisDataRange === 0 ? 0 : size[0] / thisDataRange;
             const isTimeAxis = info.thisAxis.type === 'time';
             let thisCoord = -step;
 
@@ -416,9 +417,14 @@ class SliderZoomView extends DataZoomView {
                     return;
                 }
 
-                thisCoord = isTimeAxis
-                    ? (+thisValue - thisDataExtent[0]) * normalizationConstant
-                    : thisCoord + step;
+                if (isTimeAxis) {
+                    thisCoord = thisDataRange === 0
+                        ? size[0] / 2
+                        : (+thisValue - thisDataExtent[0]) * normalizationConstant;
+                }
+                else {
+                    thisCoord += step;
+                }
 
                 // FIXME
                 // Should consider axis.min/axis.max when drawing dataShadow.
