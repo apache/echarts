@@ -86,6 +86,12 @@ export interface BarSeriesOption
      */
     roundCap?: boolean
 
+    /**
+     * Pixel gap between adjacent segments in a stacked Cartesian bar.
+     * Set the same value on each series in a stack for a uniform gap.
+     */
+    stackGap?: number
+
     showBackground?: boolean
 
     backgroundStyle?: ItemStyleOption & {
@@ -147,6 +153,8 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
         clip: true,
 
         roundCap: false,
+
+        stackGap: 0,
 
         showBackground: false,
         backgroundStyle: {
