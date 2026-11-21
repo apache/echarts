@@ -54,7 +54,7 @@ export interface MatrixBodyCornerCell {
     option: MatrixBodyCornerCellOption | NullUndefined;
     // `matrix.body/corner.data[i].coord` can locate a rect of cells (say, area).
     // `inSpanOf` refers to the top-left cell, which represents that area.
-    // The top-left cell has `inSpanOf` refering to itself.
+    // The top-left cell has `inSpanOf` referring to itself.
     inSpanOf: MatrixBodyCornerCell | NullUndefined;
     // If existing, it indicates cell merging, and this cell is the top-left cell
     // of the merging area.

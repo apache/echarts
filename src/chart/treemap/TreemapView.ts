@@ -487,7 +487,7 @@ class TreemapView extends ChartView {
                 isInSelf: (e, x, y) => {
                     const containerGroup = this._containerGroup;
                     return containerGroup
-                        // Currently only x, y exist in tranform.
+                        // Currently only x, y exist in transform.
                         ? containerGroup.getBoundingRect().contain(x - containerGroup.x, y - containerGroup.y)
                         : false;
                 },
