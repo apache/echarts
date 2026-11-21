@@ -419,7 +419,7 @@ function pruneTicksByBreak<TItem extends ScaleTick | number>(
             // 2. Use an empirically gap value here. Theoritically `zigzagAmplitude` is
             //  supposed to be involved to provide better precision but it will brings
             //  more complexity. The empirically gap value is conservative because break
-            //  labels and normal tick lables are prone to overlapping.
+            //  labels and normal tick labels are prone to overlapping.
             const gap = interval * 3 / 4;
             if (val > clampedBrk.vmin - gap
                 && val < clampedBrk.vmax + gap

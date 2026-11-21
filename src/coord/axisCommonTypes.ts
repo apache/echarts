@@ -75,7 +75,7 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      *  Note that if `nameGap` is applied after the overlap handling, it may still
      *  cause overlap and confuse users.
      * 2. If `nameMoveOverlap: true`, move the name util it does not overlap with
-     *  axis lables. `nameTextStyle.textMargin` can be used to adjust its gap from
+     *  axis labels. `nameTextStyle.textMargin` can be used to adjust its gap from
      *  others in this case.
      * - If 'auto'/null/undefined, use `nameMoveOverlap`, except when `grid.containLabel` is
      *  true. This is for backward compat - users have tuned the position based on no name moved.

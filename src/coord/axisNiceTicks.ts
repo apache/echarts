@@ -70,7 +70,7 @@ function calcNiceForIntervalOrLogScale(
     const autoIntervalPrecision = config.intervalPrecision;
     const autoInterval = config.interval;
 
-    // When auto calculated interval is not preferable, users are allowed to explicity specify
+    // When auto calculated interval is not preferable, users are allowed to explicitly specify
     // `interval`, `min`, `max` to customize the axis. A typical case is, in angle axis with angle
     // 0 - 360, where the internally calculated interval is not 60-based.
     // NOTICE:
