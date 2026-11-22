@@ -137,12 +137,13 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
 
         if (firstCreate) {
             el.setShape(shape);
-            applyEdgeFill(el, edge, nodeData, lineStyle);
+            applyEdgeFill(el, shape, edge, nodeData, lineStyle);
         }
         else {
             saveOldStyle(el);
 
-            applyEdgeFill(el, edge, nodeData, lineStyle);
+            // Use the new shape, since `el.shape` is not updated yet (or is being animated).
+            applyEdgeFill(el, shape, edge, nodeData, lineStyle);
             graphic.updateProps(el, {
                 shape: shape
             }, seriesModel, edgeIdx);
@@ -165,6 +166,7 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
 
 function applyEdgeFill(
     edgeShape: ChordEdge,
+    shape: ChordPathShape,
     edge: GraphEdge,
     nodeData: SeriesData<ChordSeriesModel>,
     lineStyleModel: Model<ChordEdgeLineStyleOption>
@@ -192,7 +194,6 @@ function applyEdgeFill(
             if (isString(sourceColor) && isString(targetColor)) {
                 // Gradient direction is perpendicular to the mid-angles
                 // of source and target nodes.
-                const shape = edgeShape.shape;
                 const sMidX = (shape.s1[0] + shape.s2[0]) / 2;
                 const sMidY = (shape.s1[1] + shape.s2[1]) / 2;
                 const tMidX = (shape.t1[0] + shape.t2[0]) / 2;
