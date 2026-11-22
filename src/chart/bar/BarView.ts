@@ -801,11 +801,6 @@ const elementCreator: {
 
         sector.name = 'item';
 
-        const positionMap = createPolarPositionMapping(isRadial);
-        sector.calculateTextPosition = createSectorCalculateTextPosition(positionMap, {
-            isRoundCap: ShapeClass === Sausage
-        });
-
         // Animation
         if (animationModel) {
             const sectorShape = sector.shape;
@@ -1043,12 +1038,19 @@ function updateStyle(
     const label = el.getTextContent();
     if (isPolar && label) {
         const position = itemModel.get(['label', 'position']);
+        const positionMap = createPolarPositionMapping(isHorizontalOrRadial);
+        // Set here rather than on creation, since the base axis may be switched between angle and radius.
+        el.calculateTextPosition = createSectorCalculateTextPosition(positionMap, {
+            isRoundCap: el.type === 'sausage'
+        });
         el.textConfig.inside = position === 'middle' ? true : null;
+        // Use the target layout, `el.shape` is still the previous one on update.
         setSectorTextRotation(
             el as Sector,
             position === 'outside' ? labelPositionOutside : position,
-            createPolarPositionMapping(isHorizontalOrRadial),
-            itemModel.get(['label', 'rotate'])
+            positionMap,
+            itemModel.get(['label', 'rotate']),
+            layout as SectorLayout
         );
     }
 

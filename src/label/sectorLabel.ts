@@ -193,7 +193,11 @@ export function setSectorTextRotation<T extends (string | (number | string)[])>(
     sector: Sector,
     textPosition: T,
     positionMapping: (seriesLabelPosition: T) => SectorTextPosition,
-    rotateType: number | 'auto'
+    rotateType: number | 'auto',
+    /**
+     * The target shape, if `sector.shape` is not updated yet (e.g., before an update animation)
+     */
+    sectorShape?: SectorLike
 ) {
     if (isNumber(rotateType)) {
         // user-set rotation
@@ -210,7 +214,7 @@ export function setSectorTextRotation<T extends (string | (number | string)[])>(
         return;
     }
 
-    const shape = sector.shape;
+    const shape = sectorShape || sector.shape;
     const startAngle = shape.clockwise ? shape.startAngle : shape.endAngle;
     const endAngle = shape.clockwise ? shape.endAngle : shape.startAngle;
     const middleAngle = (startAngle + endAngle) / 2;
