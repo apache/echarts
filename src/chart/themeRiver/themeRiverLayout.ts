@@ -48,7 +48,7 @@ function themeRiverLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
         layoutInfo.rect = rect;
 
-        const boundaryGap = seriesModel.get('boundaryGap');
+        const boundaryGap = seriesModel.get('boundaryGap').slice();
 
         const axis = single.getAxis();
 
