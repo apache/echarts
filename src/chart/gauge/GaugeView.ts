@@ -572,9 +572,11 @@ class GaugeView extends ChartView {
                     toggleHoverEmphasis(progress, focus, blurScope, emphasisDisabled);
                 }
             });
-
-            this._progressEls = progressList;
         }
+
+        // Kept even when neither the pointer nor the progress is shown, so that
+        // the next update does not read the elements of an older render, or none.
+        this._progressEls = progressList;
     }
 
     _renderAnchor(
