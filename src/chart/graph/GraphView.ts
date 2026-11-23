@@ -120,6 +120,13 @@ class GraphView extends ChartView implements RoamHostView {
                 this._firstRender ? null : seriesModel,
             );
         }
+        else {
+            // On cartesian2d (or any coordinate system that is not its own view),
+            // nodes are laid out in global coordinates. Drop the transform a
+            // previous render on a view coordinate system left on the group.
+            mainGroup.stopAnimation();
+            mainGroup.attr({x: 0, y: 0, scaleX: 1, scaleY: 1});
+        }
         // Fix edge contact point with node
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
