@@ -62,4 +62,48 @@ describe('bar', function () {
         }
     });
 
+    it('draws a background for every bar when showBackground is turned on with fewer bars', function () {
+        const chart = createChart({width: 400, height: 300});
+        const sales: Record<string, number> = { Apples: 42, Bananas: 75, Cherries: 30, Dates: 88, Figs: 61 };
+
+        function makeOption(top3: boolean) {
+            let names = Object.keys(sales);
+            if (top3) {
+                names = names.sort((a, b) => sales[b] - sales[a]).slice(0, 3);
+            }
+            return {
+                animation: false,
+                xAxis: { type: 'category', data: names },
+                yAxis: { max: 100 },
+                series: [{
+                    type: 'bar',
+                    showBackground: top3,
+                    data: names.map(name => sales[name])
+                }]
+            };
+        }
+
+        function backgroundCount() {
+            const view = (chart as any)._chartsViews[0];
+            return view._backgroundGroup ? view._backgroundGroup.childCount() : 0;
+        }
+
+        try {
+            chart.setOption(makeOption(false));
+            expect(backgroundCount()).toBe(0);
+
+            expect(() => chart.setOption(makeOption(true))).not.toThrow();
+
+            const data = (chart as any).getModel().getSeriesByIndex(0).getData();
+            expect(data.count()).toBe(3);
+            expect(backgroundCount()).toBe(3);
+            for (let i = 0; i < data.count(); i++) {
+                expect(data.getItemGraphicEl(i)).toBeTruthy();
+            }
+        }
+        finally {
+            chart.dispose();
+        }
+    });
+
 });
