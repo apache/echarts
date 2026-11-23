@@ -370,7 +370,7 @@ export function getAcceptableTickPrecision(
 
 /**
  * Get a data of given precision, assuring the sum of percentages
- * in valueList is 1.
+ * in valueList is 100 when the total is nonzero.
  * The largest remainder method is used.
  * https://en.wikipedia.org/wiki/Largest_remainder_method
  *
@@ -391,7 +391,7 @@ export function getPercentWithPrecision(valueList: number[], idx: number, precis
 
 /**
  * Get a data of given precision, assuring the sum of percentages
- * in valueList is 1.
+ * in valueList is 100 when the total is nonzero.
  * The largest remainder method is used.
  * https://en.wikipedia.org/wiki/Largest_remainder_method
  *
