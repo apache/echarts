@@ -117,7 +117,7 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
      */
     getProgressive() {
         // Do not support progressive in normal mode.
-        return this.get('large')
+        return this.get('large') && this._isLargeSupported()
             ? this.get('progressive')
             : false;
     }
@@ -130,11 +130,21 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
         pipeline: Pick<Pipeline, 'progressiveEnabled' | 'threshold'>
     ) {
         const context = preparePipelineContext(this, view, pipeline);
+        if (!this._isLargeSupported()) {
+            // Large mode is only laid out on cartesian2d. On polar, `large: true`
+            // used to reach LargePath with no points and throw, so draw normally.
+            context.large = false;
+            context.progressiveRender = false;
+        }
         // Do not support progressive in normal mode.
-        if (context.progressiveRender) {
+        else if (context.progressiveRender) {
             context.large = true;
         }
         return context;
+    }
+
+    private _isLargeSupported(): boolean {
+        return this.get('coordinateSystem') === 'cartesian2d';
     }
 
     brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {

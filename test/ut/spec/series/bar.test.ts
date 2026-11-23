@@ -62,4 +62,50 @@ describe('bar', function () {
         }
     });
 
+    it('draws a polar bar series with large: true normally once it reaches largeThreshold', function () {
+        const chart = createChart({width: 400, height: 300});
+
+        try {
+            expect(() => chart.setOption({
+                animation: false,
+                polar: {},
+                angleAxis: { type: 'category', data: ['a', 'b', 'c'] },
+                radiusAxis: {},
+                series: [{
+                    type: 'bar',
+                    coordinateSystem: 'polar',
+                    large: true,
+                    largeThreshold: 2,
+                    data: [1, 2, 3]
+                }]
+            })).not.toThrow();
+
+            const data = (chart as any).getModel().getSeriesByIndex(0).getData();
+            for (let i = 0; i < data.count(); i++) {
+                expect(data.getItemGraphicEl(i)).toBeTruthy();
+            }
+        }
+        finally {
+            chart.dispose();
+        }
+    });
+
+    it('keeps large mode for a cartesian2d bar series', function () {
+        const chart = createChart({width: 400, height: 300});
+
+        try {
+            chart.setOption({
+                animation: false,
+                xAxis: { type: 'category', data: ['a', 'b', 'c'] },
+                yAxis: {},
+                series: [{ type: 'bar', large: true, largeThreshold: 2, data: [1, 2, 3] }]
+            });
+
+            expect((chart as any).getModel().getSeriesByIndex(0).pipelineContext.large).toBe(true);
+        }
+        finally {
+            chart.dispose();
+        }
+    });
+
 });
