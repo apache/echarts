@@ -320,12 +320,14 @@ class BarView extends ChartView {
                 }
 
                 if (drawBackground) {
-                    let bgEl: Rect | Sector;
-                    if (oldBgEls.length === 0) {
-                        bgEl = createBackground(oldIndex);
+                    // The old item may have had no background (`showBackground` was
+                    // off, or it had no layout). Then create one for the new index;
+                    // the old index may not exist in the new data.
+                    let bgEl = oldBgEls && oldBgEls[oldIndex];
+                    if (!bgEl) {
+                        bgEl = createBackground(newIndex);
                     }
                     else {
-                        bgEl = oldBgEls[oldIndex];
                         bgEl.useStyle(backgroundModel.getItemStyle());
                         // Only cartesian2d support borderRadius.
                         if (coord.type === 'cartesian2d') {
@@ -336,9 +338,11 @@ class BarView extends ChartView {
                         }
                         bgEls[newIndex] = bgEl;
                     }
-                    const bgLayout = getLayout[coord.type](data, newIndex);
-                    const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
-                    updateProps<RectProps | SectorProps>(bgEl, { shape }, animationModel, newIndex);
+                    const bgLayout = bgEl && getLayout[coord.type](data, newIndex);
+                    if (bgLayout) {
+                        const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
+                        updateProps<RectProps | SectorProps>(bgEl, { shape }, animationModel, newIndex);
+                    }
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
