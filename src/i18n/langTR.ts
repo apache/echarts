@@ -29,13 +29,13 @@ export default {
         ],
         monthAbbr: [
             'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz',
-            'Tem', 'Agu', 'Eyl', 'Eki', 'Kas', 'Ara'
+            'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'
         ],
         dayOfWeek: [
             'Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'
         ],
         dayOfWeekAbbr: [
-            'Paz', 'Pzt', 'Sal', 'Çrş', 'Prş', 'Cum', 'Cts'
+            'Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'
         ]
     },
     legend: {
@@ -52,7 +52,7 @@ export default {
                 lineX: 'Yatay Seçim',
                 lineY: 'Dikey Seçim',
                 keep: 'Seçimi Koru',
-                clear: 'Seçimi Sil'
+                clear: 'Seçimi Temizle'
             }
         },
         dataView: {
@@ -67,10 +67,10 @@ export default {
         },
         magicType: {
             title: {
-                line: 'Çizgisel Grafiğe Çevir',
-                bar: 'Çubuk Grafiğe Çevir',
-                stack: 'Yığın',
-                tiled: 'Blok'
+                line: 'Çizgi Grafiğe Geç',
+                bar: 'Çubuk Grafiğe Geç',
+                stack: 'Yığılmış',
+                tiled: 'Yan Yana'
             }
         },
         restore: {
@@ -78,7 +78,7 @@ export default {
         },
         saveAsImage: {
             title: 'Resim Olarak Kaydet',
-            lang: ['Resim Olarak Kaydetmek için Sağ Tıklayın']
+            lang: ['Resim olarak kaydetmek için sağ tıklayın']
         }
     },
     series: {
@@ -92,38 +92,38 @@ export default {
             tree: 'Ağaç Grafiği',
             treemap: 'Ağaç Haritası',
             boxplot: 'Kutu Grafiği',
-            candlestick: 'Şamdan Grafik',
+            candlestick: 'Mum Grafiği',
             k: 'K Çizgi Grafiği',
-            heatmap: 'Sıcaklık Haritası',
+            heatmap: 'Isı Haritası',
             map: 'Harita',
-            parallel: 'Paralel Koordinat Haritası',
+            parallel: 'Paralel Koordinat Grafiği',
             lines: 'Çizgisel Grafik',
             graph: 'İlişkisel Grafik',
-            sankey: 'Sankey Diagramı',
-            funnel: 'Huni Grafik',
+            sankey: 'Sankey Diyagramı',
+            funnel: 'Huni Grafiği',
             gauge: 'Gösterge',
             pictorialBar: 'Resimli Çubuk Grafiği',
             themeRiver: 'Akış Haritası',
-            sunburst: 'Güeş Patlaması Tablosu',
-            custom: 'Özel grafik',
-            chart: 'Grafiği'
+            sunburst: 'Güneş Patlaması Grafiği',
+            custom: 'Özel Grafik',
+            chart: 'Grafik'
         }
     },
     aria: {
         general: {
-            withTitle: 'Bu grafik "{title}" içindir.',
-            withoutTitle: 'Bu Bir Grafiktir.'
+            withTitle: 'Bu, "{title}" hakkında bir grafiktir',
+            withoutTitle: 'Bu bir grafiktir'
         },
         series: {
             single: {
                 prefix: '',
-                withName: ' Grafik Türü {seriesType} ve {seriesName} gösteriyor.',
-                withoutName: ' {seriesType} tipinde grafik.'
+                withName: '. Türü {seriesType}, adı {seriesName}.',
+                withoutName: '. Türü {seriesType}.'
             },
             multiple: {
-                prefix: '. {seriesCount} kadar grafik sayısından oluşur.',
-                withName: ' {seriesId}.serisi {seriesName} adını temsil eden bir {seriesType} temsil eder.',
-                withoutName: ' {seriesId}. serisi bir {seriesType}.',
+                prefix: '. {seriesCount} seriden oluşur.',
+                withName: ' {seriesId}. seri, {seriesName} adlı bir {seriesType}.',
+                withoutName: ' {seriesId}. seri bir {seriesType}.',
                 separator: {
                     middle: '',
                     end: ''
@@ -131,9 +131,9 @@ export default {
             }
         },
         data: {
-            allData: 'Veriler Aşağıdaki Gibidir: ',
-            partialData: 'İlk {displayCnt} öğesi: ',
-            withName: ' {value} için {name}',
+            allData: ' Veriler şöyle: ',
+            partialData: ' İlk {displayCnt} öğe: ',
+            withName: '{name} verisi {value}',
             withoutName: '{value}',
             separator: {
                 middle: ', ',
