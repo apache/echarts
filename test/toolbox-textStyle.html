@@ -139,7 +139,12 @@ under the License.
             document.head.appendChild(font1);
             document.head.appendChild(font2);
 
-            document.fonts.ready.then(function () {
+            // document.fonts.ready is not necessarily guarantee all fonts are loaded.
+            // Unused fonts might never be loaded. So use this way instead.
+            Promise.all([
+                document.fonts.load('400 16px "Noto Sans SC"'),
+                document.fonts.load('400 16px Courgette')
+            ]).then(function () {
                 console.log("fonts ready");
 
                 var option = {
