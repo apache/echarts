@@ -21,7 +21,7 @@ import { isString, indexOf, each, bind, isFunction, isArray, isDom, retrieve2 } 
 import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord, transformLocalCoordClear } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
-import { convertToColorString, toCamelCase, normalizeCssArray } from '../../util/format';
+import { convertToColorString, normalizeCssArray } from '../../util/format';
 import type ExtensionAPI from '../../core/ExtensionAPI';
 import type { ZRenderType } from 'zrender/src/zrender';
 import type { TooltipOption } from './TooltipModel';
@@ -32,78 +32,93 @@ import type CanvasPainter from 'zrender/src/canvas/Painter';
 import type SVGPainter from 'zrender/src/svg/Painter';
 import {
     shouldTooltipConfine,
-    toCSSVendorPrefix,
     getComputedStyle,
-    TRANSFORM_VENDOR,
-    TRANSITION_VENDOR
 } from './helper';
 import { getPaddingFromTooltipModel } from './tooltipMarkup';
+import { CSS_TRANSFORM_VENDOR, CSS_TRANSITION_VENDOR } from '../../util/vendor';
+import { mathRound } from '../../util/number';
 
 /* global document, window */
-
-const CSS_TRANSITION_VENDOR = toCSSVendorPrefix(TRANSITION_VENDOR, 'transition');
-const CSS_TRANSFORM_VENDOR = toCSSVendorPrefix(TRANSFORM_VENDOR, 'transform');
 
 // eslint-disable-next-line
 const gCssText = `position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;${env.transform3dSupported ? 'will-change:transform;' : ''}`;
 
-function mirrorPos(pos: string): string {
-    pos = pos === 'left'
+/**
+ * SECURITY: This method must guarantee the returned value is only 'left' | 'right' | 'top' | 'bottom',
+ * otherwise, malicious CSS declaration injections may be introduced via `TooltipOption['position']`.
+ */
+function mirrorAndSanitizePos(pos: TooltipOption['position']): 'left' | 'right' | 'top' | 'bottom' {
+    return pos === 'left'
         ? 'right'
         : pos === 'right'
         ? 'left'
         : pos === 'top'
         ? 'bottom'
         : 'top';
-    return pos;
 }
 
 function assembleArrow(
+    el: HTMLDivElement,
     tooltipModel: Model<TooltipOption>,
     borderColor: ZRColor,
-    arrowPosition: TooltipOption['position']
-) {
-    if (!isString(arrowPosition) || arrowPosition === 'inside') {
-        return '';
+    arrowPosOption: TooltipOption['position']
+): void {
+    if (!el.childNodes.length // no arrow if empty
+        || !isString(arrowPosOption)
+        || arrowPosOption === 'inside'
+        || tooltipModel.get('trigger') !== 'item'
+        || shouldTooltipConfine(tooltipModel)
+    ) {
+        return;
     }
+
+    const arrowPos = mirrorAndSanitizePos(arrowPosOption);
+
+    const arrowEl = document.createElement('div');
+    const arrowCSSStyle = arrowEl.style;
 
     const backgroundColor = tooltipModel.get('backgroundColor');
     const borderWidth = tooltipModel.get('borderWidth');
 
     borderColor = convertToColorString(borderColor);
-    const arrowPos = mirrorPos(arrowPosition);
     const arrowSize = Math.max(Math.round(borderWidth) * 1.5, 6);
-    let positionStyle = '';
-    let transformStyle = CSS_TRANSFORM_VENDOR + ':';
     let rotateDeg;
     if (indexOf(['left', 'right'], arrowPos) > -1) {
-        positionStyle += 'top:50%';
-        transformStyle += `translateY(-50%) rotate(${rotateDeg = arrowPos === 'left' ? -225 : -45}deg)`;
+        arrowCSSStyle.top = '50%';
+        arrowCSSStyle[CSS_TRANSFORM_VENDOR.c as 'transform'] =
+            `translateY(-50%) rotate(${rotateDeg = arrowPos === 'left' ? -225 : -45}deg)`;
     }
     else {
-        positionStyle += 'left:50%';
-        transformStyle += `translateX(-50%) rotate(${rotateDeg = arrowPos === 'top' ? 225 : 45}deg)`;
+        arrowCSSStyle.left = '50%';
+        arrowCSSStyle[CSS_TRANSFORM_VENDOR.c as 'transform'] =
+            `translateX(-50%) rotate(${rotateDeg = arrowPos === 'top' ? 225 : 45}deg)`;
     }
+
     const rotateRadian = rotateDeg * Math.PI / 180;
     const arrowWH = arrowSize + borderWidth;
     const rotatedWH = arrowWH * Math.abs(Math.cos(rotateRadian)) + arrowWH * Math.abs(Math.sin(rotateRadian));
     const arrowOffset = Math.round(((rotatedWH - Math.SQRT2 * borderWidth) / 2
         + Math.SQRT2 * borderWidth - (rotatedWH - arrowWH) / 2) * 100) / 100;
-    positionStyle += `;${arrowPos}:-${arrowOffset}px`;
+    arrowCSSStyle[arrowPos] = `-${arrowOffset}px`;
 
     const borderStyle = `${borderColor} solid ${borderWidth}px;`;
-    const styleCss = [
-        `position:absolute;width:${arrowSize}px;height:${arrowSize}px;z-index:-1;`,
-        `${positionStyle};${transformStyle};`,
-        `border-bottom:${borderStyle}`,
-        `border-right:${borderStyle}`,
-        `background-color:${backgroundColor};`
-    ];
 
-    return `<div style="${styleCss.join('')}"></div>`;
+    arrowCSSStyle.position = 'absolute';
+    arrowCSSStyle.width = `${arrowSize}px;`;
+    arrowCSSStyle.height = `${arrowSize}px;`;
+    arrowCSSStyle.zIndex = '-1';
+    arrowCSSStyle.borderBottom = borderStyle;
+    arrowCSSStyle.borderRight = borderStyle;
+    arrowCSSStyle.backgroundColor = backgroundColor;
+
+    // no need to create a new parent element, but it's not supported by IE 10 and older.
+    // const arrowEl = document.createRange().createContextualFragment(arrow);
+    el.appendChild(arrowEl);
 }
 
-function assembleTransition(duration: number, onlyFadeTransition: boolean, enableDisplayTransition: boolean): string {
+function assembleTransition(
+    style: CSSStyleDeclaration, duration: number, onlyFadeTransition: boolean, enableDisplayTransition: boolean
+): void {
     const transitionCurve = 'cubic-bezier(0.23,1,0.32,1)';
     let transitionOption = '';
     let transitionText = '';
@@ -115,31 +130,29 @@ function assembleTransition(duration: number, onlyFadeTransition: boolean, enabl
         transitionOption = ` ${duration}s ${transitionCurve}`;
         transitionText += (transitionText.length ? ',' : '') + (
             env.transformSupported
-                ? `${CSS_TRANSFORM_VENDOR}${transitionOption}`
+                ? `${CSS_TRANSFORM_VENDOR.k}${transitionOption}`
                 : `,left${transitionOption},top${transitionOption}`
         );
     }
 
-    return CSS_TRANSITION_VENDOR + ':' + transitionText;
+    style[CSS_TRANSITION_VENDOR.c as 'transition'] = transitionText;
 }
 
-function assembleTransform(x: number, y: number, toString?: boolean) {
+function assembleTransform(style: CSSStyleDeclaration, x: number, y: number): void {
     // If using float on style, the final width of the dom might
     // keep changing slightly while mouse move. So `toFixed(0)` them.
     const x0 = x.toFixed(0) + 'px';
     const y0 = y.toFixed(0) + 'px';
     // not support transform, use `left` and `top` instead.
     if (!env.transformSupported) {
-        return toString
-            ? `top:${y0};left:${x0};`
-            : [['top', y0], ['left', x0]];
+        style.top = y0;
+        style.left = x0;
+        return;
     }
     // support transform
     const is3d = env.transform3dSupported;
-    const translate = `translate${is3d ? '3d' : ''}(${x0},${y0}${is3d ? ',0' : ''})`;
-    return toString
-        ? 'top:0;left:0;' + CSS_TRANSFORM_VENDOR + ':' + translate + ';'
-        : [['top', 0], ['left', 0], [TRANSFORM_VENDOR, translate]];
+    style.top = style.left = '0';
+    style[CSS_TRANSFORM_VENDOR.c as 'transform'] = `translate${is3d ? '3d' : ''}(${x0},${y0}${is3d ? ',0' : ''})`;
 }
 
 /**
@@ -147,45 +160,45 @@ function assembleTransform(x: number, y: number, toString?: boolean) {
  * @return {string}
  * @inner
  */
-function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string {
-    const cssText = [];
-
-    const fontSize = textStyleModel.get('fontSize');
+function assembleFont(style: CSSStyleDeclaration, textStyleModel: Model<TooltipOption['textStyle']>): void {
     const color = textStyleModel.getTextColor();
 
-    color && cssText.push('color:' + color);
+    if (color) {
+        style.color = color;
+    }
 
-    cssText.push('font:' + textStyleModel.getFont());
+    style.font = textStyleModel.getFont();
 
-    // @ts-ignore, leave it to the tooltip refactor.
-    const lineHeight = retrieve2(textStyleModel.get('lineHeight'), Math.round(fontSize * 3 / 2));
-
-    fontSize
-        && cssText.push('line-height:' + lineHeight + 'px');
+    const fontSize = textStyleModel.get('fontSize');
+    if (fontSize) {
+        // zrender `lineHeight` only supports 'px', so keep consistent.
+        style.lineHeight = retrieve2(textStyleModel.get('lineHeight'), mathRound(+fontSize * 3 / 2)) + 'px';
+    }
 
     const shadowColor = textStyleModel.get('textShadowColor');
     const shadowBlur = textStyleModel.get('textShadowBlur') || 0;
     const shadowOffsetX = textStyleModel.get('textShadowOffsetX') || 0;
     const shadowOffsetY = textStyleModel.get('textShadowOffsetY') || 0;
-    shadowColor && shadowBlur
-        && cssText.push('text-shadow:' + shadowOffsetX + 'px ' + shadowOffsetY + 'px '
-            + shadowBlur + 'px ' + shadowColor);
+    if (shadowColor && shadowBlur) {
+        style.textShadow = shadowOffsetX + 'px ' + shadowOffsetY + 'px '
+            + shadowBlur + 'px ' + shadowColor;
+    }
 
-    each(['decoration', 'align'] as const, function (name) {
-        const val = textStyleModel.get(name);
-        val && cssText.push('text-' + name + ':' + val);
+    each(['Decoration', 'Align'] as const, function (camelName) {
+        const val = textStyleModel.get(camelName.toLowerCase() as 'decoration' | 'align');
+        if (val) {
+            style[`text${camelName}`] = val;
+        }
     });
-
-    return cssText.join(';');
 }
 
 function assembleCssText(
+    style: CSSStyleDeclaration,
     tooltipModel: Model<TooltipOption>,
     enableTransition: boolean,
     onlyFadeTransition: boolean,
     enableDisplayTransition: boolean
-) {
-    const cssText: string[] = [];
+): void {
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
     const shadowBlur = tooltipModel.get('shadowBlur');
@@ -194,35 +207,34 @@ function assembleCssText(
     const shadowOffsetY = tooltipModel.get('shadowOffsetY');
     const textStyleModel = tooltipModel.getModel('textStyle');
     const padding = getPaddingFromTooltipModel(tooltipModel, 'html');
-    const boxShadow = `${shadowOffsetX}px ${shadowOffsetY}px ${shadowBlur}px ${shadowColor}`;
 
-    cssText.push('box-shadow:' + boxShadow);
+    style.boxShadow = `${shadowOffsetX}px ${shadowOffsetY}px ${shadowBlur}px ${shadowColor}`;
+
     // Animation transition. Do not animate when transitionDuration <= 0.
-    enableTransition && transitionDuration > 0
-        && cssText.push(assembleTransition(transitionDuration, onlyFadeTransition, enableDisplayTransition));
+    if (enableTransition && transitionDuration > 0) {
+        assembleTransition(style, transitionDuration, onlyFadeTransition, enableDisplayTransition);
+    }
 
     if (backgroundColor) {
-        cssText.push('background-color:' + backgroundColor);
+        style.backgroundColor = backgroundColor;
     }
 
     // Border style
-    each(['width', 'color', 'radius'] as const, function (name) {
-        const borderName = 'border-' + name;
-        const camelCase = toCamelCase(borderName) as 'borderWidth' | 'borderColor' | 'borderRadius';
-        const val = tooltipModel.get(camelCase);
-        val != null
-            && cssText.push(borderName + ':' + val + (name === 'color' ? '' : 'px'));
+    each(['Width', 'Color', 'Radius'] as const, function (camelName) {
+        const camelProp = `border${camelName}` as 'borderWidth' | 'borderColor' | 'borderRadius';
+        const val = tooltipModel.get(camelProp);
+        if (val != null) {
+            style[camelProp] = val + (camelName === 'Color' ? '' : 'px');
+        }
     });
 
     // Text style
-    cssText.push(assembleFont(textStyleModel));
+    assembleFont(style, textStyleModel);
 
     // Padding
     if (padding != null) {
-        cssText.push('padding:' + normalizeCssArray(padding).join('px ') + 'px');
+        style.padding = normalizeCssArray(padding).join('px ') + 'px';
     }
-
-    return cssText.join(';') + ';';
 }
 
 // If not able to make, do not modify the input `out`.
@@ -411,18 +423,26 @@ class TooltipHTMLContent {
             style.display = 'none';
         }
         else {
-            style.cssText = gCssText
-                + assembleCssText(tooltipModel, !this._firstShow, this._longHide, this._enableDisplayTransition)
-                // initial transform
-                + assembleTransform(styleCoord[0], styleCoord[1], true)
-                + `border-color:${convertToColorString(nearPointColor)};`
-                + (tooltipModel.get('extraCssText') || '')
-                // If mouse occasionally move over the tooltip, a mouseout event will be
-                // triggered by canvas, and cause some unexpectable result like dragging
-                // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
-                // it. Although it is not supported by IE8~IE10, fortunately it is a rare
-                // scenario.
-                + `;pointer-events:${this._enterable ? 'auto' : 'none'}`;
+            // SECURITY: Use CSSOM API to minimize CSS injection - users generally do not need to
+            // worry about risks on most options.
+            style.cssText = gCssText;
+            assembleCssText(style, tooltipModel, !this._firstShow, this._longHide, this._enableDisplayTransition);
+            // initial transform
+            assembleTransform(style, styleCoord[0], styleCoord[1]);
+            style.borderColor = convertToColorString(nearPointColor);
+
+            const extraCssTextOption = tooltipModel.get('extraCssText');
+            if (extraCssTextOption) {
+                // SECURITY: Users should guarantee that `extraCssText` is from tursted source or is sanitized.
+                style.cssText += extraCssTextOption;
+            }
+
+            // If mouse occasionally move over the tooltip, a mouseout event will be
+            // triggered by canvas, and cause some unexpectable result like dragging
+            // stop, "unfocusAdjacency". Here `pointer-events: none` is used to solve
+            // it. Although it is not supported by IE8~IE10, fortunately it is a rare
+            // scenario.
+            style.pointerEvents = this._enterable ? 'auto' : 'none';
         }
 
         this._show = true;
@@ -444,13 +464,8 @@ class TooltipHTMLContent {
             return;
         }
 
-        let arrow = '';
-        if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
-            && !shouldTooltipConfine(tooltipModel)) {
-            arrow = assembleArrow(tooltipModel, borderColor, arrowPosition);
-        }
         if (isString(content)) {
-            el.innerHTML = content + arrow;
+            el.innerHTML = content;
         }
         else if (content) {
             // Clear previous
@@ -463,15 +478,9 @@ class TooltipHTMLContent {
                     el.appendChild(content[i]);
                 }
             }
-            // no arrow if empty
-            if (arrow && el.childNodes.length) {
-                // no need to create a new parent element, but it's not supported by IE 10 and older.
-                // const arrowEl = document.createRange().createContextualFragment(arrow);
-                const arrowEl = document.createElement('div');
-                arrowEl.innerHTML = arrow;
-                el.appendChild(arrowEl);
-            }
         }
+
+        assembleArrow(el, tooltipModel, borderColor, arrowPosition);
     }
 
     setEnterable(enterable: boolean) {
@@ -491,11 +500,7 @@ class TooltipHTMLContent {
         makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
-            const style = this.el.style;
-            const transforms = assembleTransform(styleCoord[0], styleCoord[1]) as string[][];
-            each(transforms, (transform) => {
-              style[transform[0] as any] = transform[1];
-            });
+            assembleTransform(this.el.style, styleCoord[0], styleCoord[1]);
         }
     }
 

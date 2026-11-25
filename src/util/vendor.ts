@@ -19,11 +19,12 @@
 
 import { assert } from 'zrender/src/core/util';
 import { error } from './log';
-import { UNDEFINED_STR } from './types';
+import { NullUndefined, UNDEFINED_STR } from './types';
 import { MAX_SAFE_INTEGER } from './number';
+import env from 'zrender/src/core/env';
 
 /* global Int8Array, Int16Array, Int32Array, Uint8Array, Uint16Array, Uint32Array,
-   Uint8ClampedArray, Float32Array, Float64Array */
+   Uint8ClampedArray, Float32Array, Float64Array, document */
 
 export const Int8ArrayCtor = typeof Int8Array !== UNDEFINED_STR ? Int8Array : undefined;
 export const Int16ArrayCtor = typeof Int16Array !== UNDEFINED_STR ? Int16Array : undefined;
@@ -132,3 +133,40 @@ export function tryEnsureTypedArray(
 
     return tyArr;
 }
+
+
+type CSSVendorProperty<TC extends string, TK extends string> = {
+    c: TC; // camelCase, used for CSSOM API. e.g., 'webkitTransform'.
+    k: TK; // kebab-case, used for literal. e.g., '-webkit-transform'.
+};
+function createCSSVendorProperty<TC extends string, TK extends string>(
+    camelPrefixes: string[], camelSuffix: string
+    // For ease of use, do not return null/undefined even if DOM is not supported or vendor detection failed.
+): CSSVendorProperty<TC, TK> {
+    const lowerSuffix = camelSuffix.toLowerCase();
+
+    _tmpVendorTestStyle = _tmpVendorTestStyle || (env.domSupported ? document.createElement('div').style : null);
+
+    const defaultsRet = {c: lowerSuffix as TC, k: lowerSuffix as TK};
+    if (!_tmpVendorTestStyle || (lowerSuffix in _tmpVendorTestStyle)) {
+        return defaultsRet;
+    }
+    for (let i = 0; i < camelPrefixes.length; i++) {
+        const camelProp = camelPrefixes[i] + camelSuffix;
+        if (camelProp in _tmpVendorTestStyle) {
+            return {c: camelProp as TC, k: `-${camelPrefixes[i].toLowerCase()}-${lowerSuffix}` as TK};
+        }
+    }
+    return defaultsRet;
+}
+let _tmpVendorTestStyle: CSSStyleDeclaration | NullUndefined;
+
+const VENDOR_PREFIXES = ['webkit', 'ms', 'Moz', 'O'];
+export const CSS_TRANSFORM_VENDOR = createCSSVendorProperty<
+    'transform' | 'webkitTransform' | 'OTransform' | 'MozTransform' | 'msTransform',
+    'transform' | '-webkit-transform' | '-o-transform' | '-moz-transform' | '-ms-transform'
+>(VENDOR_PREFIXES, 'Transform');
+export const CSS_TRANSITION_VENDOR = createCSSVendorProperty<
+    'transition' | 'webkitTransition' | 'OTransition' | 'MozTransition' | 'msTransition',
+    'transition' | '-webkit-transition' | '-o-transition' | '-moz-transition' | '-ms-transition'
+>(VENDOR_PREFIXES, 'Transition');

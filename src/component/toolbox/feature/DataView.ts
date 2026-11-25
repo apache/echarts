@@ -380,12 +380,16 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         buttonContainer.style.cssText = 'position:absolute;bottom:5px;left:0;right:0';
 
         // eslint-disable-next-line max-len
-        let buttonStyle = 'float:right;margin-right:20px;border:none;cursor:pointer;padding:2px 5px;font-size:12px;border-radius:3px';
+        const buttonStyle = 'float:right;margin-right:20px;border:none;cursor:pointer;padding:2px 5px;font-size:12px;border-radius:3px';
         const closeButton = document.createElement('div');
         const refreshButton = document.createElement('div');
 
-        buttonStyle += ';background-color:' + model.get('buttonColor');
-        buttonStyle += ';color:' + model.get('buttonTextColor');
+        function setButtonStyleFromUser(buttonEl: HTMLElement): void {
+            // Use CSSOM API rather than `.cssText` to avoid declaration injection.
+            const buttonCSSStyle = buttonEl.style;
+            buttonCSSStyle.backgroundColor = model.get('buttonColor');
+            buttonCSSStyle.color = model.get('buttonTextColor');
+        }
 
         const self = this;
 
@@ -433,6 +437,8 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         refreshButton.innerHTML = lang[2];
         refreshButton.style.cssText =
         closeButton.style.cssText = buttonStyle;
+        setButtonStyleFromUser(refreshButton);
+        setButtonStyleFromUser(closeButton);
 
         !model.get('readOnly') && buttonContainer.appendChild(refreshButton);
         buttonContainer.appendChild(closeButton);
