@@ -46,7 +46,8 @@ import { getECData } from '../../util/innerStore';
 
 import { simpleLayoutEdge } from './simpleLayoutHelper';
 import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
-import { clone, extend } from 'zrender/src/core/util';
+import { clone } from 'zrender/src/core/util';
+import { createSymbol } from '../../util/symbol';
 import ECLinePath from '../helper/LinePath';
 import { NullUndefined, RoamHostView, RoamPayload } from '../../util/types';
 import { getThumbnailBridge, ThumbnailBridge } from '../../component/helper/thumbnailBridge';
@@ -382,25 +383,30 @@ class GraphView extends ChartView implements RoamHostView {
         bridgeGroup.add(symbolGroup);
         bridgeGroup.add(lineGroup);
 
+        const data = seriesModel.getData();
+
         // TODO: reuse elements for performance in large graph?
         for (let i = 0; i < symbolNodes.length; i++) {
-            const node = symbolNodes[i];
-            const sub = (node as graphic.Group).children()[0];
-            const x = (node as Symbol).x;
-            const y = (node as Symbol).y;
-            const subShape = clone((sub as graphic.Path).shape);
-            const shape = extend(subShape, {
-                width: sub.scaleX,
-                height: sub.scaleY,
-                x: x - sub.scaleX / 2,
-                y: y - sub.scaleY / 2
-            });
-            const style = clone((sub as graphic.Path).style);
-            const subThumbnail = new (sub as any).constructor({
-                shape,
-                style,
-                z2: 151
-            });
+            const node = symbolNodes[i] as Symbol;
+            const sub = node.getSymbolPath();
+            const width = sub.scaleX;
+            const height = sub.scaleY;
+            // Recreate the symbol rather than cloning `sub` via its constructor and shape,
+            // since SVG path (`path://`) and image (`image://`) symbols are not described by shape.
+            const subThumbnail = createSymbol(
+                node.getSymbolType(),
+                node.x - width / 2,
+                node.y - height / 2,
+                width,
+                height,
+                null,
+                data.getItemVisual(getECData(node).dataIndex, 'symbolKeepAspect')
+            );
+            // Image symbols keep their geometry in style.
+            if (!(subThumbnail instanceof graphic.Image)) {
+                subThumbnail.useStyle(clone(sub.style));
+            }
+            subThumbnail.z2 = 151;
             symbolGroup.add(subThumbnail);
         }
 
