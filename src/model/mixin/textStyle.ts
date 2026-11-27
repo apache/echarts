@@ -22,6 +22,7 @@ import {getFont} from '../../label/labelStyle';
 import Model from '../Model';
 import { LabelOption, ColorString } from '../../util/types';
 import ZRText, {TextStyleProps} from 'zrender/src/graphic/Text';
+import { retrieve2 } from 'zrender/src/core/util';
 
 const PATH_COLOR = ['textStyle', 'color'] as const;
 
@@ -31,9 +32,9 @@ type LabelRectRelatedOption = Pick<LabelOption,
     | 'width' | 'height' | 'overflow'
 > & LabelFontOption;
 
+const fontParams = ['fontStyle', 'fontWeight', 'fontSize', 'fontFamily'] as const;
 const textStyleParams = [
-    'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'padding',
-    'lineHeight', 'rich', 'width', 'height', 'overflow'
+    'padding', 'lineHeight', 'rich', 'width', 'height', 'overflow'
 ] as const;
 
 // TODO Performance improvement?
@@ -70,6 +71,11 @@ class TextStyleMixin {
             verticalAlign: this.getShallow('verticalAlign')
                 || this.getShallow('baseline')
         };
+        const globalTextStyle = this.ecModel && this.ecModel.option.textStyle;
+        for (let i = 0; i < fontParams.length; i++) {
+            const key = fontParams[i];
+            (style as any)[key] = retrieve2(this.getShallow(key), globalTextStyle && globalTextStyle[key]);
+        }
         for (let i = 0; i < textStyleParams.length; i++) {
             (style as any)[textStyleParams[i]] = this.getShallow(textStyleParams[i]);
         }
