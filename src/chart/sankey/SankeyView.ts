@@ -18,6 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
+import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { LayoutOrient, ECElement, RoamHostView, RoamPayload } from '../../util/types';
 import type { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
@@ -216,6 +217,10 @@ class SankeyView extends ChartView implements RoamHostView {
             });
 
             curve.useStyle(lineStyleModel.getItemStyle());
+            const decal = edge.getVisual('decal');
+            if (decal) {
+                curve.style.decal = createOrUpdatePatternFromDecal(decal, api);
+            }
             // Special color, use source node color or target node color
             applyCurveStyle(curve.style, orient, edge);
 
