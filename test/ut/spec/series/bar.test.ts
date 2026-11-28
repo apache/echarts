@@ -18,9 +18,116 @@
 */
 
 import { createChart } from '../../core/utHelper';
+import GlobalModel from '../../../../src/model/Global';
+import CartesianAxisModel from '../../../../src/coord/cartesian/AxisModel';
+import OrdinalScale from '../../../../src/scale/Ordinal';
 
 
 describe('bar', function () {
+
+    (['canvas', 'svg'] as const).forEach(function (renderer) {
+        (['xAxis', 'yAxis'] as const).forEach(function (axisType) {
+            it('should restore category order when realtimeSort is disabled on ' + axisType + ' with ' + renderer,
+                function () {
+                    const chart = createChart({opts: {renderer}});
+                    const categories = ['a', 'b', 'c', 'd'];
+                    const getLabels = function () {
+                        const model = (chart as any).getModel() as GlobalModel;
+                        const axis = (model.getComponent(axisType) as CartesianAxisModel).axis;
+                        const scale = axis.scale as OrdinalScale;
+                        return categories.map(function (_, index) {
+                            return scale.getLabel({value: index});
+                        });
+                    };
+
+                    try {
+                        chart.setOption({
+                            animation: false,
+                            [axisType]: {type: 'category', data: categories, inverse: axisType === 'yAxis'},
+                            [axisType === 'xAxis' ? 'yAxis' : 'xAxis']: {type: 'value'},
+                            series: [{type: 'bar', realtimeSort: false, data: [10, 40, 20, 30]}]
+                        });
+                        expect(getLabels()).toEqual(categories);
+
+                        // Repeat to cover enabling sorting again after restoring the original order.
+                        for (let i = 0; i < 2; i++) {
+                            chart.setOption({series: [{realtimeSort: true}]});
+                            chart.getZr().flush();
+                            expect(getLabels()).toEqual(['b', 'd', 'c', 'a']);
+
+                            chart.setOption({series: [{realtimeSort: false}]});
+                            expect(getLabels()).toEqual(categories);
+                            chart.resize();
+                            expect(getLabels()).toEqual(categories);
+                        }
+                    }
+                    finally {
+                        chart.dispose();
+                    }
+                }
+            );
+        });
+    });
+
+    it('should keep sorting until the last realtimeSort series on the axis is disabled', function () {
+        const chart = createChart();
+        const getLabels = function () {
+            const model = (chart as any).getModel() as GlobalModel;
+            const scale = (model.getComponent('xAxis') as CartesianAxisModel).axis.scale as OrdinalScale;
+            return [0, 1, 2, 3].map(function (value) {
+                return scale.getLabel({value});
+            });
+        };
+
+        try {
+            chart.setOption({
+                animation: false,
+                xAxis: {type: 'category', data: ['a', 'b', 'c', 'd']},
+                yAxis: {},
+                series: [
+                    {id: 'first', type: 'bar', realtimeSort: true, data: [10, 40, 20, 30]},
+                    {id: 'second', type: 'bar', realtimeSort: true, data: [10, 40, 20, 30]},
+                    {type: 'line', data: [1, 2, 3, 4]}
+                ]
+            });
+            expect(getLabels()).toEqual(['b', 'd', 'c', 'a']);
+            chart.setOption({series: [{id: 'first', realtimeSort: false}]});
+            expect(getLabels()).toEqual(['b', 'd', 'c', 'a']);
+            chart.setOption({series: [{id: 'second', realtimeSort: false}]});
+            expect(getLabels()).toEqual(['a', 'b', 'c', 'd']);
+        }
+        finally {
+            chart.dispose();
+        }
+    });
+
+    it('should preserve an axis order that was not set by realtimeSort', function () {
+        const chart = createChart();
+
+        try {
+            chart.setOption({
+                animation: false,
+                xAxis: {type: 'category', data: ['a', 'b', 'c', 'd']},
+                yAxis: {},
+                series: [{type: 'bar', data: [10, 40, 20, 30]}]
+            });
+            chart.dispatchAction({
+                type: 'changeAxisOrder',
+                componentType: 'xAxis',
+                xAxisIndex: 0,
+                sortInfo: {ordinalNumbers: [3, 2, 1, 0]}
+            });
+            chart.setOption({series: [{data: [20, 50, 30, 40]}]});
+            const model = (chart as any).getModel() as GlobalModel;
+            const scale = (model.getComponent('xAxis') as CartesianAxisModel).axis.scale as OrdinalScale;
+            expect([0, 1, 2, 3].map(function (value) {
+                return scale.getLabel({value});
+            })).toEqual(['d', 'c', 'b', 'a']);
+        }
+        finally {
+            chart.dispose();
+        }
+    });
 
     it('should respect encoded object-row dimensions missing from earlier rows', function () {
         const chart = createChart({width: 400, height: 300});

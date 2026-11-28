@@ -27,11 +27,44 @@ import BarSeries from './BarSeries';
 import BarView from './BarView';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import { SERIES_TYPE_BAR } from '../../layout/barCommon';
+import { makeInner } from '../../util/model';
+import Cartesian2D from '../../coord/cartesian/Cartesian2D';
+import { indexOf } from 'zrender/src/core/util';
+
+const getAxisSortState = makeInner<{realtimeSort: boolean}, CartesianAxisModel>();
 
 export function install(registers: EChartsExtensionInstallRegisters) {
 
     registers.registerChartView(BarView);
     registers.registerSeriesModel(BarSeries);
+
+    registers.registerProcessor({
+        overallReset(ecModel) {
+            const sortingAxes: CartesianAxisModel[] = [];
+            // Include filtered series so hiding a series does not reset its axis order.
+            ecModel.eachRawSeriesByType('bar', function (seriesModel: BarSeries) {
+                const coordSys = seriesModel.coordinateSystem as Cartesian2D;
+                if (seriesModel.get('realtimeSort', true) && coordSys && coordSys.type === 'cartesian2d') {
+                    const baseAxis = coordSys.getBaseAxis();
+                    if (baseAxis.type === 'category') {
+                        sortingAxes.push(baseAxis.model as CartesianAxisModel);
+                    }
+                }
+            });
+            ecModel.eachComponent(function (componentType, componentModel) {
+                if (componentType === 'xAxis' || componentType === 'yAxis') {
+                    const axisModel = componentModel as CartesianAxisModel;
+                    const state = getAxisSortState(axisModel);
+                    const realtimeSort = indexOf(sortingAxes, axisModel) >= 0;
+                    if (state.realtimeSort && !realtimeSort) {
+                        // Clear the persisted order before the grid updates scales and bar layout.
+                        axisModel.axis.setCategorySortInfo(null);
+                    }
+                    state.realtimeSort = realtimeSort;
+                }
+            });
+        }
+    });
 
     registers.registerLayout(
         registers.PRIORITY.VISUAL.LAYOUT, createCrossSeriesLayoutHandler(SERIES_TYPE_BAR)
