@@ -17,7 +17,9 @@
 * under the License.
 */
 
+import { extend, isString } from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
+import { getDecalFromPalette } from '../../model/mixin/palette';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import Model from '../../model/Model';
 import {
@@ -29,6 +31,8 @@ import {
     LineStyleOption,
     LayoutOrient,
     ColorString,
+    InnerDecalObject,
+    ZRColor,
     StatesOptionMixin,
     OptionDataItemObject,
     GraphEdgeItemObject,
@@ -249,6 +253,37 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> implements RoamH
      */
     getEdgeData() {
         return this.getGraph().edgeData;
+    }
+
+    enableAriaDecal() {
+        const graph = this.getGraph();
+        const scope = {};
+        const decalForColor = (color: ZRColor, fallback: string) => {
+            const decal: InnerDecalObject = getDecalFromPalette(
+                this.ecModel, isString(color) ? 'color:' + color : fallback, scope
+            );
+            if (decal) {
+                decal.dirty = true;
+            }
+            return decal;
+        };
+
+        graph.eachNode(node => {
+            // Sankey colors come from flow values, levels or individual node options.
+            const paletteDecal = decalForColor(node.getVisual('color'), 'node:' + node.id);
+            const specifiedDecal = node.getModel<SankeyNodeItemOption>().get(['itemStyle', 'decal']);
+            node.setVisual('decal', specifiedDecal && specifiedDecal !== 'none'
+                ? extend(extend({}, paletteDecal), specifiedDecal) : specifiedDecal || paletteDecal);
+        });
+
+        graph.eachEdge(edge => {
+            const color = edge.getModel<SankeyEdgeItemOption>().get(['lineStyle', 'color']);
+            // Source and target links already inherit the node's rendered pattern.
+            // A gradient interpolates between two colors and has no single color key.
+            if (color && color !== 'source' && color !== 'target' && color !== 'gradient') {
+                edge.setVisual('decal', decalForColor(color, 'edge:' + edge.dataIndex));
+            }
+        });
     }
 
     formatTooltip(
